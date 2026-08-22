@@ -9,11 +9,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
-
-func Connect(databaseURL string) (*gorm.DB, error) {
+func Connect(databaseURL string, isProduction bool) (*gorm.DB, error) {
+	logLevel := logger.Warn
+	if isProduction {
+		logLevel = logger.Silent
+	}
 	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger:         logger.Default.LogMode(logLevel),
+		TranslateError: true,
 	})
 	if err != nil {
 		return nil, err
@@ -21,7 +24,6 @@ func Connect(databaseURL string) (*gorm.DB, error) {
 
 	log.Println("Database connection established")
 
-	// Auto-migration
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Wallet{},
@@ -29,7 +31,6 @@ func Connect(databaseURL string) (*gorm.DB, error) {
 		&models.DueBill{},
 		&models.Budget{},
 		&models.Goal{},
-		&models.IdempotencyKey{},
 	)
 	if err != nil {
 		log.Printf("AutoMigrate error: %v", err)
@@ -37,6 +38,5 @@ func Connect(databaseURL string) (*gorm.DB, error) {
 	}
 
 	log.Println("Database migration completed")
-	DB = db
 	return db, nil
 }

@@ -39,7 +39,6 @@ func AuthMiddlewareWithVerifier(verifier auth.TokenVerifier) fiber.Handler {
 		}
 
 		c.Locals("userID", uid)
-		c.Locals("userEmail", c.Get("X-User-Email"))
 
 		return c.Next()
 	}

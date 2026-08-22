@@ -125,9 +125,9 @@ func (d *DueBill) BeforeCreate(tx *gorm.DB) (err error) {
 
 type Budget struct {
 	ID           uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
-	UserID       string         `gorm:"type:varchar(128);index;not null" json:"user_id"`
+	UserID       string         `gorm:"type:varchar(128);not null;uniqueIndex:idx_budget_user_month" json:"user_id"`
 	MonthlyLimit int64          `gorm:"not null" json:"monthly_limit"`
-	MonthYear    string         `gorm:"type:varchar(7);not null;index" json:"month_year"` // "YYYY-MM"
+	MonthYear    string         `gorm:"type:varchar(7);not null;uniqueIndex:idx_budget_user_month" json:"month_year"` // "YYYY-MM"
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
@@ -159,4 +159,22 @@ func (g *Goal) BeforeCreate(tx *gorm.DB) (err error) {
 		g.ID = uuid.New()
 	}
 	return
+}
+
+type DueBillPatch struct {
+	ProviderName      *string            `gorm:"column:provider_name" json:"provider_name,omitempty"`
+	ProviderIconURL   *string            `gorm:"column:provider_icon_url" json:"provider_icon_url,omitempty"`
+	TotalAmount       *int64             `gorm:"column:total_amount" json:"total_amount,omitempty"`
+	DueDate           *time.Time         `gorm:"column:due_date" json:"due_date,omitempty"`
+	IsRecurring       *bool              `gorm:"column:is_recurring" json:"is_recurring,omitempty"`
+	RecurringInterval *RecurringInterval `gorm:"column:recurring_interval" json:"recurring_interval,omitempty"`
+	Notes             *string            `gorm:"column:notes" json:"notes,omitempty"`
+}
+
+type GoalPatch struct {
+	Name         *string    `gorm:"column:name" json:"name,omitempty"`
+	TargetAmount *int64     `gorm:"column:target_amount" json:"target_amount,omitempty"`
+	TargetDate   *time.Time `gorm:"column:target_date" json:"target_date,omitempty"`
+	ColorHex     *string    `gorm:"column:color_hex" json:"color_hex,omitempty"`
+	Notes        *string    `gorm:"column:notes" json:"notes,omitempty"`
 }
