@@ -297,6 +297,10 @@
     <string name="settings_widget_title">Home screen widget</string>
     <string name="settings_widget_hide_balance">Hide balance on widget</string>
     <string name="settings_widget_hide_balance_desc">Show dots instead of amounts</string>
+    <!-- Bill reminder settings -->
+    <string name="settings_bill_reminder_title">Bill reminders</string>
+    <string name="settings_bill_reminder_time">Daily reminder time</string>
+    <string name="settings_bill_reminder_time_desc">Check and notify due bills at this time</string>
     <!-- Transactions -->
     <string name="tx_add_title">Add Transaction</string>
     <string name="tx_expense">Expense</string>

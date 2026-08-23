@@ -172,4 +172,3 @@ private val DarkModeOptions = listOf(
     DarkModeOption(AppThemeDarkMode.Light, "Terang"),
     DarkModeOption(AppThemeDarkMode.Dark, "Gelap"),
 )
-// ponytail: labels stay hardcoded for enum, add stringResource mapping when needed

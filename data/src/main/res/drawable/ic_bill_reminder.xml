@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="1000"
+    android:viewportHeight="1000">
+
+    <!-- Siluet monokrom logo BareBudget (dompet + panah) untuk ikon notifikasi -->
+    <group
+        android:scaleX="1.8"
+        android:scaleY="1.8"
+        android:pivotX="500"
+        android:pivotY="445">
+
+        <!-- Panah -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M380,435 C460,430 520,380 580,300 L595,335 C530,405 460,455 380,455 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M650,250 L560,275 L590,320 L630,355 Z" />
+
+        <!-- Dompet -->
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M380,440 L560,440 C595,440 624,469 624,504 L624,510" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M624,570 L624,606 C624,625 609,640 590,640 L350,640" />
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M368,435 C430,435 510,390 575,305" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M555,495 L620,495 C636.5,495 650,508.5 650,525 C650,541.5 636.5,555 620,555 L555,555 C538.5,555 525,541.5 525,525 C525,508.5 538.5,495 555,495 Z" />
+    </group>
+
+</vector>

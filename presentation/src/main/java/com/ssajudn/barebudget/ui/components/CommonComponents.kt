@@ -155,8 +155,6 @@ fun FinancialRunwayCard(
                 modifier = Modifier
                     .matchParentSize()
                     .drawBehind {
-                        // ponytail: single rotating gradient band; swap for a mesh
-                        // shader (RuntimeShader) only if this ever feels flat.
                         val angle = sweep * 2f * PI.toFloat()
                         val radius = max(size.width, size.height)
                         val dir = Offset(cos(angle), sin(angle))

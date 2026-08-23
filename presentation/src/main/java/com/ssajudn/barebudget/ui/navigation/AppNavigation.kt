@@ -169,7 +169,6 @@ fun AppNavigation(
 
     fun navigateToStepRoute(route: String) {
         if (navController.currentDestination?.route == route) return
-        // ponytail: plain navigate, no popUpTo games — endTour resets the whole stack anyway
         navController.navigate(route) { launchSingleTop = true }
     }
 

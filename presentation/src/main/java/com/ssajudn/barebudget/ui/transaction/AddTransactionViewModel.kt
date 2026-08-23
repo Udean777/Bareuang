@@ -73,7 +73,6 @@ class AddTransactionViewModel @Inject constructor(
         }
     }
 
-    // ponytail: snapshot untuk banner saja; save selalu cek ulang langsung ke repository
     private fun loadBudgetStatus() {
         viewModelScope.launch {
             val budget = budgetRepository.getMonthlyBudget("")

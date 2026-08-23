@@ -34,6 +34,8 @@ class BillReminderPrefs @Inject constructor(
         private const val KEY_SHOWN = "shown_reminder_keys"
         private const val KEY_PERM_ASKED = "notif_perm_asked"
         private const val KEY_ENABLED = "reminders_enabled"
+        private const val KEY_HOUR = "reminder_hour"
+        private const val KEY_MINUTE = "reminder_minute"
         private const val MAX_ENTRIES = 300
 
         fun markPermissionAsked(context: Context) {
@@ -53,4 +55,13 @@ class BillReminderPrefs @Inject constructor(
 
     fun notificationsEnabled(): Boolean =
         prefs.getBoolean(KEY_ENABLED, true)
+
+    // Default 00:00 (12 malam)
+    fun reminderHour(): Int = prefs.getInt(KEY_HOUR, 0)
+
+    fun reminderMinute(): Int = prefs.getInt(KEY_MINUTE, 0)
+
+    fun setReminderTime(hour: Int, minute: Int) {
+        prefs.edit().putInt(KEY_HOUR, hour).putInt(KEY_MINUTE, minute).apply()
+    }
 }

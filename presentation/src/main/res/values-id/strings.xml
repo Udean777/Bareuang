@@ -275,6 +275,10 @@
     <string name="appearance_dynamic_need">Memerlukan Android 12 ke atas</string>
     <!-- Transactions -->
     <string name="tx_add_title">Tambah Transaksi</string>
+    <!-- Bill reminder settings -->
+    <string name="settings_bill_reminder_title">Pengingat Tagihan</string>
+    <string name="settings_bill_reminder_time">Jam pengingat harian</string>
+    <string name="settings_bill_reminder_time_desc">Periksa dan notifikasikan tagihan jatuh tempo pada jam ini</string>
     <string name="tx_expense">Pengeluaran</string>
     <string name="tx_income">Pemasukan</string>
     <string name="tx_transfer">Transfer</string>

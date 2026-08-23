@@ -153,7 +153,8 @@ fun AppNavigationBar(
                                     fontSize = 10.5.sp,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                                 ),
-                                color = animatedContentColor
+                                // Warna teks tetap mengikuti tema, tidak ikut warna ikon terpilih.
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

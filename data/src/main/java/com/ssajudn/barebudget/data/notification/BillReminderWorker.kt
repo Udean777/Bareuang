@@ -1,6 +1,8 @@
 package com.ssajudn.barebudget.data.notification
 
 import android.content.Context
+import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -21,27 +23,43 @@ class BillReminderWorker @AssistedInject constructor(
     private val dueBillRepository: DueBillRepository,
     private val buildReminders: BuildBillRemindersUseCase,
     private val prefs: BillReminderPrefs,
-    private val notifier: BillNotificationHelper
+    private val notifier: BillNotificationHelper,
+    private val scheduler: BillReminderScheduler
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        if (!prefs.notificationsEnabled()) return Result.success()
+        // Perpanjang rantai harian untuk besok, di semua jalur keluar.
+        scheduler.scheduleDailyAt(prefs.reminderHour(), prefs.reminderMinute())
+
+        if (!prefs.notificationsEnabled()) {
+            Log.d(TAG, "Skip: reminders disabled in prefs")
+            return Result.success()
+        }
+
+        // Jangan bakar key dedup kalau izin notifikasi mati — pengingat akan
+        // muncul begitu izin diberikan, bukan hilang selamanya.
+        if (!NotificationManagerCompat.from(applicationContext).areNotificationsEnabled()) {
+            Log.d(TAG, "Skip: POST_NOTIFICATIONS tidak granted")
+            return Result.success()
+        }
 
         val bills = dueBillRepository.getDueBills(DueBillStatus.UNPAID.name)
             .getOrDefault(emptyList())
+        Log.d(TAG, "Unpaid bills: ${bills.size} -> ${bills.map { "${it.providerName} due=${it.dueDate}" }}")
 
         val reminders = buildReminders(bills) { bill ->
             runCatching { com.ssajudn.barebudget.utils.DateUtils.getDaysUntilDue(bill.dueDate) }
                 .getOrDefault(Long.MAX_VALUE)
-        }.filter { reminder ->
-            val key = dedupeKey(reminder.billId, reminder.dueDateIso, reminder.urgency.name)
-            val fresh = !prefs.alreadyShown(key)
-            if (fresh) prefs.markShown(key)
-            fresh
         }
+        Log.d(TAG, "Reminders in window: ${reminders.map { "${it.providerName} daysLeft=${it.daysLeft} urgency=${it.urgency}" }}")
 
-        if (reminders.isNotEmpty()) {
-            notifier.showSummary(reminders)
+        val fresh = reminders.filter { !prefs.alreadyShown(dedupeKey(it.billId, it.dueDateIso, it.urgency.name)) }
+
+        // Tandai shown HANYA setelah notifikasi benar-benar tampil.
+        if (fresh.isNotEmpty() && notifier.showSummary(fresh)) {
+            fresh.forEach { prefs.markShown(dedupeKey(it.billId, it.dueDateIso, it.urgency.name)) }
+        } else if (fresh.isEmpty() && reminders.isNotEmpty()) {
+            Log.d(TAG, "Semua reminder sudah pernah tampil (dedup)")
         }
         return Result.success()
     }
@@ -50,7 +68,8 @@ class BillReminderWorker @AssistedInject constructor(
         "$billId:$dueDateIso:$urgency"
 
     companion object {
-        const val UNIQUE_PERIODIC = "bill_reminder_periodic"
+        private const val TAG = "BillReminder"
         const val UNIQUE_ONE_TIME = "bill_reminder_once"
+        const val UNIQUE_DAILY = "bill_reminder_daily"
     }
 }

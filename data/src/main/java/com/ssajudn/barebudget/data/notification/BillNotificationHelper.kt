@@ -34,8 +34,10 @@ class BillNotificationHelper @Inject constructor(
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
-    fun showSummary(reminders: List<BillReminder>) {
-        if (reminders.isEmpty()) return
+    /** @return true jika notifikasi berhasil diposting (izin ada, tidak error). */
+    fun showSummary(reminders: List<BillReminder>): Boolean {
+        if (reminders.isEmpty()) return false
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
 
         ensureChannel()
 
@@ -46,7 +48,7 @@ class BillNotificationHelper @Inject constructor(
         }
 
         val preview = reminders.take(MAX_LINES).joinToString("\n") { reminder ->
-            "• ${reminder.providerName}: ${formatAmount(reminder.amount)}"
+            "• ${reminder.providerName} · ${formatAmount(reminder.amount)} (${dueLabel(reminder)})"
         }
         val extra = reminders.size - MAX_LINES
         val body = if (extra > 0) {
@@ -65,23 +67,38 @@ class BillNotificationHelper @Inject constructor(
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_bill_reminder)
+            .setColor(ACCENT_COLOR)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+        return runCatching {
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+        }.isSuccess
     }
 
     private fun formatAmount(amount: Long): String = "Rp" + amount.toString()
         .reversed().chunked(3).joinToString(".").reversed()
 
+    private fun dueLabel(reminder: BillReminder): String = when (reminder.urgency) {
+        BillReminderUrgency.OVERDUE -> context.getString(R.string.bill_reminder_overdue_by, -reminder.daysLeft)
+        BillReminderUrgency.TODAY -> context.getString(R.string.bill_reminder_due_today)
+        BillReminderUrgency.TOMORROW -> context.getString(R.string.bill_reminder_due_tomorrow)
+        BillReminderUrgency.SOON -> context.getString(R.string.bill_reminder_due_in, reminder.daysLeft)
+    }
+
     companion object {
         const val CHANNEL_ID = "bill_reminders"
         const val NOTIFICATION_ID = 4201
         private const val MAX_LINES = 3
+
+        // Warna aksen brand (mint green dari logo) untuk aksen notifikasi.
+        private const val ACCENT_COLOR = 0xFF50E392.toInt()
     }
 }

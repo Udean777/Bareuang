@@ -297,6 +297,10 @@
     <string name="settings_widget_title">Widget Layar Utama</string>
     <string name="settings_widget_hide_balance">Sembunyikan saldo di widget</string>
     <string name="settings_widget_hide_balance_desc">Tampilkan sensor titik alih-alih nominal angka</string>
+    <!-- Bill reminder settings -->
+    <string name="settings_bill_reminder_title">Pengingat Tagihan</string>
+    <string name="settings_bill_reminder_time">Jam pengingat harian</string>
+    <string name="settings_bill_reminder_time_desc">Periksa dan notifikasikan tagihan jatuh tempo pada jam ini</string>
     <!-- Transactions -->
     <string name="tx_add_title">Tambah Transaksi</string>
     <string name="tx_expense">Pengeluaran</string>

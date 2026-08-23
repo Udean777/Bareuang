@@ -184,6 +184,56 @@ fun SettingsScreen(
                 )
             )
 
+            // 3b. BILL REMINDER TIME
+            val billReminderPrefs = remember { com.ssajudn.barebudget.data.notification.BillReminderPrefs(context) }
+            val billReminderScheduler = remember { com.ssajudn.barebudget.data.notification.BillReminderScheduler(context) }
+            var reminderHour by remember { mutableIntStateOf(billReminderPrefs.reminderHour()) }
+            var reminderMinute by remember { mutableIntStateOf(billReminderPrefs.reminderMinute()) }
+            var showReminderTimeDialog by remember { mutableStateOf(false) }
+            com.ssajudn.barebudget.ui.components.Material3SettingsGroup(
+                title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_bill_reminder_title),
+                items = listOf(
+                    com.ssajudn.barebudget.ui.components.Material3SettingsItem(
+                        title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_bill_reminder_time),
+                        description = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_bill_reminder_time_desc),
+                        value = String.format(java.util.Locale.US, "%02d:%02d", reminderHour, reminderMinute),
+                        icon = Icons.Default.NotificationsActive,
+                        onClick = { showReminderTimeDialog = true }
+                    )
+                )
+            )
+
+            if (showReminderTimeDialog) {
+                val timeState = rememberTimePickerState(
+                    initialHour = reminderHour,
+                    initialMinute = reminderMinute,
+                    is24Hour = true
+                )
+                AlertDialog(
+                    onDismissRequest = { showReminderTimeDialog = false },
+                    title = {
+                        Text(text = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_bill_reminder_time))
+                    },
+                    text = { TimePicker(state = timeState) },
+                    confirmButton = {
+                        AppTextButton(onClick = {
+                            reminderHour = timeState.hour
+                            reminderMinute = timeState.minute
+                            billReminderPrefs.setReminderTime(timeState.hour, timeState.minute)
+                            billReminderScheduler.scheduleDailyAt(timeState.hour, timeState.minute)
+                            showReminderTimeDialog = false
+                        }) {
+                            Text(stringResource(com.ssajudn.barebudget.presentation.R.string.common_save))
+                        }
+                    },
+                    dismissButton = {
+                        AppTextButton(onClick = { showReminderTimeDialog = false }) {
+                            Text(stringResource(com.ssajudn.barebudget.presentation.R.string.common_close))
+                        }
+                    }
+                )
+            }
+
             // 4. LANGUAGE SETTINGS
             var currentLanguage by remember { mutableStateOf(com.ssajudn.barebudget.utils.LanguageManager.getCurrentLanguageCode(context)) }
             var showLanguageDialog by remember { mutableStateOf(false) }

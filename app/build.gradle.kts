@@ -120,6 +120,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
     implementation(libs.androidx.work.runtime.ktx)
 
     // Home screen widget (Glance)
