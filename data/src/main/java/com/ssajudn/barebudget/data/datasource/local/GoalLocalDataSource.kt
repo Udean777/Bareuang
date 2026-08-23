@@ -26,8 +26,7 @@ import javax.inject.Singleton
 class GoalLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager,
-    private val outboxScheduler: com.ssajudn.barebudget.data.sync.OutboxScheduler? = null
+    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager
 ) {
 
     suspend fun getGoals(): Result<List<Goal>> = withContext(Dispatchers.IO) {
@@ -49,10 +48,6 @@ class GoalLocalDataSource @Inject constructor(
             notes = request.notes
         )
         db.goalDao().insertGoal(LocalGoalEntity.fromGoal(localGoal, isSynced = false).copy(ownerId = sessionManager.userId))
-        if (!sessionManager.isGuestMode && outboxScheduler != null) {
-            val dto = com.ssajudn.barebudget.data.network.dto.CreateGoalRequestDto(request.name, request.targetAmount, request.targetDate, request.colorHex, request.notes ?: "")
-            try { outboxScheduler.enqueue(sessionManager.userId, "goal", localGoal.id!!, dto) } catch (_: Exception) {}
-        }
         Result.success(localGoal)
     }
 
@@ -86,11 +81,6 @@ class GoalLocalDataSource @Inject constructor(
                     db.runInTransaction { block() }
                 } catch (_: Exception) {
                     block()
-                }
-                if (!sessionManager.isGuestMode && outboxScheduler != null) {
-                    val dto = com.ssajudn.barebudget.data.network.dto.CreateGoalRequestDto("deposit:$id", amount, "", "", "")
-                    // Enqueue deposit operation in the offline outbox for synchronization when connectivity is restored
-                    try { outboxScheduler.enqueue(sessionManager.userId, "goal_deposit", id, mapOf("id" to id, "amount" to amount, "walletId" to walletId)) } catch (_: Exception) {}
                 }
                 Result.success(true)
             } catch (e: Exception) {

@@ -43,7 +43,6 @@ import com.ssajudn.barebudget.ui.components.AppNavigationBar
 import com.ssajudn.barebudget.ui.components.NavigationBarItemData
 import com.ssajudn.barebudget.ui.dashboard.DashboardScreen
 import com.ssajudn.barebudget.ui.goals.GoalsScreen
-import com.ssajudn.barebudget.ui.onboarding.AuthScreen
 import com.ssajudn.barebudget.ui.onboarding.OnboardingScreen
 import com.ssajudn.barebudget.ui.settings.SettingsScreen
 import com.ssajudn.barebudget.ui.splash.SplashScreen
@@ -281,11 +280,11 @@ fun AppNavigation(
                 )
             }
 
-            composable(Screen.Auth.route) {
-                AuthScreen(
-                    onAuthSuccess = {
+            composable(Screen.Onboarding.route) {
+                OnboardingScreen(
+                    onFinishOnboarding = {
                         navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.Auth.route) { inclusive = true }
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
                         }
                     }
                 )
@@ -351,7 +350,7 @@ fun AppNavigation(
                         }
                     },
                     onSignOutSuccess = {
-                        navController.navigate(Screen.Auth.route) {
+                        navController.navigate(Screen.Onboarding.route) {
                             popUpTo(0) { inclusive = true }
                         }
                     }

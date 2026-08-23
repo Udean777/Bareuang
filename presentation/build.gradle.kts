@@ -49,11 +49,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    implementation(libs.coil.compose)
     implementation(libs.material.kolor)
     implementation(libs.androidx.palette.ktx)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
 
     // User Onboarding Tour & Preferences & Translation
     implementation(libs.compose.showcase)

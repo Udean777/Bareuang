@@ -128,73 +128,7 @@ fun SettingsScreen(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 1. USER PROFILE CARD (Hanya muncul jika login dengan Google)
-            if (!uiState.isGuestMode) {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(22.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = uiState.userName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = uiState.userEmail,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Surface(
-                            shape = MaterialTheme.shapes.medium,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                        ) {
-                            Text(
-                                text = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_google_connected),
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 2. OFFLINE BACKUP & RESTORE GROUP
+            // 1. OFFLINE BACKUP & RESTORE GROUP
             com.ssajudn.barebudget.ui.components.Material3SettingsGroup(
                 title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_backup_title),
                 items = listOf(
@@ -217,21 +151,6 @@ fun SettingsScreen(
                     )
                 )
             )
-
-            // 3. CLOUD SYNC GROUP (Opsional untuk Guest yang ingin sync Google)
-            if (uiState.isGuestMode) {
-                com.ssajudn.barebudget.ui.components.Material3SettingsGroup(
-                    title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_cloud_title),
-                    items = listOf(
-                        com.ssajudn.barebudget.ui.components.Material3SettingsItem(
-                            title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_link_google_title),
-                            description = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_link_google_desc),
-                            icon = Icons.Default.CloudUpload,
-                            onClick = { viewModel.linkWithGoogle() }
-                        )
-                    )
-                )
-            }
 
             // 3. APPEARANCE
             AppearanceSettingsGroup(
@@ -360,7 +279,7 @@ fun SettingsScreen(
                 title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_danger_title),
                 items = listOf(
                     com.ssajudn.barebudget.ui.components.Material3SettingsItem(
-                        title = if (uiState.isGuestMode) stringResource(com.ssajudn.barebudget.presentation.R.string.settings_reset_local) else stringResource(com.ssajudn.barebudget.presentation.R.string.settings_sign_out),
+                        title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_reset_local),
                         description = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_danger_desc),
                         icon = Icons.AutoMirrored.Filled.Logout,
                         isDestructive = true,
@@ -395,13 +314,9 @@ fun SettingsScreen(
 
     if (showSignOutConfirmDialog) {
         AppConfirmDialog(
-            title = if (uiState.isGuestMode) stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_reset_title) else stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_signout_title),
-            message = if (uiState.isGuestMode) {
-                stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_reset_message)
-            } else {
-                stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_signout_message)
-            },
-            confirmButtonText = if (uiState.isGuestMode) stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_reset_confirm) else stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_signout_confirm),
+            title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_reset_title),
+            message = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_reset_message),
+            confirmButtonText = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_dialog_reset_confirm),
             onDismissRequest = { showSignOutConfirmDialog = false },
             onConfirm = {
                 showSignOutConfirmDialog = false

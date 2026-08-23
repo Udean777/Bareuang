@@ -3,7 +3,6 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.services)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
@@ -27,7 +26,7 @@ android {
             storeFile = keystoreProps["storeFile"]?.toString()?.let { path ->
                 // Tolerate a leading '/' meant as "relative to project root".
                 file(path).takeIf { it.exists() } ?: rootProject.file(path.removePrefix("/"))
-            }
+            } ?: System.getenv("KEYSTORE_FILE")?.let { file(it) }
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps["storePassword"] as String?
             keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps["keyAlias"] as String?
             keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps["keyPassword"] as String?
@@ -99,7 +98,6 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":presentation"))
-    implementation(libs.coil.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -125,9 +123,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     // Networking (Retrofit & Gson)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging.interceptor)
 
     // CameraX & ML Kit (Snap Ledger OCR)
     implementation(libs.androidx.camera.core)
@@ -137,12 +132,6 @@ dependencies {
     implementation(libs.google.mlkit.text.recognition)
 
     // Firebase Authentication & Google Credentials
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
-    implementation(libs.play.services.auth)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
 
     // Room Database (Local Offline Storage)
     implementation(libs.androidx.room.runtime)

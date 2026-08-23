@@ -15,9 +15,6 @@ import javax.inject.Inject
  * Hilt-provided singleton and mutated a global `ApiClient.authToken`.
  *
  * With Hilt, [UserSessionManager] is a singleton: the same instance is shared
- * by [com.ssajudn.barebudget.data.network.AuthInterceptor], the repositories,
- * and this ViewModel. No global mutation is needed because the interceptor
- * reads `userId` live on every request.
  */
 @HiltViewModel
 class SplashViewModel @Inject constructor(
@@ -28,6 +25,6 @@ class SplashViewModel @Inject constructor(
     fun computeStartDestination(): String = when {
         !sessionManager.isOnboardingCompleted -> Screen.Onboarding.route
         sessionManager.userId.isNotBlank() -> Screen.Dashboard.route
-        else -> Screen.Auth.route
+        else -> Screen.Onboarding.route
     }
 }

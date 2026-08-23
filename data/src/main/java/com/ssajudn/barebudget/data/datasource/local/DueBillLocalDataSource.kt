@@ -27,8 +27,7 @@ import javax.inject.Singleton
 class DueBillLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager,
-    private val outboxScheduler: com.ssajudn.barebudget.data.sync.OutboxScheduler? = null
+    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager
 ) {
 
     suspend fun getDueBills(status: String?): Result<List<DueBill>> = withContext(Dispatchers.IO) {
@@ -58,10 +57,6 @@ class DueBillLocalDataSource @Inject constructor(
                 notes = request.notes
             )
             db.dueBillDao().insertDueBill(LocalDueBillEntity.fromDueBill(newBill, isSynced = false).copy(ownerId = sessionManager.userId))
-            if (!sessionManager.isGuestMode && outboxScheduler != null) {
-                val dto = com.ssajudn.barebudget.data.network.dto.CreateDueBillRequestDto(request.providerName, request.providerIconUrl, request.totalAmount, request.dueDate, request.isRecurring, request.recurringInterval.name, request.notes ?: "")
-                try { outboxScheduler.enqueue(sessionManager.userId, "duebill", newBill.id!!, dto) } catch (_: Exception) {}
-            }
             Result.success(newBill)
         } catch (e: Exception) {
             Result.failure(ApiErrorParser.fromThrowable(e))
