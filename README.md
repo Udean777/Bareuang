@@ -99,9 +99,9 @@ Mengusung pendekatan **Offline-First**, BareBudget bisa langsung dipakai tanpa p
 ### 11. 🔒 Clean Architecture & Sinkronisasi Cloud Offline-First
 * **Multi-module Terisolasi Rapi**: `:domain` murni Kotlin (bebas dependensi Android/Room/Retrofit), `:data` Android library (Room/Retrofit/Firebase/WorkManager), `:presentation` antarmuka Compose & ViewModel (MaterialKolor, Compose Navigation, Hilt), serta `:app` sebagai composition root (`app → presentation → data → domain`).
 * **Pemisahan Model DTO & Domain**: Lapisan DTO diatur terpisah dengan `Gson(LOWER_CASE_WITH_UNDERSCORES)` dan `@SerializedName`, dipetakan via `dto.toDomain()`. Perubahan domain tidak akan merusak kontrak API (diverifikasi via `ApiContractTest` MockWebServer).
-* **Pola Outbox + WorkManager**: Sinkronisasi data lokal ke server menggunakan antrean *Room outbox* yang dieksekusi oleh `@HiltWorker` dan `WorkManager` (berjalan otomatis saat perangkat online dengan strategi exponential backoff). Server PostgreSQL mencegah data ganda melalui *idempotency keys*.
+* **Pola Outbox + WorkManager**: Sinkronisasi data lokal ke server menggunakan antrean *Room outbox* yang dieksekusi oleh `@HiltWorker` dan `WorkManager` (berjalan otomatis saat perangkat online dengan strategi exponential backoff).
 * **Manajemen State & UiEffect Bersih**: Komunikasi one-shot event menggunakan `Channel<UiEffect>` (mencegah event terkirim ulang saat layar berotasi) dan proteksi tombol saat operasi sedang berjalan untuk mencegah klik ganda.
-* **Keamanan & Isolasi Data Akun**: Verifikasi Firebase ID Token di sisi backend, pembersihan data lokal yang aman saat *sign out*, serta validasi migrasi data dari mode Guest ke akun Google tanpa risiko kehilangan data.
+* **Keamanan & Isolasi Data Akun**: Autentikasi API memakai **Firebase ID Token asli** yang diverifikasi signature RS256-nya di backend terhadap sertifikat publik Google, mutasi saldo dompet dilindungi *row-level locking* (`SELECT ... FOR UPDATE`) dari race condition, pembersihan data lokal yang aman saat *sign out*, serta validasi migrasi data dari mode Guest ke akun Google tanpa risiko kehilangan data.
 
 ---
 
@@ -149,17 +149,19 @@ BareBudget/
 │   └── src/main/java/com/ssajudn/barebudget/
 │       └── BareBudgetApplication.kt # Hilt + HiltWorkerFactory (WorkManager)
 └── server/                     # Go + Fiber + GORM + PostgreSQL
-    ├── cmd/api/main.go         # Fiber + AuthMiddlewareWithVerifier + route PATCH
+    ├── cmd/api/main.go         # Fiber + AuthMiddlewareWithVerifier + graceful shutdown
     ├── internal/
-    │   ├── auth/               # TokenVerifier (Firebase ID token, dev fallback non-prod)
-    │   ├── config/             # ENV, CORS, IsProduction
-    │   ├── database/           # postgres.go AutoMigrate User/Wallet/Transaction/DueBill/Budget/Goal/IdempotencyKey
-    │   ├── handler/            # HTTP Handlers (DTO vs GORM model terpisah)
-    │   ├── middleware/         # AuthMiddlewareWithVerifier (Bearer → verified UID)
-    │   ├── models/             # GORM entities + IdempotencyKey (user_id,key PK)
-    │   ├── repository/         # Transactional queries (CreateTransaction, UpdateDueBillStatus, DepositToGoal)
-    │   └── service/            # Business logic
-    └── go.mod                  # go 1.23, Dockerfile golang:1.23-alpine
+    │   ├── apperr/             # Typed errors (BadRequest/NotFound/Conflict) → mapping status HTTP
+    │   ├── auth/               # TokenVerifier — verifikasi signature RS256 Firebase ID token vs sertifikat publik Google
+    │   ├── config/             # ENV, CORS, IsProduction (fail-fast tanpa DATABASE_URL di produksi)
+    │   ├── database/           # postgres.go AutoMigrate User/Wallet/Transaction/DueBill/Budget/Goal
+    │   ├── handler/            # HTTP Handlers (interface Service consumer-side, error mapping terpusat)
+    │   ├── i18n/               # Pesan runway & notes transaksi bilingual (en/id)
+    │   ├── middleware/         # AuthMiddlewareWithVerifier (Bearer → verified UID), locale
+    │   ├── models/             # GORM entities + typed patch (DueBillPatch/GoalPatch)
+    │   ├── repository/         # Store interface tipis + Transactional (query atomik, row locking)
+    │   └── service/            # Logika bisnis uang (saldo, bayar/refund tagihan, deposit goal)
+    └── go.mod                  # go 1.25, Dockerfile golang:1.25-alpine
 ```
 
 **Teknologi & Utilitas Modern:** Hilt Work (`hilt-work`), WorkManager (`work-runtime-ktx`), MockWebServer (`mockwebserver`), Gson `LOWER_CASE_WITH_UNDERSCORES`, Room `withTransaction`, `Channel<UiEffect>`.
@@ -170,18 +172,21 @@ BareBudget/
 
 ### 1. Menjalankan Backend Server (Go + PostgreSQL)
 
-Pastikan kamu sudah menginstal **Go (versi 1.23 ke atas)** dan **PostgreSQL**.
+Pastikan kamu sudah menginstal **Go (versi 1.25 ke atas)** dan **PostgreSQL**.
 
 ```bash
 # Masuk ke direktori server
 cd server
 
-# Salin contoh konfigurasi environment
+# Salin contoh konfigurasi environment, lalu isi FIREBASE_PROJECT_ID
+# (Firebase Console → Project Settings → General → Project ID)
 cp .env.example .env
 
 # Jalankan server API (default port: 8080)
 go run cmd/api/main.go
 ```
+
+> **Catatan Produksi**: Set `ENV=production` + `DATABASE_URL` (wajib, server *fail-fast* tanpa itu) + `FIREBASE_PROJECT_ID` (wajib — semua token diverifikasi signature-nya; tanpa ini semua request ditolak 401).
 
 > **Tips Docker**: Kamu juga bisa menjalankan instance PostgreSQL secara praktis lewat Docker:
 > ```bash
@@ -203,7 +208,27 @@ go run cmd/api/main.go
 ./gradlew :domain:build :data:assembleDebug :app:assembleDebug
 ```
 
-### 3. Menjalankan Pengujian & Verifikasi
+### 3. Build Release (Signed APK / AAB)
+
+Release build memakai **R8 minification** dan ditandatangani dengan keystore yang kredensialnya **tidak pernah masuk git**:
+
+1. Generate keystore: `keytool -genkey -v -keystore keystores/barebudget-release.keystore -alias barebudget -keyalg RSA -keysize 4096 -validity 10000`
+2. Buat `keystore.properties` di root project (sudah di-gitignore):
+   ```properties
+   storeFile=keystores/barebudget-release.keystore
+   storePassword=****
+   keyAlias=barebudget
+   keyPassword=****
+   ```
+3. Build:
+   ```bash
+   ./gradlew :app:assembleRelease   # APK signed (~5 MB)
+   ./gradlew :app:bundleRelease     # AAB untuk Play Store
+   ```
+
+> Tanpa `keystore.properties`, build release tetap jalan tapi menghasilkan APK *unsigned* — cocok untuk CI/reviewer.
+
+### 4. Menjalankan Pengujian & Verifikasi
 
 ```bash
 # Unit test domain + data (termasuk ApiContractTest MockWebServer)
