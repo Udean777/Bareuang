@@ -126,6 +126,18 @@ data class LocalBudgetEntity(
     val ownerId: String = ""
 )
 
+@Entity(
+    tableName = "local_category_budgets",
+    primaryKeys = ["monthYear", "category"]
+)
+data class LocalCategoryBudgetEntity(
+    val monthYear: String,
+    val category: String,
+    val limitAmount: Long,
+    val isSynced: Boolean = false,
+    val ownerId: String = ""
+)
+
 @Entity(tableName = "local_goals")
 data class LocalGoalEntity(
     @PrimaryKey val id: String,

@@ -36,8 +36,11 @@ import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 import com.ssajudn.barebudget.utils.DateUtils
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.AppTextButton
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTransactionScreen(
     onNavigateBack: () -> Unit,
@@ -77,7 +80,7 @@ fun AddTransactionScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    AppIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
@@ -89,9 +92,11 @@ fun AddTransactionScreen(
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.background,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
             ) {
-                Button(
+                AppButton(
                     onClick = { viewModel.saveTransaction() },
                     enabled = !uiState.isLoading && uiState.parsedAmount > 0 && !isOperationLoading,
                     modifier = Modifier
@@ -148,7 +153,7 @@ fun AddTransactionScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.weight(1f)
                         )
-                        TextButton(onClick = onNavigateToBudget) {
+                        AppTextButton(onClick = onNavigateToBudget) {
                             Text(stringResource(R.string.tx_budget_set_action), fontWeight = FontWeight.Bold)
                         }
                     }
@@ -404,13 +409,19 @@ fun AddTransactionScreen(
                         items(filteredCats) { category ->
                             val isSelected = category == uiState.selectedCategory
                             val catColors = categoryColors
+                            val catBudget = uiState.categoryBudgets.find { it.category == category }
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { viewModel.onCategoryChange(category) },
                                 label = {
+                                    val labelText = if (catBudget != null && catBudget.limitAmount > 0) {
+                                        "${category.displayName} (${CurrencyFormatter.formatCompact(catBudget.remainingAmount)})"
+                                    } else {
+                                        category.displayName
+                                    }
                                     Text(
-                                        text = category.displayName,
+                                        text = labelText,
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )

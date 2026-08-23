@@ -29,8 +29,10 @@ import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 import com.ssajudn.barebudget.utils.DateUtils
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TransferScreen(
     onNavigateBack: (() -> Unit)? = null,
@@ -96,7 +98,7 @@ fun TransferScreen(
                 },
                 navigationIcon = {
                     if (onNavigateBack != null) {
-                        IconButton(onClick = onNavigateBack) {
+                        AppIconButton(onClick = onNavigateBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                         }
                     }
@@ -109,9 +111,11 @@ fun TransferScreen(
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.background,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
             ) {
-                Button(
+                AppButton(
                     onClick = { viewModel.saveTransaction() },
                     enabled = !uiState.isLoading && uiState.parsedAmount > 0 && !isBalanceInsufficient && uiState.selectedWalletId != null && uiState.selectedToWalletId != null,
                     modifier = Modifier

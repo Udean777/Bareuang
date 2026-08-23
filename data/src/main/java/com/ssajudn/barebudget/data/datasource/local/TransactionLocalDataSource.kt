@@ -4,6 +4,7 @@ import com.ssajudn.barebudget.data.local.room.AppDatabase
 import com.ssajudn.barebudget.data.local.room.LocalTransactionEntity
 import com.ssajudn.barebudget.domain.model.CreateTransactionRequest
 import com.ssajudn.barebudget.domain.model.Transaction
+import com.ssajudn.barebudget.domain.model.TransactionType
 import com.ssajudn.barebudget.data.service.WalletBalanceService
 import com.ssajudn.barebudget.domain.repository.TransactionRepository
 import com.ssajudn.barebudget.data.error.ApiErrorParser
@@ -43,6 +44,27 @@ class TransactionLocalDataSource @Inject constructor(
     suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction> =
         withContext(Dispatchers.IO) {
             try {
+                // Validasi: semua tipe wajib pakai dompet
+                if (request.walletId.isNullOrBlank()) {
+                    return@withContext Result.failure(IllegalArgumentException("Dompet wajib dipilih untuk transaksi"))
+                }
+                if (request.type == TransactionType.TRANSFER && request.toWalletId.isNullOrBlank()) {
+                    return@withContext Result.failure(IllegalArgumentException("Dompet tujuan wajib dipilih untuk transfer"))
+                }
+                // Validasi saldo untuk pengeluaran & transfer
+                if (request.type == TransactionType.EXPENSE) {
+                    val w = db.walletDao().getWalletById(request.walletId!!)
+                        ?: return@withContext Result.failure(IllegalArgumentException("Dompet tidak ditemukan"))
+                    if (w.balance < request.amount) {
+                        return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup. Saldo: ${w.balance}, dibutuhkan: ${request.amount}"))
+                    }
+                } else if (request.type == TransactionType.TRANSFER) {
+                    val w = db.walletDao().getWalletById(request.walletId!!)
+                        ?: return@withContext Result.failure(IllegalArgumentException("Dompet asal tidak ditemukan"))
+                    if (w.balance < request.amount) {
+                        return@withContext Result.failure(IllegalStateException("Saldo dompet asal tidak cukup"))
+                    }
+                }
                 val dateStr = request.date.ifBlank {
                     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date())
                 }

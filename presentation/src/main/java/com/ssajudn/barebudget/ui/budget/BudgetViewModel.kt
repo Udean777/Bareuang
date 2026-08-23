@@ -22,9 +22,12 @@ data class BudgetUiState(
     val parsedAmount: Long = 0L,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val categoryBudgets: List<com.ssajudn.barebudget.domain.model.CategoryBudget> = emptyList()
 ) {
     val isLocked: Boolean get() = currentLimit > 0
+    val totalAllocatedCategory: Long get() = categoryBudgets.sumOf { it.limitAmount }
+    val isOverAllocated: Boolean get() = currentLimit > 0 && totalAllocatedCategory > currentLimit
 }
 
 @HiltViewModel
@@ -36,12 +39,12 @@ class BudgetViewModel @Inject constructor(
     private val _effect = Channel<UiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
-
     private val _uiState = MutableStateFlow(BudgetUiState())
     val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
 
     init {
         loadCurrentBudget()
+        observeCategoryBudgets()
     }
 
     private fun loadCurrentBudget() {
@@ -59,6 +62,14 @@ class BudgetViewModel @Inject constructor(
                 .onFailure {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
+        }
+    }
+
+    private fun observeCategoryBudgets() {
+        viewModelScope.launch {
+            repository.getCategoryBudgets().collect { list ->
+                _uiState.value = _uiState.value.copy(categoryBudgets = list)
+            }
         }
     }
 
@@ -96,6 +107,27 @@ class BudgetViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
                     _operation.value = OperationState.Error(msg)
                     viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
+                }
+        }
+    }
+
+    fun setCategoryBudget(category: com.ssajudn.barebudget.domain.model.TransactionCategory, limit: Long) {
+        if (limit <= 0) return
+        viewModelScope.launch {
+            repository.setCategoryBudget(category, limit)
+                .onFailure { error ->
+                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Gagal mengatur limit kategori"
+                    _effect.send(UiEffect.ShowSnackbar(msg))
+                }
+        }
+    }
+
+    fun deleteCategoryBudget(category: com.ssajudn.barebudget.domain.model.TransactionCategory) {
+        viewModelScope.launch {
+            repository.deleteCategoryBudget(category)
+                .onFailure { error ->
+                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Gagal menghapus limit kategori"
+                    _effect.send(UiEffect.ShowSnackbar(msg))
                 }
         }
     }

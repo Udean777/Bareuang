@@ -108,6 +108,24 @@ interface BudgetDao {
 
     @Query("DELETE FROM local_budgets")
     fun clearAll()
+
+    @Query("SELECT * FROM local_category_budgets WHERE monthYear = :monthYear")
+    fun getCategoryBudgets(monthYear: String): List<LocalCategoryBudgetEntity>
+
+    @Query("SELECT * FROM local_category_budgets WHERE monthYear = :monthYear")
+    fun observeCategoryBudgets(monthYear: String): Flow<List<LocalCategoryBudgetEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertCategoryBudget(categoryBudget: LocalCategoryBudgetEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertCategoryBudgets(categoryBudgets: List<LocalCategoryBudgetEntity>)
+
+    @Query("DELETE FROM local_category_budgets WHERE monthYear = :monthYear AND category = :category")
+    fun deleteCategoryBudget(monthYear: String, category: String)
+
+    @Query("DELETE FROM local_category_budgets")
+    fun clearAllCategoryBudgets()
 }
 
 @Dao

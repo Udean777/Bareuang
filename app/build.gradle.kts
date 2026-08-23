@@ -122,6 +122,10 @@ dependencies {
     implementation(libs.hilt.work)
     implementation(libs.androidx.work.runtime.ktx)
 
+    // Home screen widget (Glance)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
     // Networking (Retrofit & Gson)
 
     // CameraX & ML Kit (Snap Ledger OCR)

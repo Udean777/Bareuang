@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bill_reminder_channel_name">Pengingat tagihan</string>
+    <string name="bill_reminder_channel_desc">Pengingat untuk tagihan yang mendekati atau lewat jatuh tempo</string>
+    <string name="bill_reminder_title_overdue">%1$d tagihan terlambat!</string>
+    <string name="bill_reminder_title_upcoming">%1$d tagihan segera jatuh tempo</string>
+    <string name="bill_reminder_more">…dan %1$d lainnya</string>
+</resources>

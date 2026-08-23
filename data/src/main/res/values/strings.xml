@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bill_reminder_channel_name">Bill reminders</string>
+    <string name="bill_reminder_channel_desc">Reminders for upcoming and overdue bills</string>
+    <string name="bill_reminder_title_overdue">%1$d overdue bill(s)!</string>
+    <string name="bill_reminder_title_upcoming">%1$d bill(s) due soon</string>
+    <string name="bill_reminder_more">…and %1$d more</string>
+</resources>

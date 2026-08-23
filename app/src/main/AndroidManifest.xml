@@ -11,6 +11,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- Local bill due-date reminders (no network involved) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".BareBudgetApplication"
         android:allowBackup="true"
@@ -34,6 +37,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Home screen budget widget (Glance) -->
+        <receiver
+            android:name=".widget.BudgetWidgetReceiver"
+            android:exported="false"
+            android:label="Bare Budget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/budget_widget_info" />
+        </receiver>
 
         <!-- WorkManager is initialized on-demand via Configuration.Provider in
              BareBudgetApplication; disable the default initializer. -->

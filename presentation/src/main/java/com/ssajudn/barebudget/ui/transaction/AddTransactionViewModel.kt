@@ -12,6 +12,7 @@ import com.ssajudn.barebudget.domain.repository.WalletRepository
 import com.ssajudn.barebudget.utils.DateUtils
 import com.ssajudn.barebudget.domain.error.AppException
 import com.ssajudn.barebudget.domain.error.userMessage
+import com.ssajudn.barebudget.utils.CurrencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +38,8 @@ data class AddTransactionUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
-    val isBudgetMissing: Boolean = false
+    val isBudgetMissing: Boolean = false,
+    val categoryBudgets: List<com.ssajudn.barebudget.domain.model.CategoryBudget> = emptyList()
 )
 
 @HiltViewModel
@@ -58,6 +60,15 @@ class AddTransactionViewModel @Inject constructor(
     init {
         loadWallets()
         loadBudgetStatus()
+        observeCategoryBudgets()
+    }
+
+    private fun observeCategoryBudgets() {
+        viewModelScope.launch {
+            budgetRepository.getCategoryBudgets("").collect { list ->
+                _uiState.value = _uiState.value.copy(categoryBudgets = list)
+            }
+        }
     }
 
     // ponytail: snapshot untuk banner saja; save selalu cek ulang langsung ke repository
@@ -211,6 +222,18 @@ class AddTransactionViewModel @Inject constructor(
             }
             if (state.selectedWalletId == state.selectedToWalletId) {
                 _uiState.value = state.copy(errorMessage = "Dompet asal dan dompet tujuan tidak boleh sama")
+                return
+            }
+        }
+
+        // Validasi saldo untuk expense & transfer
+        if (state.transactionType == TransactionType.EXPENSE || state.transactionType == TransactionType.TRANSFER) {
+            val sourceWallet = state.wallets.find { it.id == state.selectedWalletId }
+            if (sourceWallet != null && sourceWallet.balance < state.parsedAmount) {
+                val msg = "Saldo dompet tidak cukup (${CurrencyFormatter.formatRupiah(sourceWallet.balance)})"
+                _uiState.value = state.copy(errorMessage = msg)
+                _operation.value = OperationState.Error(msg)
+                viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
                 return
             }
         }

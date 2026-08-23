@@ -27,9 +27,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.BuildConfig
 import com.ssajudn.barebudget.data.local.ThemePreferences
+import com.ssajudn.barebudget.data.local.WidgetPreferences
 import com.ssajudn.barebudget.domain.AppConfig
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.AppTextButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,7 +110,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(enabled = !isOperationLoading, onClick = onNavigateBack) {
+                    AppIconButton(enabled = !isOperationLoading, onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(com.ssajudn.barebudget.presentation.R.string.common_back))
                     }
                 },
@@ -158,6 +161,27 @@ fun SettingsScreen(
                 darkMode = darkMode,
                 onColorModeChange = themePrefs::setColorMode,
                 onDarkModeChange = themePrefs::setDarkMode,
+            )
+
+            // 3b. WIDGET
+            val widgetPrefs = remember { WidgetPreferences.getInstance(context) }
+            val widgetHideBalance by widgetPrefs.hideBalance.collectAsStateWithLifecycle()
+            com.ssajudn.barebudget.ui.components.Material3SettingsGroup(
+                title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_widget_title),
+                items = listOf(
+                    com.ssajudn.barebudget.ui.components.Material3SettingsItem(
+                        title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_widget_hide_balance),
+                        description = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_widget_hide_balance_desc),
+                        icon = Icons.Default.VisibilityOff,
+                        onClick = { widgetPrefs.setHideBalance(!widgetHideBalance) },
+                        trailingContent = {
+                            Switch(
+                                checked = widgetHideBalance,
+                                onCheckedChange = { widgetPrefs.setHideBalance(it) }
+                            )
+                        }
+                    )
+                )
             )
 
             // 4. LANGUAGE SETTINGS
@@ -213,7 +237,7 @@ fun SettingsScreen(
                         }
                     },
                     confirmButton = {
-                        TextButton(onClick = { showLanguageDialog = false }) {
+                        AppTextButton(onClick = { showLanguageDialog = false }) {
                             Text(stringResource(com.ssajudn.barebudget.presentation.R.string.common_close))
                         }
                     }

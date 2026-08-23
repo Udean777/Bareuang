@@ -26,6 +26,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppTextButton
 import com.ssajudn.barebudget.ui.theme.*
 import com.ssajudn.barebudget.utils.LanguageManager
 import kotlinx.coroutines.launch
@@ -93,7 +95,7 @@ fun OnboardingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!isLastPage) {
-                    TextButton(
+                    AppTextButton(
                         onClick = {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(pages.size - 1)
@@ -169,7 +171,7 @@ fun OnboardingScreen(
                     }
 
                     // Next Button
-                    Button(
+                    AppButton(
                         onClick = {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -365,7 +367,7 @@ fun StartStep(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Button(
+                AppButton(
                     onClick = onStartClick,
                     enabled = !isLoading,
                     modifier = Modifier

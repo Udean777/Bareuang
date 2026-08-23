@@ -10,9 +10,7 @@ import com.ssajudn.barebudget.domain.repository.BudgetRepository
 import com.ssajudn.barebudget.domain.repository.TransactionRepository
 import com.ssajudn.barebudget.domain.repository.WalletRepository
 import com.ssajudn.barebudget.testutil.MainDispatcherRule
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -49,6 +47,7 @@ class AddTransactionViewModelTest {
 
     private fun createVm(monthlyBudget: Long = 2_000_000L): AddTransactionViewModel {
         coEvery { budgetRepository.getMonthlyBudget(any()) } returns Result.success(monthlyBudget)
+        every { budgetRepository.getCategoryBudgets(any()) } returns kotlinx.coroutines.flow.flowOf(emptyList())
         return AddTransactionViewModel(walletRepository, transactionRepository, budgetRepository)
     }
 

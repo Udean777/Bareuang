@@ -20,4 +20,20 @@ class BudgetRepositoryImpl @Inject constructor(
 
     override suspend fun getMonthlyBudget(monthYear: String): Result<Long> =
         local.getMonthlyBudget(monthYear)
+
+    override fun getCategoryBudgets(monthYear: String): kotlinx.coroutines.flow.Flow<List<com.ssajudn.barebudget.domain.model.CategoryBudget>> =
+        local.observeCategoryBudgets(monthYear)
+
+    override suspend fun setCategoryBudget(
+        category: com.ssajudn.barebudget.domain.model.TransactionCategory,
+        limitAmount: Long,
+        monthYear: String
+    ): Result<Boolean> =
+        local.setCategoryBudget(category, limitAmount, monthYear)
+
+    override suspend fun deleteCategoryBudget(
+        category: com.ssajudn.barebudget.domain.model.TransactionCategory,
+        monthYear: String
+    ): Result<Boolean> =
+        local.deleteCategoryBudget(category, monthYear)
 }

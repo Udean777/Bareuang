@@ -38,6 +38,9 @@ private class FakeBudgetRepo(var budget: Long = 0L) : BudgetRepository {
     )
     override suspend fun setBudget(monthlyLimit: Long, monthYear: String) = Result.success(true)
     override suspend fun getMonthlyBudget(monthYear: String) = Result.success(budget)
+    override fun getCategoryBudgets(monthYear: String): Flow<List<com.ssajudn.barebudget.domain.model.CategoryBudget>> = flowOf(emptyList())
+    override suspend fun setCategoryBudget(category: com.ssajudn.barebudget.domain.model.TransactionCategory, limitAmount: Long, monthYear: String) = Result.success(true)
+    override suspend fun deleteCategoryBudget(category: com.ssajudn.barebudget.domain.model.TransactionCategory, monthYear: String) = Result.success(true)
 }
 
 private class FakeTxRepo(var txs: List<Transaction> = emptyList()) : TransactionRepository {

@@ -36,6 +36,10 @@ import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.DateUtils
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 import com.ssajudn.barebudget.ui.components.AppDatePickerDialog
+import com.ssajudn.barebudget.ui.components.pressScale
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.AppOutlinedButton
 import com.ssajudn.barebudget.domain.model.Wallet
 
 enum class GoalFilter(val labelRes: Int) {
@@ -52,6 +56,7 @@ val presetGoalColors = listOf(
 @Composable
 fun GoalsScreen(
     onNavigateBack: (() -> Unit)? = null,
+    onAddGoalRequest: (() -> Unit)? = null,
     viewModel: GoalsViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -91,6 +96,13 @@ fun GoalsScreen(
     var editingGoal by remember { mutableStateOf<Goal?>(null) }
     var actionSheetGoal by remember { mutableStateOf<Goal?>(null) }
 
+    LaunchedEffect(onAddGoalRequest) {
+        if (onAddGoalRequest != null) {
+            editingGoal = null
+            showAddDialog = true
+        }
+    }
+
     var depositGoalTarget by remember { mutableStateOf<Goal?>(null) }
     var initialIsWithdraw by remember { mutableStateOf(false) }
     var goalToDelete by remember { mutableStateOf<Goal?>(null) }
@@ -110,17 +122,9 @@ fun GoalsScreen(
                 },
                 navigationIcon = {
                     if (onNavigateBack != null) {
-                        IconButton(onClick = onNavigateBack) {
+                        AppIconButton(onClick = onNavigateBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                         }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        editingGoal = null
-                        showAddDialog = true
-                    }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.goals_create))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -229,7 +233,7 @@ fun GoalsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(16.dp))
-                            Button(enabled = !isOperationLoading, onClick = { viewModel.loadGoals() }) {
+                            AppButton(enabled = !isOperationLoading, onClick = { viewModel.loadGoals() }) {
                                 Text(stringResource(R.string.common_retry))
                             }
                         }
@@ -273,7 +277,7 @@ fun GoalsScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
-                                    Button(onClick = {
+                                    AppButton(onClick = {
                                         editingGoal = null
                                         showAddDialog = true
                                     }) {
@@ -469,12 +473,12 @@ fun GoalsScreen(
                             horizontalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                            Text(stringResource(R.string.goals_delete), style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.goals_delete), style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
 
-                OutlinedButton(
+                AppOutlinedButton(
                     onClick = { actionSheetGoal = null },
                     modifier = Modifier
                         .fillMaxWidth()

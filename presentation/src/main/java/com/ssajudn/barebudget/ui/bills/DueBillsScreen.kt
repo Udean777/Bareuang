@@ -34,6 +34,10 @@ import com.ssajudn.barebudget.utils.DateUtils
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.ssajudn.barebudget.ui.components.AppDatePickerDialog
 import com.ssajudn.barebudget.ui.components.AppFormDialog
+import com.ssajudn.barebudget.ui.components.pressScale
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppOutlinedButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
 import com.ssajudn.barebudget.domain.model.RecurringInterval
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.res.stringResource
@@ -44,6 +48,7 @@ import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 @Composable
 fun DueBillsScreen(
     onNavigateBack: (() -> Unit)? = null,
+    onAddBillRequest: (() -> Unit)? = null,
     viewModel: DueBillsViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -82,6 +87,13 @@ fun DueBillsScreen(
     var editingBill by remember { mutableStateOf<DueBill?>(null) }
     var actionSheetBill by remember { mutableStateOf<DueBill?>(null) }
 
+    LaunchedEffect(onAddBillRequest) {
+        if (onAddBillRequest != null) {
+            editingBill = null
+            showFormDialog = true
+        }
+    }
+
     var payingBill by remember { mutableStateOf<DueBill?>(null) }
     var unpayingBillConfirm by remember { mutableStateOf<DueBill?>(null) }
     var deletingBillConfirm by remember { mutableStateOf<DueBill?>(null) }
@@ -101,17 +113,9 @@ fun DueBillsScreen(
                 },
                 navigationIcon = {
                     if (onNavigateBack != null) {
-                        IconButton(onClick = onNavigateBack) {
+                        AppIconButton(onClick = onNavigateBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                         }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        editingBill = null
-                        showFormDialog = true
-                    }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.bills_form_add))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -172,21 +176,20 @@ fun DueBillsScreen(
                     )
                 )
 
-                // 2. FILTER TABS (Semua / Belum Lunas / Lunas)
+                // 2. FILTER TABS (Belum Lunas / Lunas) — bertindak sebagai halaman terpisah
                 SingleChoiceSegmentedButtonRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val filters = listOf(
-                        Triple(null, stringResource(R.string.bills_filter_all), 0),
-                        Triple(DueBillStatus.UNPAID, stringResource(R.string.bills_filter_unpaid), 1),
-                        Triple(DueBillStatus.PAID, stringResource(R.string.bills_filter_paid), 2)
+                        Pair(DueBillStatus.UNPAID, stringResource(R.string.bills_filter_unpaid)),
+                        Pair(DueBillStatus.PAID, stringResource(R.string.bills_filter_paid))
                     )
-                    filters.forEach { (status, label, index) ->
+                    filters.forEachIndexed { index, (status, label) ->
                         SegmentedButton(
                             selected = selectedStatusFilter == status,
                             enabled = !isOperationLoading,
                             onClick = { viewModel.setFilterStatus(status) },
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = 3)
+                            shape = SegmentedButtonDefaults.itemShape(index = index, count = 2)
                         ) {
                             Text(label, style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (selectedStatusFilter == status) FontWeight.Bold else FontWeight.Medium))
                         }
@@ -225,7 +228,7 @@ fun DueBillsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(16.dp))
-                            Button(onClick = { viewModel.loadDueBills() }) {
+                            AppButton(onClick = { viewModel.loadDueBills() }) {
                                 Text(stringResource(R.string.common_retry))
                             }
                         }
@@ -250,34 +253,35 @@ fun DueBillsScreen(
                                         text = stringResource(R.string.bills_empty_title),
                                         style = MaterialTheme.typography.titleLarge.copy(
                                             fontWeight = FontWeight.Bold
-                                        )
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = stringResource(R.string.bills_empty_desc),
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                     )
                                 }
                             }
                         } else {
                             LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 20.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                contentPadding = PaddingValues(top = Spacing.MediumSmall, bottom = Spacing.FabClearance)
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(
+                                    start = Spacing.ScreenHorizontal,
+                                    end = Spacing.ScreenHorizontal,
+                                    top = Spacing.Small,
+                                    bottom = Spacing.FabClearance
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                items(state.bills) { bill ->
+                                items(state.bills, key = { it.id ?: it.hashCode() }) { bill ->
                                     DueBillItem(
                                         bill = bill,
                                         onClick = { actionSheetBill = bill },
                                         onToggleStatus = {
-                                            if (bill.status == DueBillStatus.UNPAID) {
-                                                payingBill = bill
-                                            } else {
-                                                unpayingBillConfirm = bill
-                                            }
+                                            viewModel.toggleBillStatus(bill)
                                         }
                                     )
                                 }
@@ -569,14 +573,21 @@ fun DueBillItem(
         )
     }
 
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .pressScale(interactionSource, pressedScale = 0.96f)
             .crispBorder(
                 shape = AppShapes.Squircle,
                 color = if (isOverdue) MaterialTheme.colorScheme.error.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
             )
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClick = onClick
+            ),
         shape = AppShapes.Squircle,
         colors = CardDefaults.elevatedCardColors(
             containerColor = if (isPaid) MaterialTheme.colorScheme.surfaceContainerLowest else MaterialTheme.colorScheme.surface
@@ -1042,13 +1053,14 @@ fun PayDueBillDialog(
 ) {
     var selectedWallet by remember(wallets) { mutableStateOf(wallets.firstOrNull()) }
     var walletDropdownExpanded by remember { mutableStateOf(false) }
+    val isInsufficient = selectedWallet != null && selectedWallet!!.balance < bill.totalAmount
 
     AppFormDialog(
         title = stringResource(R.string.bills_pay_title),
         icon = Icons.Default.AccountBalanceWallet,
         iconTint = MaterialTheme.colorScheme.primary,
         confirmButtonText = stringResource(R.string.bills_pay_btn),
-        isConfirmEnabled = selectedWallet?.id != null,
+        isConfirmEnabled = selectedWallet?.id != null && !isInsufficient,
         onDismissRequest = onDismiss,
         onConfirm = {
             selectedWallet?.id?.let { onConfirm(it) }
@@ -1132,6 +1144,32 @@ fun PayDueBillDialog(
                             selectedWallet = wallet
                             walletDropdownExpanded = false
                         }
+                    )
+                }
+            }
+        }
+
+        if (isInsufficient) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.errorContainer
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Saldo tidak cukup untuk membayar tagihan ini",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
             }

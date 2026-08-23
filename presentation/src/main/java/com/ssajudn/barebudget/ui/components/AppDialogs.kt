@@ -45,11 +45,15 @@ fun AppFormDialog(
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
     ) {
         Surface(
             modifier = modifier
                 .fillMaxWidth(0.92f)
+                .imePadding()
                 .heightIn(max = 640.dp)
                 .crispBorder(
                     shape = AppShapes.Squircle,
@@ -99,14 +103,14 @@ fun AppFormDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     if (dismissButtonText != null) {
-                        TextButton(
+                        AppTextButton(
                             onClick = onDismissRequest,
                             modifier = Modifier.padding(end = Spacing.Small)
                         ) {
                             Text(dismissButtonText)
                         }
                     }
-                    Button(
+                    AppButton(
                         onClick = onConfirm,
                         enabled = isConfirmEnabled,
                         colors = ButtonDefaults.buttonColors(
@@ -193,13 +197,13 @@ fun AppConfirmDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(
+                    AppTextButton(
                         onClick = onDismissRequest,
                         modifier = Modifier.padding(end = Spacing.Small)
                     ) {
                         Text(dismissButtonText)
                     }
-                    Button(
+                    AppButton(
                         onClick = onConfirm,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = containerColor,

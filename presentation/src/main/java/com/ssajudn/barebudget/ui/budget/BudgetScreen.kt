@@ -8,6 +8,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
@@ -27,8 +33,10 @@ import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.ui.tour.tourAnchor
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BudgetScreen(
     onNavigateBack: () -> Unit,
@@ -66,7 +74,7 @@ fun BudgetScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    AppIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
@@ -78,9 +86,11 @@ fun BudgetScreen(
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.background,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
             ) {
-                Button(
+                AppButton(
                     onClick = { viewModel.saveBudget() },
                     enabled = !uiState.isLoading && uiState.parsedAmount > 0 && !uiState.isLocked && !isOperationLoading,
                     modifier = Modifier
@@ -259,6 +269,155 @@ fun BudgetScreen(
                 }
             }
 
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+            )
+
+            // CATEGORY BUDGETS SECTION
+            var showCategoryDialog by remember { mutableStateOf(false) }
+            var editingCategoryBudget by remember { mutableStateOf<com.ssajudn.barebudget.domain.model.CategoryBudget?>(null) }
+            var categoryToDelete by remember { mutableStateOf<com.ssajudn.barebudget.domain.model.CategoryBudget?>(null) }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.budget_category_title),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.budget_category_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                FilledTonalButton(
+                    onClick = {
+                        editingCategoryBudget = null
+                        showCategoryDialog = true
+                    },
+                    shape = AppShapes.Pill,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.common_add), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                }
+            }
+
+            // Allocation Summary
+            if (uiState.categoryBudgets.isNotEmpty()) {
+                Surface(
+                    shape = AppShapes.Squircle,
+                    color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (uiState.isOverAllocated) Icons.Default.Warning else Icons.Default.PieChart,
+                            contentDescription = null,
+                            tint = if (uiState.isOverAllocated) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = if (uiState.isOverAllocated) {
+                                stringResource(R.string.budget_category_over_warning)
+                            } else {
+                                stringResource(
+                                    R.string.budget_category_allocated,
+                                    CurrencyFormatter.formatCompact(uiState.totalAllocatedCategory),
+                                    if (uiState.currentLimit > 0) CurrencyFormatter.formatCompact(uiState.currentLimit) else "unlimited"
+                                )
+                            },
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = if (uiState.isOverAllocated) FontWeight.Bold else FontWeight.Medium,
+                                color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Category list
+            if (uiState.categoryBudgets.isEmpty()) {
+                Surface(
+                    shape = AppShapes.Squircle,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Category,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.budget_category_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                uiState.categoryBudgets.forEach { catBudget ->
+                    CategoryBudgetCard(
+                        categoryBudget = catBudget,
+                        onEdit = {
+                            editingCategoryBudget = catBudget
+                            showCategoryDialog = true
+                        },
+                        onDelete = {
+                            categoryToDelete = catBudget
+                        }
+                    )
+                }
+            }
+
+            // Category Form Dialog
+            if (showCategoryDialog) {
+                SetCategoryBudgetDialog(
+                    initialBudget = editingCategoryBudget,
+                    existingCategories = uiState.categoryBudgets.map { it.category }.toSet(),
+                    onDismiss = { showCategoryDialog = false },
+                    onConfirm = { category, limit ->
+                        viewModel.setCategoryBudget(category, limit)
+                        showCategoryDialog = false
+                    }
+                )
+            }
+
+            // Category Delete Confirmation Dialog
+            if (categoryToDelete != null) {
+                com.ssajudn.barebudget.ui.components.AppConfirmDialog(
+                    title = stringResource(R.string.budget_category_delete),
+                    message = stringResource(R.string.budget_category_delete_confirm, categoryToDelete!!.category.displayName),
+                    confirmButtonText = stringResource(R.string.common_delete),
+                    dismissButtonText = stringResource(R.string.common_cancel),
+                    onConfirm = {
+                        viewModel.deleteCategoryBudget(categoryToDelete!!.category)
+                        categoryToDelete = null
+                    },
+                    onDismissRequest = { categoryToDelete = null }
+                )
+            }
+
             if (uiState.errorMessage != null) {
                 Text(
                     text = uiState.errorMessage!!,
@@ -267,5 +426,190 @@ fun BudgetScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryBudgetCard(
+    categoryBudget: com.ssajudn.barebudget.domain.model.CategoryBudget,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val category = categoryBudget.category
+    val catColors = com.ssajudn.barebudget.ui.theme.categoryColors
+    val progress = categoryBudget.progressPercentage
+    val progressColor = when {
+        categoryBudget.isOverspent -> MaterialTheme.colorScheme.error
+        categoryBudget.isWarning -> Color(0xFFF39C12)
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AppShapes.Squircle,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = catColors.container(category),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = com.ssajudn.barebudget.ui.components.getCategoryIcon(category),
+                                contentDescription = null,
+                                tint = catColors.onContainer(category),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = category.displayName,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "${CurrencyFormatter.formatCompact(categoryBudget.spentAmount)} / ${CurrencyFormatter.formatCompact(categoryBudget.limitAmount)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = progressColor,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                    AppIconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                    AppIconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp),
+                color = progressColor,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SetCategoryBudgetDialog(
+    initialBudget: com.ssajudn.barebudget.domain.model.CategoryBudget?,
+    existingCategories: Set<com.ssajudn.barebudget.domain.model.TransactionCategory>,
+    onDismiss: () -> Unit,
+    onConfirm: (com.ssajudn.barebudget.domain.model.TransactionCategory, Long) -> Unit
+) {
+    val expenseCategories = com.ssajudn.barebudget.domain.model.TransactionCategory.entries.filter {
+        it != com.ssajudn.barebudget.domain.model.TransactionCategory.TRANSFER &&
+        it != com.ssajudn.barebudget.domain.model.TransactionCategory.SALARY &&
+        it != com.ssajudn.barebudget.domain.model.TransactionCategory.BONUS &&
+        it != com.ssajudn.barebudget.domain.model.TransactionCategory.INVESTMENT
+    }
+
+    val availableCategories = if (initialBudget != null) {
+        listOf(initialBudget.category)
+    } else {
+        expenseCategories.filter { it !in existingCategories }.ifEmpty { expenseCategories }
+    }
+
+    var selectedCategory by remember { mutableStateOf(initialBudget?.category ?: availableCategories.firstOrNull() ?: expenseCategories.first()) }
+    var rawAmount by remember { mutableStateOf(initialBudget?.limitAmount?.toString() ?: "") }
+    var parsedAmount by remember { mutableStateOf(initialBudget?.limitAmount ?: 0L) }
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    com.ssajudn.barebudget.ui.components.AppFormDialog(
+        title = if (initialBudget != null) stringResource(R.string.budget_category_edit) else stringResource(R.string.budget_category_add),
+        icon = Icons.Default.Category,
+        iconTint = MaterialTheme.colorScheme.primary,
+        confirmButtonText = stringResource(R.string.common_save),
+        isConfirmEnabled = parsedAmount > 0,
+        onDismissRequest = onDismiss,
+        onConfirm = { onConfirm(selectedCategory, parsedAmount) }
+    ) {
+        if (initialBudget == null) {
+            ExposedDropdownMenuBox(
+                expanded = dropdownExpanded,
+                onExpandedChange = { dropdownExpanded = !dropdownExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = selectedCategory.displayName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.budget_category_select)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                )
+                ExposedDropdownMenu(
+                    expanded = dropdownExpanded,
+                    onDismissRequest = { dropdownExpanded = false }
+                ) {
+                    availableCategories.forEach { cat ->
+                        DropdownMenuItem(
+                            text = { Text(cat.displayName) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = com.ssajudn.barebudget.ui.components.getCategoryIcon(cat),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            onClick = {
+                                selectedCategory = cat
+                                dropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        OutlinedTextField(
+            value = rawAmount,
+            onValueChange = { input ->
+                val digitsOnly = input.filter { it.isDigit() }.take(12)
+                rawAmount = digitsOnly
+                parsedAmount = digitsOnly.toLongOrNull() ?: 0L
+            },
+            label = { Text(stringResource(R.string.budget_category_limit)) },
+            placeholder = { Text("Rp 0") },
+            singleLine = true,
+            visualTransformation = CurrencyVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

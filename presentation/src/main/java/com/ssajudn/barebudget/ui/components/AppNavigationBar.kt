@@ -104,6 +104,8 @@ fun AppNavigationBar(
                         label = "navItemContent"
                     )
 
+                    val navInteractionSource = remember { MutableInteractionSource() }
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -111,9 +113,10 @@ fun AppNavigationBar(
                                 if (item.tourAnchorKey != null) Modifier.tourAnchor(item.tourAnchorKey)
                                 else Modifier
                             )
+                            .pressScale(navInteractionSource, pressedScale = 0.88f)
                             .clip(AppShapes.Pill)
                             .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
+                                interactionSource = navInteractionSource,
                                 indication = null
                             ) { onNavigate(item.route) }
                             .padding(vertical = 4.dp),

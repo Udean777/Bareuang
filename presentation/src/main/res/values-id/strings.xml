@@ -341,6 +341,10 @@
     <string name="onboarding_auth_desc">Masuk untuk sinkronisasi data cloud atau langsung lanjutkan dengan profil tamu.</string>
     <string name="auth_offline_message">Kamu sedang tidak terhubung ke internet. Sambungkan dulu ya untuk masuk dengan Google.</string>
     <string name="auth_guest_offline_message">Tidak ada koneksi internet. Mode tetamu tetap bisa dipakai offline — data kamu tersimpan di perangkat ini.</string>
+    <string name="notif_perm_title">Jangan Sampai Ada Tagihan Terlewat</string>
+    <string name="notif_perm_desc">BareBudget bisa mengingatkan saat tagihan mendekati jatuh tempo — 3 hari lagi, besok, dan hari-H. Notifikasi dibuat sepenuhnya di perangkatmu; tidak ada data yang dikirim ke mana pun.</string>
+    <string name="notif_perm_allow">Izinkan Notifikasi</string>
+    <string name="notif_perm_later">Lain Kali</string>
     <string name="onboarding_google_title">Masuk dengan Google</string>
     <string name="onboarding_google_desc">Direkomendasikan. Semua riwayat transaksi, budget, dan tagihan tersimpan aman di cloud. Data tidak akan hilang saat berganti perangkat.</string>
     <string name="onboarding_guest_title">Mode Tamu</string>

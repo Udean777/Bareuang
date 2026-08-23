@@ -33,6 +33,7 @@ import com.ssajudn.barebudget.ui.theme.categoryColors
 import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.DateUtils
+import com.ssajudn.barebudget.ui.components.AppIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,13 +72,13 @@ fun TransactionDetailScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.tx_detail_title), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    AppIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 actions = {
                     if (uiState.transaction != null) {
-                        IconButton(enabled = !isOperationLoading, onClick = { showDeleteConfirmDialog = true }) {
+                        AppIconButton(enabled = !isOperationLoading, onClick = { showDeleteConfirmDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = stringResource(R.string.common_delete),

@@ -268,12 +268,34 @@
     <string name="budget_locked_desc">Saat ini %1$s. Kamu hanya bisa mengubah budget 1x per bulan. Budget akan bisa diubah lagi bulan depan.</string>
     <string name="budget_input_label">Target Anggaran Bulanan</string>
     <string name="budget_presets_label">Preset Cepat</string>
+    <string name="budget_category_title">Anggaran per Kategori</string>
+    <string name="budget_category_subtitle">Bagi alokasi limit untuk setiap pos pengeluaran</string>
+    <string name="budget_category_add">Atur Limit Kategori</string>
+    <string name="budget_category_edit">Ubah Limit Kategori</string>
+    <string name="budget_category_empty">Belum ada anggaran kategori yang diatur.</string>
+    <string name="budget_category_allocated">Teralokasi %1$s dari %2$s</string>
+    <string name="budget_category_over_warning">Total alokasi kategori melebihi anggaran global bulanan!</string>
+    <string name="budget_category_select">Pilih Kategori</string>
+    <string name="budget_category_limit">Nominal Batas</string>
+    <string name="budget_category_delete">Hapus Limit Kategori</string>
+    <string name="budget_category_delete_confirm">Hapus batas anggaran untuk %1$s?</string>
+
+    <!-- Speed Dial FAB Labels -->
+    <string name="fab_menu_transaction">Transaksi</string>
+    <string name="fab_menu_bill">Tagihan</string>
+    <string name="fab_menu_goal">Target Tabungan</string>
+
     <!-- Appearance -->
     <string name="appearance_title">Tampilan</string>
     <string name="appearance_dark_mode">Mode Gelap</string>
     <string name="appearance_dynamic">Warna Dinamis</string>
     <string name="appearance_dynamic_desc">Mengikuti palet wallpaper (Material You)</string>
     <string name="appearance_dynamic_need">Memerlukan Android 12 ke atas</string>
+
+    <!-- Widget settings -->
+    <string name="settings_widget_title">Widget Layar Utama</string>
+    <string name="settings_widget_hide_balance">Sembunyikan saldo di widget</string>
+    <string name="settings_widget_hide_balance_desc">Tampilkan sensor titik alih-alih nominal angka</string>
     <!-- Transactions -->
     <string name="tx_add_title">Tambah Transaksi</string>
     <string name="tx_expense">Pengeluaran</string>
@@ -341,6 +363,10 @@
     <string name="onboarding_auth_desc">Masuk untuk sinkronisasi data cloud atau langsung lanjutkan dengan profil tamu.</string>
     <string name="auth_offline_message">Kamu sedang tidak terhubung ke internet. Sambungkan dulu ya untuk masuk dengan Google.</string>
     <string name="auth_guest_offline_message">Tidak ada koneksi internet. Mode tetamu tetap bisa dipakai offline — data kamu tersimpan di perangkat ini.</string>
+    <string name="notif_perm_title">Jangan Sampai Ada Tagihan Terlewat</string>
+    <string name="notif_perm_desc">BareBudget bisa mengingatkan saat tagihan mendekati jatuh tempo — 3 hari lagi, besok, dan hari-H. Notifikasi dibuat sepenuhnya di perangkatmu; tidak ada data yang dikirim ke mana pun.</string>
+    <string name="notif_perm_allow">Izinkan Notifikasi</string>
+    <string name="notif_perm_later">Lain Kali</string>
     <string name="onboarding_google_title">Masuk dengan Google</string>
     <string name="onboarding_google_desc">Direkomendasikan. Semua riwayat transaksi, budget, dan tagihan tersimpan aman di cloud. Data tidak akan hilang saat berganti perangkat.</string>
     <string name="onboarding_guest_title">Mode Tamu</string>

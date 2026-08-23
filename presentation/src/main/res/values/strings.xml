@@ -268,12 +268,34 @@
     <string name="budget_locked_desc">Currently %1$s. You can only change your budget once per month. It will be editable again next month.</string>
     <string name="budget_input_label">Target Monthly Budget</string>
     <string name="budget_presets_label">Quick Presets</string>
+    <string name="budget_category_title">Category Budgets</string>
+    <string name="budget_category_subtitle">Allocate limits per spending category</string>
+    <string name="budget_category_add">Set Category Limit</string>
+    <string name="budget_category_edit">Edit Category Limit</string>
+    <string name="budget_category_empty">No category budgets set yet.</string>
+    <string name="budget_category_allocated">Allocated %1$s of %2$s</string>
+    <string name="budget_category_over_warning">Total category allocation exceeds monthly budget!</string>
+    <string name="budget_category_select">Select Category</string>
+    <string name="budget_category_limit">Limit Amount</string>
+    <string name="budget_category_delete">Delete Category Budget</string>
+    <string name="budget_category_delete_confirm">Delete budget for %1$s?</string>
+
+    <!-- Speed Dial FAB Labels -->
+    <string name="fab_menu_transaction">Transaction</string>
+    <string name="fab_menu_bill">Due Bill</string>
+    <string name="fab_menu_goal">Savings Goal</string>
+
     <!-- Appearance -->
     <string name="appearance_title">Appearance</string>
     <string name="appearance_dark_mode">Dark Mode</string>
     <string name="appearance_dynamic">Dynamic Colors</string>
     <string name="appearance_dynamic_desc">Follow wallpaper palette (Material You)</string>
     <string name="appearance_dynamic_need">Requires Android 12 or higher</string>
+
+    <!-- Widget settings -->
+    <string name="settings_widget_title">Home screen widget</string>
+    <string name="settings_widget_hide_balance">Hide balance on widget</string>
+    <string name="settings_widget_hide_balance_desc">Show dots instead of amounts</string>
     <!-- Transactions -->
     <string name="tx_add_title">Add Transaction</string>
     <string name="tx_expense">Expense</string>
@@ -341,6 +363,10 @@
     <string name="onboarding_auth_desc">Sign in to sync your cloud records or continue instantly with a guest profile.</string>
     <string name="auth_offline_message">You are offline. Connect to the internet to sign in with Google.</string>
     <string name="auth_guest_offline_message">No internet connection. Guest mode still works offline — your data stays on this device.</string>
+    <string name="notif_perm_title">Never Miss a Bill</string>
+    <string name="notif_perm_desc">BareBudget can remind you when bills are due — 3 days ahead, tomorrow, and today. Reminders are generated entirely on your device; nothing is sent anywhere.</string>
+    <string name="notif_perm_allow">Allow Notifications</string>
+    <string name="notif_perm_later">Maybe later</string>
     <string name="onboarding_google_title">Sign In with Google</string>
     <string name="onboarding_google_desc">Recommended. All your transaction history, budgets, and bills are backed up securely to the cloud. You won\'t lose your data when reinstalling.</string>
     <string name="onboarding_guest_title">Guest Mode</string>
