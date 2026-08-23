@@ -67,14 +67,13 @@
     <string name="analytics_title">Analisis Finansial</string>
     <string name="analytics_error_title">Gagal memuat analisis</string>
     <string name="analytics_tab_cashflow">Arus Kas</string>
-    <string name="analytics_tab_networth">Kekayaan Bersih</string>
+    <string name="analytics_tab_networth">Kekayaan</string>
     <string name="analytics_tab_categories">Kategori</string>
     <string name="analytics_cashflow_summary">RINGKASAN ARUS KAS</string>
     <string name="analytics_income">Pemasukan</string>
     <string name="analytics_expense">Pengeluaran</string>
-    <string name="analytics_net_cashflow_surplus">Arus Kas Bersih (Surplus)</string>
-    <string name="analytics_net_cashflow_deficit">Arus Kas Bersih (Defisit)</string>
-    <string name="analytics_cashflow_trend">Tren Arus Kas (6 Bulan Terakhir)</string>
+    <string name="analytics_net_cashflow">Arus Kas Bersih</string>
+    <string name="analytics_cashflow_trend">Tren Arus Kas (6 Bln Terakhir)</string>
     <string name="analytics_networth_current">Total Kekayaan Saat Ini</string>
     <string name="analytics_networth_growth">Pertumbuhan Kekayaan Bersih</string>
     <string name="analytics_savage_streak"><xliff:g id="days">%1$d</xliff:g> Hari Savage Streak!</string>

@@ -367,7 +367,32 @@ fun TransactionItem(
             }
         },
         headlineContent = {
-            Text(text = merchantName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = merchantName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (transaction.isRecurringParent || transaction.recurringInterval != com.ssajudn.barebudget.domain.model.RecurringInterval.NONE || transaction.parentRecurringId != null) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        shape = AppShapes.Pill,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.tx_badge_recurring),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         },
         supportingContent = {
             Text(
@@ -388,6 +413,95 @@ fun TransactionItem(
                 color = trailingColor
             )
         },
+    )
+}
+
+/**
+ * Dedicated UI item for scheduled recurring transactions.
+ * Shows neutral amount without +/- signs, cycle info, and next scheduled date.
+ */
+@Composable
+fun RecurringTransactionItem(
+    transaction: Transaction,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    val category = transaction.category
+    val colors = categoryColors
+    val merchantName = transaction.merchant?.takeIf { it.isNotBlank() } ?: category.displayName
+    val amountText = CurrencyFormatter.formatRupiah(transaction.amount)
+    val nextDate = transaction.nextOccurrenceDate ?: transaction.date
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+
+    ListItem(
+        modifier = modifier
+            .pressScale(interactionSource, pressedScale = 0.98f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClick = onClick
+            ),
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(CategoryIconContainerSize)
+                    .clip(AppShapes.Squircle)
+                    .background(colors.container(category)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getCategoryIcon(category),
+                    contentDescription = null,
+                    tint = colors.onContainer(category),
+                    modifier = Modifier.size(CategoryIconSize)
+                )
+            }
+        },
+        headlineContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = merchantName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Surface(
+                    shape = AppShapes.Pill,
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Text(
+                        text = transaction.recurringInterval.displayName,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        },
+        supportingContent = {
+            Text(
+                text = stringResource(R.string.dashboard_recurring_next, DateUtils.formatDisplayDate(nextDate)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        trailingContent = {
+            Text(
+                text = amountText,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     )
 }
 

@@ -92,6 +92,75 @@ object DateUtils {
         }
     }
 
+    /**
+     * Calculates next occurrence matching a target day of week (1 = Monday ... 7 = Sunday)
+     */
+    fun calculateNextWeeklyDay(fromDateStr: String, targetDayOfWeek: Int): String {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(fromDateStr.substring(0, minOf(10, fromDateStr.length))) ?: Date()
+            val cal = Calendar.getInstance().apply { time = date }
+
+            // Convert Calendar.DAY_OF_WEEK (Sunday=1, Monday=2..Saturday=7) to ISO (Monday=1..Sunday=7)
+            val currentCalDay = cal.get(Calendar.DAY_OF_WEEK)
+            val currentIsoDay = if (currentCalDay == Calendar.SUNDAY) 7 else currentCalDay - 1
+
+            var daysToAdd = (targetDayOfWeek - currentIsoDay + 7) % 7
+            if (daysToAdd == 0) daysToAdd = 7 // next week
+            cal.add(Calendar.DAY_OF_MONTH, daysToAdd)
+            sdf.format(cal.time)
+        } catch (_: Exception) {
+            calculateNextDueDate(fromDateStr, "WEEKLY")
+        }
+    }
+
+    /**
+     * Calculates next occurrence matching a target day of month (1..31)
+     */
+    fun calculateNextMonthlyDate(fromDateStr: String, targetDayOfMonth: Int): String {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(fromDateStr.substring(0, minOf(10, fromDateStr.length))) ?: Date()
+            val cal = Calendar.getInstance().apply { time = date }
+
+            cal.add(Calendar.MONTH, 1)
+            val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+            cal.set(Calendar.DAY_OF_MONTH, targetDayOfMonth.coerceIn(1, maxDay))
+            sdf.format(cal.time)
+        } catch (_: Exception) {
+            calculateNextDueDate(fromDateStr, "MONTHLY")
+        }
+    }
+
+    /**
+     * Extracts ISO day of week (1=Monday ... 7=Sunday) from YYYY-MM-DD
+     */
+    fun getDayOfWeek(dateStr: String): Int {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(dateStr.substring(0, minOf(10, dateStr.length))) ?: Date()
+            val cal = Calendar.getInstance().apply { time = date }
+            val calDay = cal.get(Calendar.DAY_OF_WEEK)
+            if (calDay == Calendar.SUNDAY) 7 else calDay - 1
+        } catch (_: Exception) {
+            1
+        }
+    }
+
+    /**
+     * Extracts Day of Month (1..31) from YYYY-MM-DD
+     */
+    fun getDayOfMonth(dateStr: String): Int {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(dateStr.substring(0, minOf(10, dateStr.length))) ?: Date()
+            val cal = Calendar.getInstance().apply { time = date }
+            cal.get(Calendar.DAY_OF_MONTH)
+        } catch (_: Exception) {
+            1
+        }
+    }
+
     fun parseIsoToMillis(isoDate: String): Long {
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

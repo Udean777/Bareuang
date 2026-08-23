@@ -68,6 +68,11 @@ class TransactionLocalDataSource @Inject constructor(
                 val dateStr = request.date.ifBlank {
                     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date())
                 }
+                val isRecurring = request.recurringInterval != com.ssajudn.barebudget.domain.model.RecurringInterval.NONE
+                val nextDate = if (isRecurring) {
+                    com.ssajudn.barebudget.utils.DateUtils.calculateNextDueDate(dateStr, request.recurringInterval.name)
+                } else null
+
                 val newTx = Transaction(
                     id = UUID.randomUUID().toString(),
                     amount = request.amount,
@@ -78,15 +83,23 @@ class TransactionLocalDataSource @Inject constructor(
                     notes = request.notes,
                     receiptUrl = request.receiptUrl,
                     walletId = request.walletId,
-                    toWalletId = request.toWalletId
+                    toWalletId = request.toWalletId,
+                    recurringInterval = request.recurringInterval,
+                    isRecurringParent = isRecurring,
+                    parentRecurringId = null,
+                    nextOccurrenceDate = nextDate
                 )
 
                 try { db.withTransaction {
-                    balanceService.adjustForCreate(request)
+                    if (!isRecurring) {
+                        balanceService.adjustForCreate(request)
+                    }
                     val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
                     db.transactionDao().insertTransaction(entity)
                 } } catch (_: Exception) {
-                    balanceService.adjustForCreate(request)
+                    if (!isRecurring) {
+                        balanceService.adjustForCreate(request)
+                    }
                     val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
                     db.transactionDao().insertTransaction(entity)
                 }

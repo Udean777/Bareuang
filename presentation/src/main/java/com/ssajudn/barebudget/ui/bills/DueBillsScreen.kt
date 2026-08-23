@@ -1039,6 +1039,65 @@ fun DueBillFormDialog(
                     )
                 }
             }
+
+            // Day of week selector when WEEKLY is selected
+            if (recurringInterval == RecurringInterval.WEEKLY) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.tx_recurring_on_day),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                val days = listOf(
+                    1 to stringResource(R.string.day_mon),
+                    2 to stringResource(R.string.day_tue),
+                    3 to stringResource(R.string.day_wed),
+                    4 to stringResource(R.string.day_thu),
+                    5 to stringResource(R.string.day_fri),
+                    6 to stringResource(R.string.day_sat),
+                    7 to stringResource(R.string.day_sun)
+                )
+                val currentDayOfWeek = DateUtils.getDayOfWeek(dueDateIso)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    days.forEach { (dayIso, dayName) ->
+                        val isCurrentDay = currentDayOfWeek == dayIso
+                        Surface(
+                            shape = AppShapes.Pill,
+                            color = if (isCurrentDay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    dueDateIso = DateUtils.calculateNextWeeklyDay(dueDateIso, dayIso)
+                                }
+                        ) {
+                            Box(
+                                modifier = Modifier.padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = dayName,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (isCurrentDay) FontWeight.Bold else FontWeight.Medium
+                                    ),
+                                    color = if (isCurrentDay) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            } else if (recurringInterval == RecurringInterval.MONTHLY) {
+                Spacer(modifier = Modifier.height(8.dp))
+                val dayOfMonth = DateUtils.getDayOfMonth(dueDateIso)
+                Text(
+                    text = stringResource(R.string.tx_recurring_on_date, dayOfMonth),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }

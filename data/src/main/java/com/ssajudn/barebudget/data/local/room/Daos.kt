@@ -29,6 +29,15 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertTransactions(transactions: List<LocalTransactionEntity>)
 
+    @Query("SELECT * FROM local_transactions WHERE isRecurringParent = 1 AND recurringInterval != 'NONE'")
+    fun getRecurringTemplates(): List<LocalTransactionEntity>
+
+    @Query("SELECT * FROM local_transactions WHERE isRecurringParent = 1 AND recurringInterval != 'NONE' AND ownerId = :ownerId")
+    fun getRecurringTemplatesByOwner(ownerId: String): List<LocalTransactionEntity>
+
+    @Query("UPDATE local_transactions SET nextOccurrenceDate = :nextDate WHERE id = :id")
+    fun updateNextOccurrence(id: String, nextDate: String)
+
     @Query("DELETE FROM local_transactions WHERE id = :id")
     fun deleteTransaction(id: String)
 

@@ -328,16 +328,6 @@ fun DashboardContent(
                     modifier = Modifier.weight(1f),
                     onClick = onGoalsClick
                 )
-
-                QuickActionCard(
-                    title = stringResource(R.string.dashboard_quick_analytics),
-                    subtitle = stringResource(R.string.dashboard_quick_analytics_desc),
-                    icon = Icons.Default.TrendingUp,
-                    bgColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tintColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f),
-                    onClick = onAnalyticsClick
-                )
             }
         }
 
@@ -389,7 +379,33 @@ fun DashboardContent(
             }
         }
 
-        // 4. RECENT TRANSACTIONS HEADER
+        // 4. RECURRING SCHEDULES (Hanya jika ada template recurring aktif)
+        if (summary.recurringTransactions.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.dashboard_recurring_schedule),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            items(summary.recurringTransactions) { tx ->
+                com.ssajudn.barebudget.ui.components.RecurringTransactionItem(
+                    transaction = tx,
+                    onClick = { tx.id?.let(onTransactionClick) }
+                )
+            }
+        }
+
+        // 5. RECENT TRANSACTIONS HEADER
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -418,7 +434,8 @@ fun DashboardContent(
             }
         }
 
-        if (summary.recentTransactions!!.isNullOrEmpty()) {
+        val recent = summary.recentTransactions
+        if (recent.isNullOrEmpty()) {
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -440,7 +457,7 @@ fun DashboardContent(
                 }
             }
         } else {
-            items(summary.recentTransactions!!) { tx ->
+            items(recent) { tx ->
                 TransactionItem(
                     transaction = tx,
                     onClick = { tx.id?.let(onTransactionClick) }

@@ -35,6 +35,8 @@ data class AddTransactionUiState(
     val selectedCategory: TransactionCategory = TransactionCategory.FOOD,
     val date: String = DateUtils.getCurrentDateISO(),
     val notes: String = "",
+    val isRecurring: Boolean = false,
+    val recurringInterval: com.ssajudn.barebudget.domain.model.RecurringInterval = com.ssajudn.barebudget.domain.model.RecurringInterval.MONTHLY,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
@@ -81,16 +83,28 @@ class AddTransactionViewModel @Inject constructor(
 
     private fun loadWallets() {
         viewModelScope.launch {
-            val result = walletRepository.getWallets()
-            if (result.isSuccess) {
-                val wallets = result.getOrNull() ?: emptyList()
-                val defaultWallet = wallets.firstOrNull()?.id
-                val defaultToWallet = wallets.getOrNull(1)?.id ?: defaultWallet
+            val initial = walletRepository.getWallets().getOrNull()
+            if (!initial.isNullOrEmpty()) {
+                val defaultWallet = initial.firstOrNull()?.id
+                val defaultToWallet = initial.getOrNull(1)?.id ?: defaultWallet
                 _uiState.value = _uiState.value.copy(
-                    wallets = wallets,
+                    wallets = initial,
                     selectedWalletId = defaultWallet,
                     selectedToWalletId = defaultToWallet
                 )
+            }
+            walletRepository.observeWallets().collect { wallets ->
+                if (wallets.isNotEmpty()) {
+                    val currentSelected = _uiState.value.selectedWalletId
+                    val defaultWallet = if (wallets.any { it.id == currentSelected }) currentSelected else wallets.firstOrNull()?.id
+                    val currentSelectedTo = _uiState.value.selectedToWalletId
+                    val defaultToWallet = if (wallets.any { it.id == currentSelectedTo }) currentSelectedTo else (wallets.getOrNull(1)?.id ?: defaultWallet)
+                    _uiState.value = _uiState.value.copy(
+                        wallets = wallets,
+                        selectedWalletId = defaultWallet,
+                        selectedToWalletId = defaultToWallet
+                    )
+                }
             }
         }
     }
@@ -204,6 +218,14 @@ class AddTransactionViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(notes = notes)
     }
 
+    fun onRecurringChange(isRecurring: Boolean) {
+        _uiState.value = _uiState.value.copy(isRecurring = isRecurring)
+    }
+
+    fun onRecurringIntervalChange(interval: com.ssajudn.barebudget.domain.model.RecurringInterval) {
+        _uiState.value = _uiState.value.copy(recurringInterval = interval)
+    }
+
     fun saveTransaction() {
         val state = _uiState.value
         if (state.parsedAmount <= 0) {
@@ -272,7 +294,8 @@ class AddTransactionViewModel @Inject constructor(
                 category = state.selectedCategory,
                 merchant = state.merchant.ifBlank { defaultMerchant },
                 date = state.date,
-                notes = state.notes
+                notes = state.notes,
+                recurringInterval = if (state.isRecurring) state.recurringInterval else com.ssajudn.barebudget.domain.model.RecurringInterval.NONE
             )
 
             transactionRepository.createTransaction(request)

@@ -41,7 +41,11 @@ data class Transaction(
     val receiptUrl: String? = null,
     val walletId: String? = null,
     val toWalletId: String? = null,
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val recurringInterval: RecurringInterval = RecurringInterval.NONE,
+    val isRecurringParent: Boolean = false,
+    val parentRecurringId: String? = null,
+    val nextOccurrenceDate: String? = null
 )
 
 enum class DueBillStatus {
@@ -101,7 +105,8 @@ data class DashboardSummary(
     val topCategories: List<CategorySummary>?,
     val unpaidDueBillsSum: Long,
     val netWorth: Long = 0L,
-    val recentTransactions: List<Transaction>?
+    val recentTransactions: List<Transaction>?,
+    val recurringTransactions: List<Transaction> = emptyList()
 )
 
 data class Goal(
@@ -151,7 +156,8 @@ data class CreateTransactionRequest(
     val notes: String = "",
     val receiptUrl: String = "",
     val walletId: String? = null,
-    val toWalletId: String? = null
+    val toWalletId: String? = null,
+    val recurringInterval: RecurringInterval = RecurringInterval.NONE
 )
 
 data class CreateDueBillRequest(

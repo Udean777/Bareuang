@@ -193,7 +193,9 @@ fun BudgetScreen(
 
             // Amount Input (M3 Display Card)
             ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .tourAnchor("budget_input_amount"),
                 shape = MaterialTheme.shapes.extraLarge,
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh

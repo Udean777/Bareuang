@@ -234,10 +234,18 @@ fun AppNavigation(
             }
         },
         floatingActionButton = {
+            val showFab = showNavigationBar && currentRoute != Screen.Transfer.route
             AnimatedVisibility(
-                visible = showNavigationBar,
-                enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
-                exit = scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200)),
+                visible = showFab,
+                enter = scaleIn(
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(250)),
+                exit = scaleOut(
+                    animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                ) + fadeOut(animationSpec = tween(180)),
             ) {
                 var isSpeedDialExpanded by remember { mutableStateOf(false) }
 

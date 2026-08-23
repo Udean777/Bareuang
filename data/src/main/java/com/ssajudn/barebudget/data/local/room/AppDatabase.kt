@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
         OutboxEntity::class,
         CachedTranslationEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -75,6 +75,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN recurringInterval TEXT NOT NULL DEFAULT 'NONE'")
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN isRecurringParent INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN parentRecurringId TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN nextOccurrenceDate TEXT DEFAULT NULL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -82,7 +91,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "bare_budget_offline.db"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

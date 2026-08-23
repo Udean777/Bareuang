@@ -56,7 +56,7 @@ class AllTransactionsViewModel @Inject constructor(
         _selectedWalletId,
         _searchQuery
     ) { args: Array<Any?> ->
-        val all = args[0] as List<Transaction>
+        val all = (args[0] as List<Transaction>).filter { !it.isRecurringParent }
         val wallets = args[1] as List<Wallet>
         val cat = args[2] as? TransactionCategory
         val type = args[3] as? TransactionType

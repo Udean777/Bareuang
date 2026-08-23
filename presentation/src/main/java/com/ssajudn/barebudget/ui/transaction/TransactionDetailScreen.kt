@@ -5,11 +5,11 @@ import com.ssajudn.barebudget.ui.common.UiEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.*
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
@@ -17,12 +17,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ssajudn.barebudget.domain.model.Transaction
 import com.ssajudn.barebudget.domain.model.TransactionType
 import com.ssajudn.barebudget.ui.components.getCategoryIcon
 import com.ssajudn.barebudget.ui.components.AppConfirmDialog
@@ -113,12 +110,16 @@ fun TransactionDetailScreen(
 
                 val isIncome = tx.type == TransactionType.INCOME
                 val isTransfer = tx.type == TransactionType.TRANSFER
+                val isRecurringTemplate = tx.isRecurringParent && tx.recurringInterval != com.ssajudn.barebudget.domain.model.RecurringInterval.NONE
+
                 val amountColor = when {
+                    isRecurringTemplate -> MaterialTheme.colorScheme.onSurface
                     isIncome -> MaterialTheme.colorScheme.primary
                     isTransfer -> MaterialTheme.colorScheme.onSurface
                     else -> MaterialTheme.colorScheme.onSurface
                 }
                 val amountPrefix = when {
+                    isRecurringTemplate -> ""
                     isIncome -> "+"
                     isTransfer -> "⇄ "
                     else -> "-"
@@ -166,7 +167,33 @@ fun TransactionDetailScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            if (isRecurringTemplate) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Surface(
+                                    shape = AppShapes.Pill,
+                                    color = MaterialTheme.colorScheme.secondaryContainer
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Update,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.dashboard_recurring_schedule) + " • " + tx.recurringInterval.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             Text(
                                 text = if (isTransfer) stringResource(R.string.tx_transfer_title) else (tx.merchant?.takeIf { it.isNotBlank() } ?: tx.category.displayName),
@@ -223,10 +250,24 @@ fun TransactionDetailScreen(
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                             DetailRow(label = stringResource(R.string.tx_date), value = DateUtils.formatDisplayDate(tx.date))
-                            
                             if (!isTransfer) {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                 DetailRow(label = stringResource(R.string.tx_merchant), value = tx.merchant?.ifBlank { "-" } ?: "-")
+                            }
+
+                            if (tx.isRecurringParent || tx.recurringInterval != com.ssajudn.barebudget.domain.model.RecurringInterval.NONE) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                DetailRow(
+                                    label = stringResource(R.string.tx_recurring_label),
+                                    value = stringResource(R.string.tx_badge_recurring) + " (${tx.recurringInterval.displayName})"
+                                )
+                                tx.nextOccurrenceDate?.let { nextDate ->
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    DetailRow(
+                                        label = stringResource(R.string.dashboard_recurring_next, ""),
+                                        value = DateUtils.formatDisplayDate(nextDate)
+                                    )
+                                }
                             }
                             
                             if (!tx.notes.isNullOrBlank()) {

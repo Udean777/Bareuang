@@ -27,6 +27,8 @@ class BareBudgetApplication : Application(), Configuration.Provider {
         // Jaring pengaman periodik; pemeriksaan cepat juga dijalankan tiap app dibuka.
         billReminderScheduler.ensureScheduled()
         billReminderScheduler.runNow()
+        com.ssajudn.barebudget.data.service.RecurringTransactionWorker.ensureScheduled(this)
+        com.ssajudn.barebudget.data.service.RecurringTransactionWorker.runNow(this)
         BudgetWidgetWorker.ensureScheduled(this)
 
         // Re-render the widget immediately whenever the privacy toggle changes.

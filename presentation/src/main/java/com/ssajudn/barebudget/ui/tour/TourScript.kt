@@ -31,7 +31,7 @@ object TourScript {
         ),
         TourStep(
             route = Screen.Budget.route,
-            anchorKey = "budget_explainer",
+            anchorKey = "budget_input_amount",
             titleRes = R.string.tour_step3_title,
             descriptionRes = R.string.tour_step3_desc
         ),

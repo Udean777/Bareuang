@@ -65,11 +65,20 @@ fun OnboardingScreen(
             imageRes = R.drawable.img_onboarding_bills
         ),
         OnboardingPageData(
-            title = stringResource(R.string.onboarding_slide4_title),
-            description = stringResource(R.string.onboarding_slide4_desc),
-            imageRes = R.drawable.ic_app_logo
+            title = stringResource(R.string.notif_perm_title),
+            description = stringResource(R.string.notif_perm_desc),
+            imageRes = R.drawable.img_onboarding_notif
         )
     )
+
+    val notifPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        isStarting = true
+        viewModel.startLocalSession {
+            onFinishOnboarding()
+        }
+    }
 
     var currentLang by remember { mutableStateOf(LanguageManager.getCurrentLanguageCode(context)) }
 
@@ -121,10 +130,21 @@ fun OnboardingScreen(
                     .fillMaxWidth()
             ) { pageIndex ->
                 if (pageIndex == pages.size - 1) {
-                    // Final Choice Page (Google Sign In vs Guest Mode)
-                    StartStep(
+                    // Final Notification Permission Step
+                    NotificationStep(
+                        data = pages[pageIndex],
                         isLoading = isStarting,
-                        onStartClick = {
+                        onAllowClick = {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                notifPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                isStarting = true
+                                viewModel.startLocalSession {
+                                    onFinishOnboarding()
+                                }
+                            }
+                        },
+                        onLaterClick = {
                             isStarting = true
                             viewModel.startLocalSession {
                                 onFinishOnboarding()
@@ -293,97 +313,99 @@ fun OnboardingSlide(
 }
 
 @Composable
-fun StartStep(
+fun NotificationStep(
+    data: OnboardingPageData,
     isLoading: Boolean,
-    onStartClick: () -> Unit
+    onAllowClick: () -> Unit,
+    onLaterClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_app_logo),
-            contentDescription = "BareBudget Logo",
+            painter = painterResource(id = data.imageRes),
+            contentDescription = data.title,
             modifier = Modifier
-                .size(76.dp)
+                .size(210.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = stringResource(R.string.onboarding_welcome),
-            style = MaterialTheme.typography.headlineMedium.copy(
+            text = data.title,
+            style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             ),
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = stringResource(R.string.onboarding_guest_desc),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            text = data.description,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceVariant
+        // Action Buttons
+        AppButton(
+            onClick = onAllowClick,
+            enabled = !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = MaterialTheme.shapes.medium
         ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(MaterialTheme.shapes.small)
-                            .background(MaterialTheme.colorScheme.secondaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.PersonOutline,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.NotificationsActive,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                     Text(
-                        text = stringResource(R.string.onboarding_guest_title),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        stringResource(R.string.notif_perm_allow),
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                AppButton(
-                    onClick = onStartClick,
-                    enabled = !isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        Text(stringResource(R.string.onboarding_guest_btn), fontWeight = FontWeight.SemiBold)
-                    }
-                }
             }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AppTextButton(
+            onClick = onLaterClick,
+            enabled = !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+        ) {
+            Text(
+                stringResource(R.string.notif_perm_later),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
         }
     }
 }
