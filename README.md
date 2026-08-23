@@ -57,6 +57,8 @@ BareBudget **100% offline dan privat**: tidak perlu akun, tidak ada server, tida
 
 ### 4. 📋 Pengingat Tagihan, Langganan & Sistem Refund
 * Pantau dan catat semua tagihan rutin (WiFi, Kos, Listrik, Langganan Streaming, PayLater: Shopee, Kredivo, GoPay, atau custom).
+* **Notifikasi Pengingat Jatuh Tempo**: Notifikasi lokal otomatis saat tagihan mendekati jatuh tempo (H-3 s.d. H+ lewat tempo), lengkap dengan ringkasan nominal, penyedia, dan status tenggat (*hari ini*, *besok*, *terlambat N hari*).
+* **Jam Pengingat Fleksibel**: Pilih sendiri waktu harian notifikasi muncul lewat menu Pengaturan (default pukul 12 malam). Pengecekan cepat juga berjalan setiap aplikasi dibuka atau tagihan ditambahkan/dibayar.
 * **Pilihan Penyedia & Ikon Kustom**: Pilihan layanan populer berlogo resmi serta opsi upload ikon sendiri yang tersimpan secara lokal.
 * **Auto-Rollover**: Begitu tagihan ditandai **Lunas (PAID)**, sistem otomatis menjadwalkan ulang tagihan untuk periode berikutnya (*Weekly, Monthly, Yearly*).
 * **Refund Otomatis Saat Batal Bayar**: Jika status tagihan lunas diubah kembali ke **Belum Lunas**, saldo dompet yang terpotong sebelumnya akan langsung dikembalikan (*refund*) dan dicatat sebagai penyesuaian tanpa mengacaukan audit keuangan.
@@ -119,6 +121,7 @@ BareBudget/
 │   │   ├── datasource/remote/  # RemoteDataSource (DTO→domain mapping)
 │   │   ├── local/room/         # Entities, Daos, AppDatabase
 │   │   ├── repository/         # *RepositoryImpl (local-only), DomainMappers
+│   │   ├── notification/       # BillReminderWorker (WorkManager+Hilt), Scheduler, Prefs, NotificationHelper
 │   │   ├── service/            # WalletBalanceService (single writer)
 │   │   └── utils/              # AppConfig (BuildConfig data), DateUtils
 │   └── schemas/                # Room schema history
@@ -145,7 +148,7 @@ BareBudget/
 │       └── BareBudgetApplication.kt # Hilt + HiltWorkerFactory (WorkManager)
 ```
 
-**Teknologi & Utilitas Modern:** Room `withTransaction`, Gson (backup JSON), Hilt, Jetpack Compose Material 3 Expressive, `Channel<UiEffect>`.
+**Teknologi & Utilitas Modern:** Room `withTransaction`, Gson (backup JSON), Hilt, WorkManager + `androidx.hilt` (pengingat tagihan harian), Jetpack Compose Material 3 Expressive, `Channel<UiEffect>`.
 
 ---
 
