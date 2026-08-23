@@ -26,7 +26,7 @@ android {
             storeFile = keystoreProps["storeFile"]?.toString()?.let { path ->
                 // Tolerate a leading '/' meant as "relative to project root".
                 file(path).takeIf { it.exists() } ?: rootProject.file(path.removePrefix("/"))
-            }
+            } ?: System.getenv("KEYSTORE_FILE")?.let { file(it) }
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps["storePassword"] as String?
             keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps["keyAlias"] as String?
             keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps["keyPassword"] as String?

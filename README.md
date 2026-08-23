@@ -191,6 +191,25 @@ Release build memakai **R8 minification** dan ditandatangani dengan keystore yan
 
 > Tanpa `keystore.properties`, build release tetap jalan tapi menghasilkan APK *unsigned* — cocok untuk CI/reviewer.
 
+#### CI/CD: Build, Test & Release Otomatis ke GitHub Releases
+
+| Workflow | Trigger | Hasil |
+|----------|---------|-------|
+| **CI** (`ci.yml`) | PR ke `main`/`dev`, atau push ke `main` | Build debug + seluruh unit test |
+| **Release** (`release.yml`) | Push ke `main` | Test → build APK+AAB signed → update release **prerelease "Latest Build"** (aset `BareBudget-latest.*` di-replace tiap merge) |
+| **Release** (`release.yml`) | Push tag `v*` (mis. `v1.0.0`) | Test → build signed → **GitHub Release stabil** `BareBudget-v1.0.0.*` dengan auto release notes |
+
+Setup sekali saja — tambahkan 4 secret di repo (**Settings → Secrets and variables → Actions**):
+
+| Secret | Isi |
+|--------|-----|
+| `SIGNING_KEYSTORE_BASE64` | Hasil `base64 -i keystores/barebudget-release.keystore` |
+| `KEYSTORE_PASSWORD` | Password keystore |
+| `KEY_ALIAS` | Alias key (mis. `barebudget`) |
+| `KEY_PASSWORD` | Password key |
+
+CI membaca kredensial dari environment variable — `keystore.properties` lokal tidak pernah dibutuhkan di repo.
+
 ### 4. Menjalankan Pengujian & Verifikasi
 
 ```bash
