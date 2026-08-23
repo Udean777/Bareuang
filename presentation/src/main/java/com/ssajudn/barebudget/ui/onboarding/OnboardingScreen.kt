@@ -26,7 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.presentation.R
-import com.ssajudn.barebudget.data.auth.AuthResult
 import com.ssajudn.barebudget.ui.theme.*
 import com.ssajudn.barebudget.utils.LanguageManager
 import kotlinx.coroutines.launch
@@ -41,21 +40,11 @@ data class OnboardingPageData(
 @Composable
 fun OnboardingScreen(
     onFinishOnboarding: () -> Unit,
-    authViewModel: AuthViewModel = hiltViewModel()
+    viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var isGoogleLoading by remember { mutableStateOf(false) }
-    var isGuestLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            errorMessage = null
-        }
-    }
+    var isStarting by remember { mutableStateOf(false) }
 
     val pages = listOf(
         OnboardingPageData(
@@ -86,7 +75,6 @@ fun OnboardingScreen(
     val isLastPage = pagerState.currentPage == pages.size - 1
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
@@ -132,25 +120,11 @@ fun OnboardingScreen(
             ) { pageIndex ->
                 if (pageIndex == pages.size - 1) {
                     // Final Choice Page (Google Sign In vs Guest Mode)
-                    FinalAuthChoiceStep(
-                        isGoogleLoading = isGoogleLoading,
-                        isGuestLoading = isGuestLoading,
-                        onSignInClick = {
-                            isGoogleLoading = true
-                            authViewModel.signInWithGoogle { result ->
-                                isGoogleLoading = false
-                                when (result) {
-                                    is AuthResult.Success -> onFinishOnboarding()
-                                    is AuthResult.Error -> errorMessage = result.message
-                                    is AuthResult.Cancelled -> { /* No-op on user cancel */ }
-                                    AuthResult.Offline -> { /* Snackbar shown by ViewModel */ }
-                                }
-                            }
-                        },
-                        onGuestClick = {
-                            isGuestLoading = true
-                            authViewModel.signInAnonymously {
-                                isGuestLoading = false
+                    StartStep(
+                        isLoading = isStarting,
+                        onStartClick = {
+                            isStarting = true
+                            viewModel.startLocalSession {
                                 onFinishOnboarding()
                             }
                         }
@@ -317,14 +291,10 @@ fun OnboardingSlide(
 }
 
 @Composable
-fun FinalAuthChoiceStep(
-    isGoogleLoading: Boolean,
-    isGuestLoading: Boolean,
-    onSignInClick: () -> Unit,
-    onGuestClick: () -> Unit
+fun StartStep(
+    isLoading: Boolean,
+    onStartClick: () -> Unit
 ) {
-    val anyLoading = isGoogleLoading || isGuestLoading
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -354,83 +324,14 @@ fun FinalAuthChoiceStep(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = stringResource(R.string.onboarding_choose_mode),
+            text = stringResource(R.string.onboarding_guest_desc),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // OPTION 1: SIGN IN (Cloud Persistent via Google)
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-        ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(MaterialTheme.shapes.small)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.CloudDone,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.onboarding_google_title),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(R.string.onboarding_google_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = onSignInClick,
-                    enabled = !anyLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    if (isGoogleLoading) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        Text(stringResource(R.string.onboarding_google_title), fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // OPTION 2: GUEST MODE (Temporary Device Only)
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -462,27 +363,18 @@ fun FinalAuthChoiceStep(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(R.string.onboarding_guest_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
                 Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedButton(
-                    onClick = onGuestClick,
-                    enabled = !anyLoading,
+                Button(
+                    onClick = onStartClick,
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    if (isGuestLoading) {
+                    if (isLoading) {
                         CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
                     } else {

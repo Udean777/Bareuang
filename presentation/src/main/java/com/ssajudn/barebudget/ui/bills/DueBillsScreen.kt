@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +32,6 @@ import com.ssajudn.barebudget.ui.theme.*
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.DateUtils
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import coil.compose.AsyncImage
 import com.ssajudn.barebudget.ui.components.AppDatePickerDialog
 import com.ssajudn.barebudget.ui.components.AppFormDialog
 import com.ssajudn.barebudget.domain.model.RecurringInterval
@@ -641,12 +641,9 @@ fun DueBillItem(
                                     if (id != 0) id else null
                                 }
                             }
-                        } else if (url != null && url.isNotBlank()) {
-                            when {
-                                url.startsWith("/") -> java.io.File(url)
-                                url.startsWith("file://") -> java.io.File(url.removePrefix("file://"))
-                                else -> url
-                            }
+                        } else if (url != null && url.startsWith("/")) {
+                            // Full-offline app: hanya path file lokal yang didukung.
+                            java.io.File(url)
                         } else {
                             when {
                                 bill.providerName.contains("Shopee", ignoreCase = true) -> R.drawable.logo_shopee
@@ -658,13 +655,7 @@ fun DueBillItem(
                     }
 
                     if (iconModel != null) {
-                        AsyncImage(
-                            model = iconModel,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(MaterialTheme.shapes.small)
-                        )
+                        LocalProviderIcon(model = iconModel, size = 28.dp)
                         Spacer(modifier = Modifier.width(10.dp))
                     }
 
@@ -869,18 +860,11 @@ fun DueBillFormDialog(
                                 .clip(MaterialTheme.shapes.extraSmall)
                         )
                     } else if (selectedProvider.isCustom && customProviderIconUrl != null) {
-                        val previewModel: Any = when {
-                            customProviderIconUrl!!.startsWith("/") -> java.io.File(customProviderIconUrl!!)
-                            customProviderIconUrl!!.startsWith("file://") -> java.io.File(customProviderIconUrl!!.removePrefix("file://"))
-                            else -> customProviderIconUrl!!
+                        val previewFile: java.io.File? =
+                            customProviderIconUrl!!.takeIf { it.startsWith("/") }?.let { java.io.File(it) }
+                        if (previewFile != null) {
+                            LocalProviderIcon(model = previewFile, size = 24.dp)
                         }
-                        AsyncImage(
-                            model = previewModel,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(MaterialTheme.shapes.extraSmall)
-                        )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Business,
@@ -1192,4 +1176,34 @@ private fun persistPickedImage(context: android.content.Context, uri: android.ne
         input.close()
         file.absolutePath
     } catch (_: Exception) { null }
+}
+
+
+/**
+ * Renders a local-only provider icon: drawable resource id or a local image
+ * file (from the photo picker). The app is fully offline — no remote URLs.
+ */
+@Composable
+private fun LocalProviderIcon(model: Any, size: androidx.compose.ui.unit.Dp) {
+    when (model) {
+        is Int -> androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = model),
+            contentDescription = null,
+            modifier = Modifier.size(size).clip(MaterialTheme.shapes.small)
+        )
+        is java.io.File -> {
+            val bitmap = remember(model.absolutePath) {
+                runCatching {
+                    android.graphics.BitmapFactory.decodeFile(model.absolutePath)?.asImageBitmap()
+                }.getOrNull()
+            }
+            if (bitmap != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = bitmap,
+                    contentDescription = null,
+                    modifier = Modifier.size(size).clip(MaterialTheme.shapes.small)
+                )
+            }
+        }
+    }
 }

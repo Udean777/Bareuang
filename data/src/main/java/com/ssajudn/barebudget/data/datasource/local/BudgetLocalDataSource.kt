@@ -20,8 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class BudgetLocalDataSource @Inject constructor(
     private val db: AppDatabase,
-    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager? = null,
-    private val outboxScheduler: com.ssajudn.barebudget.data.sync.OutboxScheduler? = null
+    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager? = null
 ) {
 
     @Suppress("DEPRECATION")
@@ -132,9 +131,6 @@ class BudgetLocalDataSource @Inject constructor(
                 }
                 val ownerId = sessionManager?.userId ?: ""
                 db.budgetDao().insertBudget(LocalBudgetEntity(monthYear = my, monthlyLimit = monthlyLimit, isSynced = false, ownerId = ownerId))
-                if (sessionManager != null && !sessionManager.isGuestMode && outboxScheduler != null) {
-                    try { outboxScheduler.enqueue(ownerId, "budget", my, mapOf("monthlyLimit" to monthlyLimit, "monthYear" to my)) } catch (_: Exception) {}
-                }
                 Result.success(true)
             } catch (e: Exception) {
                 if (e is com.ssajudn.barebudget.domain.error.AppException) Result.failure(e)

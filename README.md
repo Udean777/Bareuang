@@ -12,10 +12,8 @@
   [![Kotlin](https://img.shields.io/badge/Kotlin-2.0+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
   [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
   [![Material Design 3](https://img.shields.io/badge/UI-Material%20Design%203-7B1FA2?style=for-the-badge&logo=materialdesign&logoColor=white)](https://m3.material.io/)
-  [![Go Fiber](https://img.shields.io/badge/Backend-Go%20Fiber-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://gofiber.io/)
-  [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
   [![Room DB](https://img.shields.io/badge/Local%20Cache-Room%20SQLite-3DDC84?style=for-the-badge&logo=sqlite&logoColor=white)](https://developer.android.com/training/data-storage/room)
-  [![Firebase Auth](https://img.shields.io/badge/Auth-Firebase%20%26%20Google-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+  [![100% Offline](https://img.shields.io/badge/Privasi-100%25%20Offline-34A853?style=for-the-badge&logo=android&logoColor=white)]
 
 </div>
 
@@ -29,7 +27,7 @@
 
 Antarmuka aplikasi dibangun **100% dengan Material Design 3 (M3)** menggunakan Jetpack Compose, menghadirkan tampilan yang bersih, adaptif, serta mendukung penuh tema dinamis (*Material You*).
 
-Mengusung pendekatan **Offline-First**, BareBudget bisa langsung dipakai tanpa perlu login (**Guest Mode**). Kamu juga bisa menghubungkannya ke **Akun Google** kapan saja untuk sinkronisasi ke cloud tanpa khawatir kehilangan riwayat data transaksi sebelumnya.
+BareBudget **100% offline dan privat**: tidak perlu akun, tidak ada server, tidak ada data yang pernah meninggalkan perangkatmu. Semua transaksi tersimpan lokal di database Room perangkat, dan kamu tetap bisa mengamankannya lewat fitur **Backup & Restore JSON** kapan saja.
 
 ---
 
@@ -96,12 +94,12 @@ Mengusung pendekatan **Offline-First**, BareBudget bisa langsung dipakai tanpa p
 * **Onboarding Berilustrasi 3D**: Alur perkenalan fitur aplikasi yang ramah dan interaktif dengan visual semi-3D.
 * **Panduan Interaktif 7 Langkah (Coach Marks)**: Memandu pengguna baru mengenal alur utama (*atur anggaran → siapkan dompet → catat transaksi → eksplor fitur*). Dilengkapi efek *spotlight*, tooltip penjelasan, indikator langkah, navigasi layar otomatis, serta dukungan bilingual. Bisa diulang kapan saja lewat menu Pengaturan.
 
-### 11. 🔒 Clean Architecture & Sinkronisasi Cloud Offline-First
-* **Multi-module Terisolasi Rapi**: `:domain` murni Kotlin (bebas dependensi Android/Room/Retrofit), `:data` Android library (Room/Retrofit/Firebase/WorkManager), `:presentation` antarmuka Compose & ViewModel (MaterialKolor, Compose Navigation, Hilt), serta `:app` sebagai composition root (`app → presentation → data → domain`).
-* **Pemisahan Model DTO & Domain**: Lapisan DTO diatur terpisah dengan `Gson(LOWER_CASE_WITH_UNDERSCORES)` dan `@SerializedName`, dipetakan via `dto.toDomain()`. Perubahan domain tidak akan merusak kontrak API (diverifikasi via `ApiContractTest` MockWebServer).
-* **Pola Outbox + WorkManager**: Sinkronisasi data lokal ke server menggunakan antrean *Room outbox* yang dieksekusi oleh `@HiltWorker` dan `WorkManager` (berjalan otomatis saat perangkat online dengan strategi exponential backoff).
+### 11. 🔒 Clean Architecture & Privasi Maksimal
+* **100% Offline & Tanpa Server**: Tidak ada backend, tidak ada request jaringan, tidak ada telemetri — seluruh logika berjalan lokal di perangkat. Data keuanganmu mustahil bocor ke pihak mana pun.
+* **Multi-module Terisolasi Rapi**: `:domain` murni Kotlin (bebas dependensi Android/Room), `:data` Android library (Room, Backup JSON), `:presentation` antarmuka Compose & ViewModel (MaterialKolor, Compose Navigation, Hilt), serta `:app` sebagai composition root (`app → presentation → data → domain`).
+* **Mutasi Keuangan Atomik**: Perubahan saldo dompet, pembayaran/refund tagihan, dan deposit target tabungan dijalankan dalam transaksi Room (`withTransaction` + *row locking*) sehingga bebas dari race condition dan data korup.
 * **Manajemen State & UiEffect Bersih**: Komunikasi one-shot event menggunakan `Channel<UiEffect>` (mencegah event terkirim ulang saat layar berotasi) dan proteksi tombol saat operasi sedang berjalan untuk mencegah klik ganda.
-* **Keamanan & Isolasi Data Akun**: Autentikasi API memakai **Firebase ID Token asli** yang diverifikasi signature RS256-nya di backend terhadap sertifikat publik Google, mutasi saldo dompet dilindungi *row-level locking* (`SELECT ... FOR UPDATE`) dari race condition, pembersihan data lokal yang aman saat *sign out*, serta validasi migrasi data dari mode Guest ke akun Google tanpa risiko kehilangan data.
+* **Backup & Restore sebagai "Sign Out"**: Reset data lokal menghapus seluruh tabel Room secara aman dan kembali ke onboarding; backup JSON adalah jalan pintas migrasi antar perangkat.
 
 ---
 
@@ -115,18 +113,15 @@ BareBudget/
 │       ├── repository/         # WalletRepository, TransactionRepository, GoalRepository, DueBillRepository, BudgetRepository
 │       ├── usecase/            # GetDashboardSummary, GetCashflow/NetWorth, PayDueBill
 │       └── error/              # AppException (typed)
-├── data/                       # Android Library — Room, Retrofit, Firebase, WorkManager (→ :domain)
+├── data/                       # Android Library — Room, Backup JSON (→ :domain)
 │   ├── src/main/java/com/ssajudn/barebudget/data/
-│   │   ├── auth/               # AuthManager (Firebase), verifier
 │   │   ├── datasource/local/   # LocalDataSource + withTransaction + ownerId
 │   │   ├── datasource/remote/  # RemoteDataSource (DTO→domain mapping)
-│   │   ├── local/room/         # Entities, Daos, AppDatabase v9 (outbox), OutboxEntity/Dao
-│   │   ├── sync/               # OutboxWorker (@HiltWorker), OutboxScheduler (WorkManager)
-│   │   ├── network/            # ApiClient, ApiService (DTO), dto/ (Wallet/Transaction/Goal/DueBillDto)
-│   │   ├── repository/         # *RepositoryImpl (isGuestMode routing), DomainMappers, MigrationRepositoryImpl
+│   │   ├── local/room/         # Entities, Daos, AppDatabase
+│   │   ├── repository/         # *RepositoryImpl (local-only), DomainMappers
 │   │   ├── service/            # WalletBalanceService (single writer)
 │   │   └── utils/              # AppConfig (BuildConfig data), DateUtils
-│   └── schemas/                # Room schema 8.json, 9.json (outbox)
+│   └── schemas/                # Room schema history
 ├── presentation/               # Android Library — Jetpack Compose UI, ViewModels, Navigation (→ :domain, :data)
 │   └── src/main/java/com/ssajudn/barebudget/
 │       ├── ui/
@@ -148,57 +143,25 @@ BareBudget/
 ├── app/                        # Android Application — Composition Root & Application Entry (→ :presentation)
 │   └── src/main/java/com/ssajudn/barebudget/
 │       └── BareBudgetApplication.kt # Hilt + HiltWorkerFactory (WorkManager)
-└── server/                     # Go + Fiber + GORM + PostgreSQL
-    ├── cmd/api/main.go         # Fiber + AuthMiddlewareWithVerifier + graceful shutdown
-    ├── internal/
-    │   ├── apperr/             # Typed errors (BadRequest/NotFound/Conflict) → mapping status HTTP
-    │   ├── auth/               # TokenVerifier — verifikasi signature RS256 Firebase ID token vs sertifikat publik Google
-    │   ├── config/             # ENV, CORS, IsProduction (fail-fast tanpa DATABASE_URL di produksi)
-    │   ├── database/           # postgres.go AutoMigrate User/Wallet/Transaction/DueBill/Budget/Goal
-    │   ├── handler/            # HTTP Handlers (interface Service consumer-side, error mapping terpusat)
-    │   ├── i18n/               # Pesan runway & notes transaksi bilingual (en/id)
-    │   ├── middleware/         # AuthMiddlewareWithVerifier (Bearer → verified UID), locale
-    │   ├── models/             # GORM entities + typed patch (DueBillPatch/GoalPatch)
-    │   ├── repository/         # Store interface tipis + Transactional (query atomik, row locking)
-    │   └── service/            # Logika bisnis uang (saldo, bayar/refund tagihan, deposit goal)
-    └── go.mod                  # go 1.25, Dockerfile golang:1.25-alpine
 ```
 
-**Teknologi & Utilitas Modern:** Hilt Work (`hilt-work`), WorkManager (`work-runtime-ktx`), MockWebServer (`mockwebserver`), Gson `LOWER_CASE_WITH_UNDERSCORES`, Room `withTransaction`, `Channel<UiEffect>`.
+**Teknologi & Utilitas Modern:** Room `withTransaction`, Gson (backup JSON), Hilt, Jetpack Compose Material 3 Expressive, `Channel<UiEffect>`.
 
 ---
 
 ## 🚀 Panduan Menjalankan Project
 
-### 1. Menjalankan Backend Server (Go + PostgreSQL)
+### 1. Tanpa Backend — 100% Lokal
 
-Pastikan kamu sudah menginstal **Go (versi 1.25 ke atas)** dan **PostgreSQL**.
+BareBudget tidak memerlukan server, API key, atau akun cloud apa pun. Cukup build dan jalankan.
 
-```bash
-# Masuk ke direktori server
-cd server
-
-# Salin contoh konfigurasi environment, lalu isi FIREBASE_PROJECT_ID
-# (Firebase Console → Project Settings → General → Project ID)
-cp .env.example .env
-
-# Jalankan server API (default port: 8080)
-go run cmd/api/main.go
-```
-
-> **Catatan Produksi**: Set `ENV=production` + `DATABASE_URL` (wajib, server *fail-fast* tanpa itu) + `FIREBASE_PROJECT_ID` (wajib — semua token diverifikasi signature-nya; tanpa ini semua request ditolak 401).
-
-> **Tips Docker**: Kamu juga bisa menjalankan instance PostgreSQL secara praktis lewat Docker:
-> ```bash
-> docker run --name barebudget-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=barebudget -p 5432:5432 -d postgres:16-alpine
-> ```
 
 ---
 
 ### 2. Menjalankan Aplikasi Android
 
 1. Buka folder root project di **Android Studio**.
-2. Pastikan file konfigurasi `google-services.json` sudah ditaruh di direktori `app/` untuk kebutuhan Firebase Auth.
+2. Tidak perlu konfigurasi apa pun — tidak ada `google-services.json`, API key, maupun server yang dibutuhkan.
 3. Siapkan emulator Android atau sambungkan perangkat HP langsung.
 4. Tekan tombol **Run 'app'** (`Shift + F10`) atau compile lewat terminal:
 
@@ -231,13 +194,14 @@ Release build memakai **R8 minification** dan ditandatangani dengan keystore yan
 ### 4. Menjalankan Pengujian & Verifikasi
 
 ```bash
-# Unit test domain + data (termasuk ApiContractTest MockWebServer)
-./gradlew :domain:test :data:testDebugUnitTest --tests "*ApiContractTest*"
+# Jalankan seluruh unit test
+./gradlew test
 
 # Verifikasi batasan arsitektur (memastikan :domain tidak mengimpor library Android)
 ./gradlew :domain:check
 
-# Uji coba outbox sync offline: aktifkan mode pesawat → buat transaksi → matikan mode pesawat → amati log WorkManager "outbox_sync"
+# Uji coba mode offline: aktifkan mode pesawat → gunakan aplikasi seperti biasa.
+# Semua fitur tetap berfungsi penuh karena seluruh data berada di Room lokal.
 ```
 
 ---

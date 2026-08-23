@@ -23,8 +23,7 @@ import javax.inject.Singleton
 class TransactionLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager,
-    private val outboxScheduler: com.ssajudn.barebudget.data.sync.OutboxScheduler? = null
+    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager
 ) {
 
     suspend fun getTransactions(category: String?, page: Int, limit: Int): Result<List<Transaction>> =
@@ -64,10 +63,6 @@ class TransactionLocalDataSource @Inject constructor(
                     balanceService.adjustForCreate(request)
                     val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
                     db.transactionDao().insertTransaction(entity)
-                    if (!sessionManager.isGuestMode && outboxScheduler != null) {
-                        val dto = com.ssajudn.barebudget.data.network.dto.CreateTransactionRequestDto(newTx.amount, newTx.type.name, newTx.category.name, newTx.merchant ?: "", newTx.date, newTx.notes ?: "", newTx.receiptUrl, newTx.walletId, newTx.toWalletId)
-                        try { outboxScheduler.enqueue(sessionManager.userId, "transaction", newTx.id!!, dto) } catch (_: Exception) {}
-                    }
                 } } catch (_: Exception) {
                     balanceService.adjustForCreate(request)
                     val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)

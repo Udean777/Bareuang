@@ -2,18 +2,10 @@ package com.ssajudn.barebudget.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.content.Context
-import com.google.firebase.auth.FirebaseUser
-import com.ssajudn.barebudget.data.auth.AuthManager
-import com.ssajudn.barebudget.data.auth.AuthResult
 import com.ssajudn.barebudget.data.local.BackupRestoreManager
 import com.ssajudn.barebudget.data.local.UserSessionManager
-import com.ssajudn.barebudget.domain.repository.MigrationRepository
-import com.ssajudn.barebudget.domain.error.AppException
-import com.ssajudn.barebudget.domain.error.userMessage
-import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.data.local.LocalDataResetter
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,10 +17,7 @@ import com.ssajudn.barebudget.ui.common.UiEffect
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val isGuestMode: Boolean = false,
     val userId: String = "",
-    val userEmail: String = "",
-    val userName: String = "",
     val isLoading: Boolean = false,
     val isSignedOut: Boolean = false,
     val errorMessage: String? = null,
@@ -37,17 +26,14 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    @ApplicationContext private val appContext: Context,
-    private val authManager: AuthManager,
     private val sessionManager: UserSessionManager,
-    private val repository: MigrationRepository,
+    private val dataResetter: LocalDataResetter,
     private val backupManager: BackupRestoreManager
 ) : ViewModel() {
-    private val _operation = kotlinx.coroutines.flow.MutableStateFlow<OperationState>(OperationState.Idle)
-    val operation: kotlinx.coroutines.flow.StateFlow<OperationState> = _operation.asStateFlow()
+    private val _operation = MutableStateFlow<OperationState>(OperationState.Idle)
+    val operation: StateFlow<OperationState> = _operation.asStateFlow()
     private val _effect = Channel<UiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
-
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -57,53 +43,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun loadUserProfile() {
-        val user: FirebaseUser? = authManager.currentUser
-        val isGuest = sessionManager.isGuestMode || (user != null && user.isAnonymous)
-        val name = user?.displayName ?: sessionManager.userName.ifBlank { "User" }
-        val email = user?.email ?: sessionManager.userEmail.ifBlank { "guest@barebudget.app" }
-        val uid = user?.uid ?: sessionManager.userId
-
-        _uiState.value = _uiState.value.copy(
-            isGuestMode = isGuest,
-            userId = uid,
-            userEmail = email,
-            userName = name
-        )
-    }
-
-    fun linkWithGoogle() {
-        viewModelScope.launch {
-            val previousGuestUserId = sessionManager.userId
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            _operation.value = OperationState.Loading
-            when (val result = authManager.signInWithGoogle()) {
-                is AuthResult.Success -> {
-                    if (previousGuestUserId.isNotBlank() && previousGuestUserId != result.user.uid) {
-                        repository.migrateGuestData(previousGuestUserId)
-                    }
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                    loadUserProfile()
-                    _uiState.value = _uiState.value.copy(successMessage = "Successfully connected! All previous transactions were migrated to your Google account.")
-                    _operation.value = OperationState.Success()
-                    _effect.send(UiEffect.ShowSnackbar("Terhubung ke Google"))
-                }
-                is AuthResult.Error -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = result.message)
-                    _operation.value = OperationState.Error(result.message)
-                    _effect.send(UiEffect.ShowSnackbar(result.message))
-                }
-                is AuthResult.Cancelled -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
-                    _operation.value = OperationState.Idle
-                }
-                AuthResult.Offline -> {
-                    val msg = appContext.getString(R.string.auth_offline_message)
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
-                    _operation.value = OperationState.Error(msg)
-                    _effect.send(UiEffect.ShowSnackbar(msg))
-                }
-            }
-        }
+        _uiState.value = _uiState.value.copy(userId = sessionManager.userId)
     }
 
     fun exportBackup(uri: android.net.Uri) {
@@ -145,11 +85,19 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Full-offline app: "sign out" means wiping all local data and returning
+     * to onboarding so a fresh start can be made on this device.
+     */
     fun signOut() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             _operation.value = OperationState.Loading
-            authManager.signOut()
+            try {
+                dataResetter.wipe()
+            } catch (_: Exception) {
+            }
+            sessionManager.clearSession(preserveOnboarding = false)
             _uiState.value = _uiState.value.copy(isLoading = false, isSignedOut = true)
             _operation.value = OperationState.Success()
             _effect.send(UiEffect.Navigate("splash"))

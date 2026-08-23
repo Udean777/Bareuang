@@ -18,8 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class WalletLocalDataSource @Inject constructor(
     private val db: AppDatabase,
-    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager? = null,
-    private val outboxScheduler: com.ssajudn.barebudget.data.sync.OutboxScheduler? = null
+    private val sessionManager: com.ssajudn.barebudget.data.local.UserSessionManager? = null
 ) {
 
     suspend fun getWallets(): Result<List<Wallet>> = withContext(Dispatchers.IO) {
@@ -70,10 +69,6 @@ class WalletLocalDataSource @Inject constructor(
             )
             val ownerId = sessionManager?.userId ?: ""
             db.walletDao().insertWallet(LocalWalletEntity.fromWallet(wallet, isSynced = false).copy(ownerId = ownerId))
-            if (sessionManager != null && !sessionManager.isGuestMode && outboxScheduler != null) {
-                val dto = com.ssajudn.barebudget.data.network.dto.CreateWalletRequestDto(request.name, request.balance, request.colorHex, request.iconName)
-                try { outboxScheduler.enqueue(ownerId, "wallet", wallet.id!!, dto) } catch (_: Exception) {}
-            }
             Result.success(wallet)
         } catch (e: Exception) {
             Result.failure(ApiErrorParser.fromThrowable(e))
