@@ -36,8 +36,13 @@ func LoadConfig() *Config {
 		port = "8080"
 	}
 
+	isProd := strings.EqualFold(env, "production")
+
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
+		if isProd {
+			log.Fatal("DATABASE_URL must be set in production")
+		}
 		dbURL = "host=localhost user=postgres password=postgres dbname=barebudget port=5432 sslmode=disable"
 	}
 
@@ -53,8 +58,6 @@ func LoadConfig() *Config {
 			}
 		}
 	}
-
-	isProd := strings.EqualFold(env, "production")
 
 	return &Config{
 		Port:               port,

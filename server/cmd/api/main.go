@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -19,8 +23,7 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 
-	// Initialize Database
-	db, err := database.Connect(cfg.DatabaseURL)
+	db, err := database.Connect(cfg.DatabaseURL, cfg.IsProduction)
 	if err != nil {
 		log.Fatalf("Could not connect to database: %v", err)
 	}
@@ -42,7 +45,7 @@ func main() {
 	app.Use(recover.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: strings.Join(cfg.CORSAllowedOrigins, ", "),
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-User-Email, Accept-Language",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, Accept-Language",
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 	}))
 	app.Use(middleware.LocaleMiddleware())
@@ -97,5 +100,16 @@ func main() {
 	api.Delete("/goals/:id", h.DeleteGoal)
 
 	log.Printf("Bare Budget server starting on port %s in [%s] mode...", cfg.Port, cfg.Environment)
-	log.Fatal(app.Listen(":" + cfg.Port))
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	go func() {
+		<-ctx.Done()
+		log.Println("shutting down...")
+		_ = app.Shutdown()
+	}()
+
+	if err := app.Listen(":" + cfg.Port); err != nil {
+		log.Fatalf("server error: %v", err)
+	}
 }

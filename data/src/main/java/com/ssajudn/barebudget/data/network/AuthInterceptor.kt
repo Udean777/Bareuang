@@ -1,42 +1,44 @@
 package com.ssajudn.barebudget.data.network
 
-import com.ssajudn.barebudget.data.local.UserSessionManager
+import com.google.firebase.auth.FirebaseAuth
+import com.google.android.gms.tasks.Tasks
 import okhttp3.Interceptor
 import okhttp3.Response
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Adds `Authorization`, `X-User-Email`, and `Accept` headers to every request,
- * reading the current values from [UserSessionManager] on each call so that a
- * login/logout immediately takes effect without mutating any global state.
+ * Attaches a real, cryptographically verified Firebase ID token as the
+ * `Authorization: Bearer` credential on every request.
  *
- * Replaces the old `ApiClient.var authToken` mutable global, which was
- * race-prone and impossible to replace in tests.
+ * - Signed-in user (incl. anonymous guests): token comes from
+ *   [com.google.firebase.auth.FirebaseUser.getIdToken] (cached by the Firebase
+ *   SDK; refreshed automatically when expired).
+ * - No session (offline guest / onboarding): no auth header is sent; the app
+ *   is local-first so requests simply fail gracefully until authenticated.
  */
 @Singleton
 class AuthInterceptor @Inject constructor(
-    private val sessionManager: UserSessionManager
+    private val firebaseAuth: FirebaseAuth
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
-        val token = sessionManager.userId.ifBlank { GUEST_FALLBACK_TOKEN }
-        val email = sessionManager.userEmail
 
-        val request = original.newBuilder()
-            .header("Authorization", "Bearer $token")
-            .header("X-User-Email", email)
-            .header("Accept", "application/json")
-            .build()
+        val user = firebaseAuth.currentUser
+            ?: return chain.proceed(
+                original.newBuilder().header("Accept", "application/json").build()
+            )
 
-        return chain.proceed(request)
+        val token = runCatching {
+            Tasks.await(user.getIdToken(false), 10, TimeUnit.SECONDS).token
+        }.getOrNull()
+
+        val builder = original.newBuilder().header("Accept", "application/json")
+        if (!token.isNullOrBlank()) {
+            builder.header("Authorization", "Bearer $token")
+        }
+        return chain.proceed(builder.build())
     }
 }
-
-// Used only when no session has been started yet (e.g. onboarding).
-// The backend middleware treats any non-empty bearer as a user id in
-// development mode; an empty token would 401 every request before the
-// user even signs in. This is dev-only and documented in AppConfig.
-private const val GUEST_FALLBACK_TOKEN = "dev-user-123"
-

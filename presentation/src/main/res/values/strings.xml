@@ -5,10 +5,6 @@
     <string name="language_english">English</string>
     <string name="language_indonesian">Bahasa Indonesia</string>
     <!-- Translation -->
-    <string name="see_translation">See Translation</string>
-    <string name="see_original">See Original</string>
-    <string name="translating">Translating…</string>
-    <string name="translation_failed">Translation failed</string>
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_bills">Bills</string>
@@ -343,6 +339,8 @@
     <string name="onboarding_welcome">Welcome to Bare Budget</string>
     <string name="onboarding_choose_mode">Select an account mode to proceed</string>
     <string name="onboarding_auth_desc">Sign in to sync your cloud records or continue instantly with a guest profile.</string>
+    <string name="auth_offline_message">You are offline. Connect to the internet to sign in with Google.</string>
+    <string name="auth_guest_offline_message">No internet connection. Guest mode still works offline — your data stays on this device.</string>
     <string name="onboarding_google_title">Sign In with Google</string>
     <string name="onboarding_google_desc">Recommended. All your transaction history, budgets, and bills are backed up securely to the cloud. You won\'t lose your data when reinstalling.</string>
     <string name="onboarding_guest_title">Guest Mode</string>

@@ -5,10 +5,6 @@
     <string name="language_english">English</string>
     <string name="language_indonesian">Bahasa Indonesia</string>
     <!-- Translation -->
-    <string name="see_translation">Lihat Terjemahan</string>
-    <string name="see_original">Lihat Asli</string>
-    <string name="translating">Menerjemahkan…</string>
-    <string name="translation_failed">Gagal menerjemahkan</string>
     <!-- Navigation -->
     <string name="nav_home">Beranda</string>
     <string name="nav_bills">Tagihan</string>
@@ -343,6 +339,8 @@
     <string name="onboarding_welcome">Selamat Datang di Bare Budget</string>
     <string name="onboarding_choose_mode">Pilih mode akun untuk melanjutkan</string>
     <string name="onboarding_auth_desc">Masuk untuk sinkronisasi data cloud atau langsung lanjutkan dengan profil tamu.</string>
+    <string name="auth_offline_message">Kamu sedang tidak terhubung ke internet. Sambungkan dulu ya untuk masuk dengan Google.</string>
+    <string name="auth_guest_offline_message">Tidak ada koneksi internet. Mode tetamu tetap bisa dipakai offline — data kamu tersimpan di perangkat ini.</string>
     <string name="onboarding_google_title">Masuk dengan Google</string>
     <string name="onboarding_google_desc">Direkomendasikan. Semua riwayat transaksi, budget, dan tagihan tersimpan aman di cloud. Data tidak akan hilang saat berganti perangkat.</string>
     <string name="onboarding_guest_title">Mode Tamu</string>

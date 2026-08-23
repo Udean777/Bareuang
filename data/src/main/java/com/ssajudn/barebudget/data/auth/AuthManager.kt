@@ -25,6 +25,9 @@ sealed interface AuthResult {
     data class Success(val user: FirebaseUser) : AuthResult
     data class Error(val message: String) : AuthResult
     object Cancelled : AuthResult
+
+    /** Device has no usable internet connection; caller should show a friendly notice. */
+    object Offline : AuthResult
 }
 
 @Singleton
@@ -42,10 +45,19 @@ class AuthManager @Inject constructor(
     val currentUser: FirebaseUser?
         get() = firebaseAuth.currentUser
 
+    private fun isOnline(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+            ?: return false
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
     /**
      * Google Sign-In using Android Credential Manager (Modern standard)
      */
     suspend fun signInWithGoogle(): AuthResult = withContext(Dispatchers.IO) {
+        if (!isOnline()) return@withContext AuthResult.Offline
         try {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -109,6 +121,11 @@ class AuthManager @Inject constructor(
      * Anonymous Guest Sign-In via Firebase Auth
      */
     suspend fun signInAnonymously(): AuthResult = withContext(Dispatchers.IO) {
+        if (!isOnline()) {
+            // Guest mode is fully usable offline; skip the Firebase round-trip.
+            sessionManager.startGuestSession()
+            return@withContext AuthResult.Offline
+        }
         try {
             val authResult = firebaseAuth.signInAnonymously().await()
             val firebaseUser = authResult.user

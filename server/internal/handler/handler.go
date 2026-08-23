@@ -1,23 +1,74 @@
 package handler
 
 import (
+	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/ssajudn/barebudget-server/internal/apperr"
 	"github.com/ssajudn/barebudget-server/internal/middleware"
 	"github.com/ssajudn/barebudget-server/internal/models"
+	"github.com/ssajudn/barebudget-server/internal/repository"
 	"github.com/ssajudn/barebudget-server/internal/service"
 )
 
-type Handler struct {
-	svc *service.Service
+// Service is defined consumer-side so Handler depends on an abstraction,
+// not the concrete service implementation.
+type Service interface {
+	SyncUser(user *models.User) error
+	MigrateGuestData(guestUserID, targetUserID string) error
+
+	CreateWallet(w *models.Wallet) error
+	GetWallets(userID string) ([]models.Wallet, error)
+	GetWalletByID(userID string, id uuid.UUID) (*models.Wallet, error)
+	UpdateWallet(w *models.Wallet) error
+	DeleteWallet(userID string, id uuid.UUID) error
+
+	CreateTransaction(t *models.Transaction) error
+	GetTransactions(userID string, startDate, endDate time.Time, category string, page, limit int) ([]models.Transaction, int64, error)
+	DeleteTransaction(userID string, id uuid.UUID) error
+
+	CreateDueBill(d *models.DueBill) error
+	GetDueBills(userID string, status string) ([]models.DueBill, error)
+	UpdateDueBill(userID string, id uuid.UUID, patch models.DueBillPatch) error
+	UpdateDueBillStatus(userID string, id uuid.UUID, status models.DueBillStatus, walletID *string, lang string) error
+	DeleteDueBill(userID string, id uuid.UUID) error
+
+	SetBudget(userID string, limit int64, monthYear string) error
+	GetDashboardSummaryWithLang(userID string, now time.Time, lang string) (*service.DashboardSummary, error)
+
+	CreateGoal(g *models.Goal) error
+	GetGoals(userID string) ([]models.Goal, error)
+	DepositToGoal(userID string, id uuid.UUID, walletID string, amount int64, lang string) error
+	UpdateGoal(userID string, id uuid.UUID, patch models.GoalPatch) error
+	DeleteGoal(userID string, id uuid.UUID) error
+
+	GetCashflowAnalytics(userID string) ([]repository.CashflowDataPoint, error)
+	GetNetWorthAnalytics(userID string) ([]repository.NetWorthDataPoint, error)
 }
 
-func NewHandler(svc *service.Service) *Handler {
+type Handler struct {
+	svc Service
+}
+
+func NewHandler(svc Service) *Handler {
 	return &Handler{svc: svc}
+}
+
+func respondError(c *fiber.Ctx, status int, msg string) error {
+	return c.Status(status).JSON(fiber.Map{"error": msg})
+}
+
+// fail maps typed errors to their HTTP status; unexpected errors are logged
+// and returned as a generic 500 to avoid leaking internals.
+func fail(c *fiber.Ctx, err error) error {
+	if status := apperr.Status(err); status != fiber.StatusInternalServerError {
+		return respondError(c, status, err.Error())
+	}
+	log.Printf("internal error: %v", err)
+	return respondError(c, fiber.StatusInternalServerError, "internal server error")
 }
 
 // User Sync Handler
@@ -44,7 +95,7 @@ func (h *Handler) SyncUser(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.SyncUser(user); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "success", "user": user})
@@ -68,7 +119,7 @@ func (h *Handler) MigrateGuestData(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.MigrateGuestData(req.GuestUserID, targetUserID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -121,7 +172,7 @@ func (h *Handler) CreateTransaction(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.CreateTransaction(tx); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(tx)
@@ -147,7 +198,7 @@ func (h *Handler) GetTransactions(c *fiber.Ctx) error {
 
 	list, total, err := h.svc.GetTransactions(userID, startDate, endDate, category, page, limit)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -167,7 +218,7 @@ func (h *Handler) DeleteTransaction(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.DeleteTransaction(userID, id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "deleted"})
@@ -207,7 +258,7 @@ func (h *Handler) CreateDueBill(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.CreateDueBill(d); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(d)
@@ -218,49 +269,40 @@ func (h *Handler) UpdateDueBill(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid bill id"})
+		return respondError(c, fiber.StatusBadRequest, "invalid bill id")
 	}
 
 	var req struct {
-		ProviderName      string                   `json:"provider_name"`
-		ProviderIconURL   string                   `json:"provider_icon_url"`
-		TotalAmount       int64                    `json:"total_amount"`
-		DueDate           string                   `json:"due_date"` // "2006-01-02"
-		IsRecurring       *bool                    `json:"is_recurring"`
-		RecurringInterval models.RecurringInterval `json:"recurring_interval"`
-		Notes             string                   `json:"notes"`
+		ProviderName      *string                   `json:"provider_name"`
+		ProviderIconURL   *string                   `json:"provider_icon_url"`
+		TotalAmount       *int64                    `json:"total_amount"`
+		DueDate           *string                   `json:"due_date"` // "2006-01-02"
+		IsRecurring       *bool                     `json:"is_recurring"`
+		RecurringInterval *models.RecurringInterval `json:"recurring_interval"`
+		Notes             *string                   `json:"notes"`
 	}
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+		return respondError(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	fields := make(map[string]interface{})
-	if req.ProviderName != "" {
-		fields["provider_name"] = req.ProviderName
+	patch := models.DueBillPatch{
+		ProviderName:      req.ProviderName,
+		ProviderIconURL:   req.ProviderIconURL,
+		TotalAmount:       req.TotalAmount,
+		IsRecurring:       req.IsRecurring,
+		RecurringInterval: req.RecurringInterval,
+		Notes:             req.Notes,
 	}
-	fields["provider_icon_url"] = req.ProviderIconURL
-	if req.TotalAmount > 0 {
-		fields["total_amount"] = req.TotalAmount
-	}
-	if req.DueDate != "" {
-		dueDate, err := time.Parse("2006-01-02", req.DueDate)
+	if req.DueDate != nil {
+		dueDate, err := time.Parse("2006-01-02", *req.DueDate)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "due_date format must be YYYY-MM-DD"})
+			return respondError(c, fiber.StatusBadRequest, "due_date format must be YYYY-MM-DD")
 		}
-		fields["due_date"] = dueDate
-	}
-	if req.IsRecurring != nil {
-		fields["is_recurring"] = *req.IsRecurring
-	}
-	fields["recurring_interval"] = req.RecurringInterval
-	fields["notes"] = req.Notes
-
-	if len(fields) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no fields to update"})
+		patch.DueDate = &dueDate
 	}
 
-	if err := h.svc.UpdateDueBill(userID, id, fields); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	if err := h.svc.UpdateDueBill(userID, id, patch); err != nil {
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "updated"})
@@ -272,7 +314,7 @@ func (h *Handler) GetDueBills(c *fiber.Ctx) error {
 
 	list, err := h.svc.GetDueBills(userID, status)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"data": list})
@@ -294,8 +336,8 @@ func (h *Handler) UpdateDueBillStatus(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
 
-	if err := h.svc.UpdateDueBillStatus(userID, id, req.Status, req.WalletID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	if err := h.svc.UpdateDueBillStatus(userID, id, req.Status, req.WalletID, middleware.GetLang(c)); err != nil {
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "updated"})
@@ -310,7 +352,7 @@ func (h *Handler) DeleteDueBill(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.DeleteDueBill(userID, id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "deleted"})
@@ -332,10 +374,7 @@ func (h *Handler) SetBudget(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.SetBudget(userID, req.MonthlyLimit, req.MonthYear); err != nil {
-		if strings.Contains(err.Error(), "already set") {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "budget set successfully"})
@@ -346,7 +385,7 @@ func (h *Handler) GetDashboardSummary(c *fiber.Ctx) error {
 	lang := middleware.GetLang(c)
 	summary, err := h.svc.GetDashboardSummaryWithLang(userID, time.Now(), lang)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(summary)
@@ -385,7 +424,7 @@ func (h *Handler) CreateGoal(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.CreateGoal(&goal); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(goal)
@@ -395,7 +434,7 @@ func (h *Handler) GetGoals(c *fiber.Ctx) error {
 	userID := middleware.GetUserID(c)
 	goals, err := h.svc.GetGoals(userID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"data": goals})
@@ -424,8 +463,8 @@ func (h *Handler) DepositToGoal(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "wallet_id is required"})
 	}
 
-	if err := h.svc.DepositToGoal(userID, id, req.WalletID, req.Amount); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	if err := h.svc.DepositToGoal(userID, id, req.WalletID, req.Amount, middleware.GetLang(c)); err != nil {
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "success", "message": "deposit updated successfully"})
@@ -436,47 +475,36 @@ func (h *Handler) UpdateGoal(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid goal id"})
+		return respondError(c, fiber.StatusBadRequest, "invalid goal id")
 	}
 
 	var req struct {
-		Name         string `json:"name"`
-		TargetAmount int64  `json:"target_amount"`
-		TargetDate   string `json:"target_date"`
-		ColorHex     string `json:"color_hex"`
-		Notes        string `json:"notes"`
+		Name         *string `json:"name"`
+		TargetAmount *int64  `json:"target_amount"`
+		TargetDate   *string `json:"target_date"`
+		ColorHex     *string `json:"color_hex"`
+		Notes        *string `json:"notes"`
 	}
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+		return respondError(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	fields := make(map[string]interface{})
-	if req.Name != "" {
-		fields["name"] = req.Name
+	patch := models.GoalPatch{
+		Name:         req.Name,
+		TargetAmount: req.TargetAmount,
+		ColorHex:     req.ColorHex,
+		Notes:        req.Notes,
 	}
-	if req.TargetAmount > 0 {
-		fields["target_amount"] = req.TargetAmount
-	}
-	if req.TargetDate != "" {
-		if t, err := time.Parse("2006-01-02", req.TargetDate); err == nil {
-			fields["target_date"] = t
-		} else if t, err := time.Parse(time.RFC3339, req.TargetDate); err == nil {
-			fields["target_date"] = t
+	if req.TargetDate != nil {
+		targetDate, err := time.Parse("2006-01-02", *req.TargetDate)
+		if err != nil {
+			return respondError(c, fiber.StatusBadRequest, "target_date format must be YYYY-MM-DD")
 		}
-	}
-	if req.ColorHex != "" {
-		fields["color_hex"] = req.ColorHex
-	}
-	if req.Notes != "" {
-		fields["notes"] = req.Notes
+		patch.TargetDate = &targetDate
 	}
 
-	if len(fields) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no fields to update"})
-	}
-
-	if err := h.svc.UpdateGoal(userID, id, fields); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	if err := h.svc.UpdateGoal(userID, id, patch); err != nil {
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "updated"})
@@ -491,7 +519,7 @@ func (h *Handler) DeleteGoal(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.DeleteGoal(userID, id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 
 	return c.JSON(fiber.Map{"status": "deleted"})
@@ -502,22 +530,41 @@ func (h *Handler) GetWallets(c *fiber.Ctx) error {
 	userID := middleware.GetUserID(c)
 	wallets, err := h.svc.GetWallets(userID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 	return c.JSON(wallets)
 }
 
 func (h *Handler) CreateWallet(c *fiber.Ctx) error {
 	userID := middleware.GetUserID(c)
-	var wallet models.Wallet
-	if err := c.BodyParser(&wallet); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid payload"})
+	var req struct {
+		Name     string `json:"name"`
+		ColorHex string `json:"color_hex"`
+		IconName string `json:"icon_name"`
 	}
-	wallet.UserID = userID
-	if err := h.svc.CreateWallet(&wallet); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	if err := c.BodyParser(&req); err != nil {
+		return respondError(c, fiber.StatusBadRequest, "invalid payload")
 	}
-	return c.JSON(wallet)
+	if req.Name == "" {
+		return respondError(c, fiber.StatusBadRequest, "name is required")
+	}
+	if req.ColorHex == "" {
+		req.ColorHex = "#4E73DF"
+	}
+	if req.IconName == "" {
+		req.IconName = "account_balance_wallet"
+	}
+
+	wallet := &models.Wallet{
+		UserID:   userID,
+		Name:     req.Name,
+		ColorHex: req.ColorHex,
+		IconName: req.IconName,
+	}
+	if err := h.svc.CreateWallet(wallet); err != nil {
+		return fail(c, err)
+	}
+	return c.Status(fiber.StatusCreated).JSON(wallet)
 }
 
 func (h *Handler) UpdateWallet(c *fiber.Ctx) error {
@@ -525,32 +572,29 @@ func (h *Handler) UpdateWallet(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+		return respondError(c, fiber.StatusBadRequest, "invalid uuid")
 	}
 
-	var payload models.Wallet
-	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid payload"})
+	existing, err := h.svc.GetWalletByID(userID, id)
+	if err != nil {
+		return fail(c, err)
 	}
 
-	wallets, _ := h.svc.GetWallets(userID)
-	var existing *models.Wallet
-	for _, w := range wallets {
-		if w.ID == id {
-			existing = &w
-			break
-		}
+	var req struct {
+		Name     string `json:"name"`
+		ColorHex string `json:"color_hex"`
+		IconName string `json:"icon_name"`
 	}
-	if existing == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "wallet not found"})
+	if err := c.BodyParser(&req); err != nil {
+		return respondError(c, fiber.StatusBadRequest, "invalid payload")
 	}
 
-	existing.Name = payload.Name
-	existing.ColorHex = payload.ColorHex
-	existing.IconName = payload.IconName
+	existing.Name = req.Name
+	existing.ColorHex = req.ColorHex
+	existing.IconName = req.IconName
 
 	if err := h.svc.UpdateWallet(existing); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 	return c.JSON(existing)
 }
@@ -564,7 +608,7 @@ func (h *Handler) DeleteWallet(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.DeleteWallet(userID, id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 	return c.JSON(fiber.Map{"success": true})
 }
@@ -574,7 +618,7 @@ func (h *Handler) GetCashflowAnalytics(c *fiber.Ctx) error {
 	userID := middleware.GetUserID(c)
 	data, err := h.svc.GetCashflowAnalytics(userID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 	return c.JSON(fiber.Map{"data": data})
 }
@@ -583,7 +627,7 @@ func (h *Handler) GetNetWorthAnalytics(c *fiber.Ctx) error {
 	userID := middleware.GetUserID(c)
 	data, err := h.svc.GetNetWorthAnalytics(userID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return fail(c, err)
 	}
 	return c.JSON(fiber.Map{"data": data})
 }

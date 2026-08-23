@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,10 +8,30 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Release signing: credentials live in gitignored keystore.properties (local)
+// with KEYSTORE_PASSWORD / KEY_PASSWORD env fallbacks (CI). Missing config
+// degrades gracefully to an unsigned APK instead of failing the build.
+val keystoreProps = Properties()
+rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use {
+    keystoreProps.load(it)
+}
+
 android {
     namespace = "com.ssajudn.barebudget"
     compileSdk {
         version = release(37)
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProps["storeFile"]?.toString()?.let { path ->
+                // Tolerate a leading '/' meant as "relative to project root".
+                file(path).takeIf { it.exists() } ?: rootProject.file(path.removePrefix("/"))
+            }
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps["storePassword"] as String?
+            keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps["keyAlias"] as String?
+            keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps["keyPassword"] as String?
+        }
     }
 
     defaultConfig {
@@ -32,14 +54,19 @@ android {
             )
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             buildConfigField("String", "BASE_URL", "\"https://api.barebudget.app/\"")
             buildConfigField(
                 "String",
                 "WEB_CLIENT_ID",
                 "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\""
             )
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             optimization {
-                enable = false
+                enable = true
             }
         }
     }

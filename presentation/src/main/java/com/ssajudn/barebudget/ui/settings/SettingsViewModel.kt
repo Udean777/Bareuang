@@ -2,6 +2,7 @@ package com.ssajudn.barebudget.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
 import com.google.firebase.auth.FirebaseUser
 import com.ssajudn.barebudget.data.auth.AuthManager
 import com.ssajudn.barebudget.data.auth.AuthResult
@@ -10,7 +11,9 @@ import com.ssajudn.barebudget.data.local.UserSessionManager
 import com.ssajudn.barebudget.domain.repository.MigrationRepository
 import com.ssajudn.barebudget.domain.error.AppException
 import com.ssajudn.barebudget.domain.error.userMessage
+import com.ssajudn.barebudget.presentation.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +37,7 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val authManager: AuthManager,
     private val sessionManager: UserSessionManager,
     private val repository: MigrationRepository,
@@ -91,6 +95,12 @@ class SettingsViewModel @Inject constructor(
                 is AuthResult.Cancelled -> {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     _operation.value = OperationState.Idle
+                }
+                AuthResult.Offline -> {
+                    val msg = appContext.getString(R.string.auth_offline_message)
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
+                    _operation.value = OperationState.Error(msg)
+                    _effect.send(UiEffect.ShowSnackbar(msg))
                 }
             }
         }

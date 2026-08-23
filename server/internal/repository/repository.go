@@ -1,13 +1,54 @@
 package repository
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ssajudn/barebudget-server/internal/apperr"
 	"github.com/ssajudn/barebudget-server/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
+
+// Store is the persistence surface available inside and outside transactions.
+type Store interface {
+	UpsertUser(user *models.User) error
+	MigrateGuestData(guestUserID, targetUserID string) error
+
+	CreateWallet(w *models.Wallet) error
+	GetWalletsByUserID(userID string) ([]models.Wallet, error)
+	GetWalletByID(userID string, id uuid.UUID) (*models.Wallet, error)
+	GetWalletForUpdate(userID, walletID string) (*models.Wallet, error)
+	UpdateWallet(w *models.Wallet) error
+	DeleteWallet(userID string, id uuid.UUID) error
+
+	CreateTransaction(t *models.Transaction) error
+	GetTransactionByID(userID string, id uuid.UUID) (*models.Transaction, error)
+	GetTransactionsByUserID(userID string, startDate, endDate time.Time, category string, limit, offset int) ([]models.Transaction, int64, error)
+	DeleteTransactionByID(userID string, id uuid.UUID) error
+
+	CreateDueBill(d *models.DueBill) error
+	GetDueBillsByUserID(userID string, status string) ([]models.DueBill, error)
+	GetDueBillForUpdate(userID string, id uuid.UUID) (*models.DueBill, error)
+	UpdateDueBill(userID string, id uuid.UUID, patch models.DueBillPatch) error
+	SettleDueBill(userID string, id uuid.UUID, status models.DueBillStatus, paidAt *time.Time, paidWalletID *string) error
+	DeleteDueBill(userID string, id uuid.UUID) error
+
+	CreateGoal(g *models.Goal) error
+	GetGoalsByUserID(userID string) ([]models.Goal, error)
+	GetGoalForUpdate(userID string, id uuid.UUID) (*models.Goal, error)
+	SetGoalCurrentAmount(userID string, id uuid.UUID, amount int64) error
+	UpdateGoal(userID string, id uuid.UUID, patch models.GoalPatch) error
+	DeleteGoal(userID string, id uuid.UUID) error
+
+	GetBudget(userID string, monthYear string) (*models.Budget, error)
+	CreateBudget(b *models.Budget) error
+	GetMonthlySpent(userID string, startOfMonth, endOfMonth time.Time) (int64, error)
+	GetMonthlyCategoryBreakdown(userID string, startOfMonth, endOfMonth time.Time) ([]CategorySummary, error)
+	GetMonthlyCashflow(userID string, monthsCount int) ([]CashflowDataPoint, error)
+	GetMonthlyNetWorthTrend(userID string, monthsCount int) ([]NetWorthDataPoint, error)
+}
 
 type Repository struct {
 	db *gorm.DB
@@ -17,64 +58,79 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
+// Transactional runs fn atomically; the Store passed to fn shares the
+// underlying transaction.
+func (r Repository) Transactional(fn func(Store) error) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		return fn(Repository{db: tx})
+	})
+}
+
+func wrapNotFound(err error, msg string) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return apperr.NotFound(msg)
+	}
+	return err
+}
+
 // User Repo
-func (r *Repository) UpsertUser(user *models.User) error {
+func (r Repository) UpsertUser(user *models.User) error {
 	return r.db.Save(user).Error
 }
 
-func (r *Repository) GetUserByID(id string) (*models.User, error) {
-	var user models.User
-	err := r.db.First(&user, "id = ?", id).Error
-	return &user, err
-}
-
 // Wallet Repo
-func (r *Repository) CreateWallet(w *models.Wallet) error {
+func (r Repository) CreateWallet(w *models.Wallet) error {
 	return r.db.Create(w).Error
 }
 
-func (r *Repository) GetWalletsByUserID(userID string) ([]models.Wallet, error) {
+func (r Repository) GetWalletsByUserID(userID string) ([]models.Wallet, error) {
 	var list []models.Wallet
 	err := r.db.Where("user_id = ?", userID).Order("created_at asc").Find(&list).Error
 	return list, err
 }
 
-func (r *Repository) UpdateWallet(w *models.Wallet) error {
+func (r Repository) GetWalletByID(userID string, id uuid.UUID) (*models.Wallet, error) {
+	var w models.Wallet
+	err := r.db.Where("id = ? AND user_id = ?", id, userID).First(&w).Error
+	if err != nil {
+		return nil, wrapNotFound(err, "wallet not found")
+	}
+	return &w, nil
+}
+
+func (r Repository) GetWalletForUpdate(userID, walletID string) (*models.Wallet, error) {
+	var w models.Wallet
+	err := r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ? AND user_id = ?", walletID, userID).First(&w).Error
+	if err != nil {
+		return nil, wrapNotFound(err, "wallet not found")
+	}
+	return &w, nil
+}
+
+func (r Repository) UpdateWallet(w *models.Wallet) error {
 	return r.db.Save(w).Error
 }
 
-func (r *Repository) DeleteWallet(userID string, id uuid.UUID) error {
+func (r Repository) DeleteWallet(userID string, id uuid.UUID) error {
 	return r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Wallet{}).Error
 }
 
 // Transaction Repo
-func (r *Repository) CreateTransaction(t *models.Transaction) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(t).Error; err != nil {
-			return err
-		}
-
-		if t.WalletID != nil && *t.WalletID != "" {
-			var wallet models.Wallet
-			if err := tx.First(&wallet, "id = ?", *t.WalletID).Error; err != nil {
-				return err
-			}
-
-			if t.Type == models.TypeIncome {
-				wallet.Balance += t.Amount
-			} else if t.Type == models.TypeExpense || t.Type == "" {
-				wallet.Balance -= t.Amount
-			}
-
-			if err := tx.Save(&wallet).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+func (r Repository) CreateTransaction(t *models.Transaction) error {
+	return r.db.Create(t).Error
 }
 
-func (r *Repository) GetTransactionsByUserID(userID string, startDate, endDate time.Time, category string, limit, offset int) ([]models.Transaction, int64, error) {
+func (r Repository) GetTransactionByID(userID string, id uuid.UUID) (*models.Transaction, error) {
+	var t models.Transaction
+	err := r.db.Where("id = ? AND user_id = ?", id, userID).First(&t).Error
+	if err != nil {
+		return nil, wrapNotFound(err, "transaction not found")
+	}
+	return &t, nil
+}
+
+func (r Repository) GetTransactionsByUserID(userID string, startDate, endDate time.Time, category string, limit, offset int) ([]models.Transaction, int64, error) {
 	var list []models.Transaction
 	var total int64
 
@@ -94,38 +150,15 @@ func (r *Repository) GetTransactionsByUserID(userID string, startDate, endDate t
 	return list, total, err
 }
 
-func (r *Repository) DeleteTransaction(userID string, id uuid.UUID) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		var t models.Transaction
-		if err := tx.Where("id = ? AND user_id = ?", id, userID).First(&t).Error; err != nil {
-			return err
-		}
-
-		if t.WalletID != nil && *t.WalletID != "" {
-			var wallet models.Wallet
-			if err := tx.First(&wallet, "id = ?", *t.WalletID).Error; err == nil {
-				if t.Type == models.TypeIncome {
-					wallet.Balance -= t.Amount
-				} else if t.Type == models.TypeExpense || t.Type == "" {
-					wallet.Balance += t.Amount
-				}
-				if err := tx.Save(&wallet).Error; err != nil {
-					return err
-				}
-			}
-		}
-
-		return tx.Delete(&t).Error
-	})
-}
-
-func (r *Repository) GetMonthlySpent(userID string, startOfMonth, endOfMonth time.Time) (int64, error) {
-	var total int64
-	err := r.db.Model(&models.Transaction{}).
-		Where("user_id = ? AND date >= ? AND date <= ? AND (type = ? OR type IS NULL OR type = '') AND category != ?", userID, startOfMonth, endOfMonth, models.TypeExpense, models.CategoryBills).
-		Select("COALESCE(SUM(amount), 0)").
-		Scan(&total).Error
-	return total, err
+func (r Repository) DeleteTransactionByID(userID string, id uuid.UUID) error {
+	res := r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Transaction{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return apperr.NotFound("transaction not found")
+	}
+	return nil
 }
 
 // DueBill Repo
@@ -135,22 +168,11 @@ type CategorySummary struct {
 	Count    int64                      `json:"count"`
 }
 
-func (r *Repository) GetMonthlyCategoryBreakdown(userID string, startOfMonth, endOfMonth time.Time) ([]CategorySummary, error) {
-	var result []CategorySummary
-	err := r.db.Model(&models.Transaction{}).
-		Select("category, COALESCE(SUM(amount), 0) as total, COUNT(id) as count").
-		Where("user_id = ? AND date >= ? AND date <= ?", userID, startOfMonth, endOfMonth).
-		Group("category").
-		Order("total desc").
-		Scan(&result).Error
-	return result, err
-}
-
-func (r *Repository) CreateDueBill(d *models.DueBill) error {
+func (r Repository) CreateDueBill(d *models.DueBill) error {
 	return r.db.Create(d).Error
 }
 
-func (r *Repository) GetDueBillsByUserID(userID string, status string) ([]models.DueBill, error) {
+func (r Repository) GetDueBillsByUserID(userID string, status string) ([]models.DueBill, error) {
 	var list []models.DueBill
 	query := r.db.Where("user_id = ?", userID)
 	if status != "" {
@@ -160,122 +182,46 @@ func (r *Repository) GetDueBillsByUserID(userID string, status string) ([]models
 	return list, err
 }
 
-func (r *Repository) UpdateDueBill(userID string, id uuid.UUID, fields map[string]interface{}) error {
+func (r Repository) GetDueBillForUpdate(userID string, id uuid.UUID) (*models.DueBill, error) {
+	var d models.DueBill
+	err := r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ? AND user_id = ?", id, userID).First(&d).Error
+	if err != nil {
+		return nil, wrapNotFound(err, "bill not found")
+	}
+	return &d, nil
+}
+
+func (r Repository) UpdateDueBill(userID string, id uuid.UUID, patch models.DueBillPatch) error {
+	res := r.db.Model(&models.DueBill{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		Updates(patch)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return apperr.NotFound("bill not found")
+	}
+	return nil
+}
+
+// SettleDueBill writes the settlement columns of a bill in one update.
+func (r Repository) SettleDueBill(userID string, id uuid.UUID, status models.DueBillStatus, paidAt *time.Time, paidWalletID *string) error {
 	return r.db.Model(&models.DueBill{}).
 		Where("id = ? AND user_id = ?", id, userID).
-		Updates(fields).Error
+		Updates(map[string]interface{}{
+			"status":         status,
+			"paid_at":        paidAt,
+			"paid_wallet_id": paidWalletID,
+		}).Error
 }
 
-func (r *Repository) UpdateDueBillStatus(userID string, id uuid.UUID, status models.DueBillStatus, walletID *string) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		var bill models.DueBill
-		if err := tx.Where("id = ? AND user_id = ?", id, userID).First(&bill).Error; err != nil {
-			return err
-		}
-
-		if status == models.DueBillPaid {
-			now := time.Now()
-			updates := map[string]interface{}{
-				"status":         status,
-				"paid_at":        now,
-				"paid_wallet_id": walletID,
-			}
-			if err := tx.Model(&bill).Updates(updates).Error; err != nil {
-				return err
-			}
-
-			if walletID != nil && *walletID != "" {
-				// 1. Create Transaction
-				transaction := models.Transaction{
-					UserID:   userID,
-					Amount:   bill.TotalAmount,
-					Type:     models.TypeExpense,
-					Category: models.CategoryBills,
-					Merchant: bill.ProviderName,
-					Date:     now,
-					Notes:    "Pembayaran tagihan: " + bill.ProviderName,
-					WalletID: walletID,
-				}
-				if err := tx.Create(&transaction).Error; err != nil {
-					return err
-				}
-
-				// 2. Deduct Wallet Balance
-				var wallet models.Wallet
-				if err := tx.First(&wallet, "id = ?", *walletID).Error; err == nil {
-					wallet.Balance -= bill.TotalAmount
-					if err := tx.Save(&wallet).Error; err != nil {
-						return err
-					}
-				}
-			}
-		} else if status == models.DueBillUnpaid {
-			// If canceling payment for a previously paid bill with recorded paid_wallet_id
-			if bill.Status == models.DueBillPaid && bill.PaidWalletID != nil && *bill.PaidWalletID != "" {
-				refundWalletID := *bill.PaidWalletID
-
-				// 1. Refund Wallet Balance
-				var wallet models.Wallet
-				if err := tx.First(&wallet, "id = ?", refundWalletID).Error; err == nil {
-					wallet.Balance += bill.TotalAmount
-					if err := tx.Save(&wallet).Error; err != nil {
-						return err
-					}
-				}
-
-				// 2. Create Refund Income Transaction
-				refundTx := models.Transaction{
-					UserID:   userID,
-					Amount:   bill.TotalAmount,
-					Type:     models.TypeIncome,
-					Category: models.CategoryBills,
-					Merchant: "Refund: " + bill.ProviderName,
-					Date:     time.Now(),
-					Notes:    "Pembatalan pembayaran tagihan " + bill.ProviderName,
-					WalletID: &refundWalletID,
-				}
-				if err := tx.Create(&refundTx).Error; err != nil {
-					return err
-				}
-			}
-
-			// Clear status and paid_wallet_id
-			updates := map[string]interface{}{
-				"status":         status,
-				"paid_at":        nil,
-				"paid_wallet_id": nil,
-			}
-			if err := tx.Model(&bill).Select("status", "paid_at", "paid_wallet_id").Updates(updates).Error; err != nil {
-				return err
-			}
-		} else {
-			if err := tx.Model(&bill).Update("status", status).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-}
-
-func (r *Repository) DeleteDueBill(userID string, id uuid.UUID) error {
+func (r Repository) DeleteDueBill(userID string, id uuid.UUID) error {
 	return r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.DueBill{}).Error
 }
 
 // Budget Repo
-func (r *Repository) UpsertBudget(b *models.Budget) error {
-	var existing models.Budget
-	err := r.db.Where("user_id = ? AND month_year = ?", b.UserID, b.MonthYear).First(&existing).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return r.db.Create(b).Error
-		}
-		return err
-	}
-	return r.db.Model(&existing).Update("monthly_limit", b.MonthlyLimit).Error
-}
-
-func (r *Repository) GetBudget(userID string, monthYear string) (*models.Budget, error) {
+func (r Repository) GetBudget(userID string, monthYear string) (*models.Budget, error) {
 	var b models.Budget
 	err := r.db.Where("user_id = ? AND month_year = ?", userID, monthYear).First(&b).Error
 	if err != nil {
@@ -284,28 +230,29 @@ func (r *Repository) GetBudget(userID string, monthYear string) (*models.Budget,
 	return &b, nil
 }
 
+func (r Repository) CreateBudget(b *models.Budget) error {
+	return r.db.Create(b).Error
+}
+
 // Data Migration (Guest -> Authenticated User)
-func (r *Repository) MigrateGuestData(guestUserID, targetUserID string) error {
+func (r Repository) MigrateGuestData(guestUserID, targetUserID string) error {
 	if guestUserID == "" || targetUserID == "" || guestUserID == targetUserID {
 		return nil
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		// 1. Migrate Transactions
 		if err := tx.Model(&models.Transaction{}).
 			Where("user_id = ?", guestUserID).
 			Update("user_id", targetUserID).Error; err != nil {
 			return err
 		}
 
-		// 2. Migrate Due Bills
 		if err := tx.Model(&models.DueBill{}).
 			Where("user_id = ?", guestUserID).
 			Update("user_id", targetUserID).Error; err != nil {
 			return err
 		}
 
-		// 3. Migrate Budgets (Update existing or rename user_id)
 		var guestBudgets []models.Budget
 		if err := tx.Where("user_id = ?", guestUserID).Find(&guestBudgets).Error; err != nil {
 			return err
@@ -315,21 +262,20 @@ func (r *Repository) MigrateGuestData(guestUserID, targetUserID string) error {
 			var targetBudget models.Budget
 			err := tx.Where("user_id = ? AND month_year = ?", targetUserID, gb.MonthYear).First(&targetBudget).Error
 			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					// Simply reassign user_id
-					if err := tx.Model(&models.Budget{}).Where("id = ?", gb.ID).Update("user_id", targetUserID).Error; err != nil {
-						return err
-					}
-				} else {
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
 					return err
 				}
-			} else {
-				// Target already has a budget for this month, delete guest duplicate or keep target
-				tx.Where("id = ?", gb.ID).Delete(&models.Budget{})
+				if err := tx.Model(&models.Budget{}).Where("id = ?", gb.ID).Update("user_id", targetUserID).Error; err != nil {
+					return err
+				}
+				continue
+			}
+			// Target already has a budget for this month; drop the guest duplicate.
+			if err := tx.Where("id = ?", gb.ID).Delete(&models.Budget{}).Error; err != nil {
+				return err
 			}
 		}
 
-		// 4. Migrate Goals
 		if err := tx.Model(&models.Goal{}).
 			Where("user_id = ?", guestUserID).
 			Update("user_id", targetUserID).Error; err != nil {
@@ -341,102 +287,46 @@ func (r *Repository) MigrateGuestData(guestUserID, targetUserID string) error {
 }
 
 // Goal Repo
-func (r *Repository) CreateGoal(g *models.Goal) error {
+func (r Repository) CreateGoal(g *models.Goal) error {
 	return r.db.Create(g).Error
 }
 
-func (r *Repository) GetGoalsByUserID(userID string) ([]models.Goal, error) {
+func (r Repository) GetGoalsByUserID(userID string) ([]models.Goal, error) {
 	var list []models.Goal
 	err := r.db.Where("user_id = ?", userID).Order("created_at desc").Find(&list).Error
 	return list, err
 }
 
-func (r *Repository) GetGoalByID(userID string, id uuid.UUID) (*models.Goal, error) {
+func (r Repository) GetGoalForUpdate(userID string, id uuid.UUID) (*models.Goal, error) {
 	var g models.Goal
-	err := r.db.Where("id = ? AND user_id = ?", id, userID).First(&g).Error
+	err := r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ? AND user_id = ?", id, userID).First(&g).Error
 	if err != nil {
-		return nil, err
+		return nil, wrapNotFound(err, "goal not found")
 	}
 	return &g, nil
 }
 
-func (r *Repository) DepositToGoal(userID string, id uuid.UUID, walletID string, amount int64) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		var goal models.Goal
-		if err := tx.Where("id = ? AND user_id = ?", id, userID).First(&goal).Error; err != nil {
-			return err
-		}
-
-		newAmount := goal.CurrentAmount + amount
-		if newAmount < 0 {
-			return fmt.Errorf("insufficient goal balance")
-		}
-
-		if err := tx.Model(&goal).Update("current_amount", newAmount).Error; err != nil {
-			return err
-		}
-
-		var wallet models.Wallet
-		if err := tx.Where("id = ? AND user_id = ?", walletID, userID).First(&wallet).Error; err != nil {
-			return fmt.Errorf("wallet not found")
-		}
-
-		now := time.Now()
-		if amount > 0 {
-			// Deposit / Setor (Expense)
-			if wallet.Balance < amount {
-				return fmt.Errorf("insufficient wallet balance")
-			}
-			wallet.Balance -= amount
-			if err := tx.Save(&wallet).Error; err != nil {
-				return err
-			}
-
-			transaction := models.Transaction{
-				UserID:   userID,
-				Amount:   amount,
-				Type:     models.TypeExpense,
-				Category: models.CategoryOther,
-				Merchant: "Tabungan: " + goal.Name,
-				Date:     now,
-				Notes:    "Setor ke tabungan " + goal.Name,
-				WalletID: &walletID,
-			}
-			if err := tx.Create(&transaction).Error; err != nil {
-				return err
-			}
-		} else if amount < 0 {
-			// Withdraw / Tarik (Income)
-			withdrawAmt := -amount
-			wallet.Balance += withdrawAmt
-			if err := tx.Save(&wallet).Error; err != nil {
-				return err
-			}
-
-			transaction := models.Transaction{
-				UserID:   userID,
-				Amount:   withdrawAmt,
-				Type:     models.TypeIncome,
-				Category: models.CategoryOther,
-				Merchant: "Penarikan: " + goal.Name,
-				Date:     now,
-				Notes:    "Penarikan dari tabungan " + goal.Name,
-				WalletID: &walletID,
-			}
-			if err := tx.Create(&transaction).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
+func (r Repository) SetGoalCurrentAmount(userID string, id uuid.UUID, amount int64) error {
+	return r.db.Model(&models.Goal{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		Update("current_amount", amount).Error
 }
 
-func (r *Repository) UpdateGoal(userID string, id uuid.UUID, fields map[string]interface{}) error {
-	return r.db.Model(&models.Goal{}).Where("id = ? AND user_id = ?", id, userID).Updates(fields).Error
+func (r Repository) UpdateGoal(userID string, id uuid.UUID, patch models.GoalPatch) error {
+	res := r.db.Model(&models.Goal{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		Updates(patch)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return apperr.NotFound("goal not found")
+	}
+	return nil
 }
 
-func (r *Repository) DeleteGoal(userID string, id uuid.UUID) error {
+func (r Repository) DeleteGoal(userID string, id uuid.UUID) error {
 	return r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Goal{}).Error
 }
 
@@ -454,43 +344,69 @@ type NetWorthDataPoint struct {
 	NetWorth int64  `json:"net_worth"`
 }
 
-func (r *Repository) GetMonthlyCashflow(userID string, monthsCount int) ([]CashflowDataPoint, error) {
+func (r Repository) GetMonthlySpent(userID string, startOfMonth, endOfMonth time.Time) (int64, error) {
+	var total int64
+	err := r.db.Model(&models.Transaction{}).
+		Where("user_id = ? AND date >= ? AND date <= ? AND (type = ? OR type IS NULL OR type = '') AND category != ?", userID, startOfMonth, endOfMonth, models.TypeExpense, models.CategoryBills).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&total).Error
+	return total, err
+}
+
+func (r Repository) GetMonthlyCategoryBreakdown(userID string, startOfMonth, endOfMonth time.Time) ([]CategorySummary, error) {
+	var result []CategorySummary
+	err := r.db.Model(&models.Transaction{}).
+		Select("category, COALESCE(SUM(amount), 0) as total, COUNT(id) as count").
+		Where("user_id = ? AND date >= ? AND date <= ?", userID, startOfMonth, endOfMonth).
+		Group("category").
+		Order("total desc").
+		Scan(&result).Error
+	return result, err
+}
+
+type monthlyTotals struct {
+	Month   time.Time
+	Income  int64
+	Expense int64
+}
+
+func (r Repository) GetMonthlyCashflow(userID string, monthsCount int) ([]CashflowDataPoint, error) {
 	now := time.Now()
-	var points []CashflowDataPoint
+	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, -(monthsCount - 1), 0)
+	end := start.AddDate(0, monthsCount, 0).Add(-time.Nanosecond)
 
-	for i := monthsCount - 1; i >= 0; i-- {
-		targetMonth := now.AddDate(0, -i, 0)
-		startOfMonth := time.Date(targetMonth.Year(), targetMonth.Month(), 1, 0, 0, 0, 0, time.UTC)
-		endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
-
-		monthKey := startOfMonth.Format("2006-01")
-		label := startOfMonth.Format("Jan")
-
-		var income int64
-		var expense int64
-
-		r.db.Model(&models.Transaction{}).
-			Where("user_id = ? AND date >= ? AND date <= ? AND type = ?", userID, startOfMonth, endOfMonth, models.TypeIncome).
-			Select("COALESCE(SUM(amount), 0)").
-			Scan(&income)
-
-		r.db.Model(&models.Transaction{}).
-			Where("user_id = ? AND date >= ? AND date <= ? AND (type = ? OR type IS NULL OR type = '')", userID, startOfMonth, endOfMonth, models.TypeExpense).
-			Select("COALESCE(SUM(amount), 0)").
-			Scan(&expense)
-
-		points = append(points, CashflowDataPoint{
-			Month:   monthKey,
-			Label:   label,
-			Income:  income,
-			Expense: expense,
-		})
+	var rows []monthlyTotals
+	err := r.db.Model(&models.Transaction{}).
+		Select(`date_trunc('month', date) as month,
+			COALESCE(SUM(CASE WHEN type = ? THEN amount ELSE 0 END), 0) as income,
+			COALESCE(SUM(CASE WHEN type = ? OR type IS NULL OR type = '' THEN amount ELSE 0 END), 0) as expense`,
+			models.TypeIncome, models.TypeExpense).
+		Where("user_id = ? AND date >= ? AND date <= ?", userID, start, end).
+		Group("month").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
 	}
 
+	byMonth := make(map[string]monthlyTotals, len(rows))
+	for _, row := range rows {
+		byMonth[row.Month.Format("2006-01")] = row
+	}
+
+	points := make([]CashflowDataPoint, 0, monthsCount)
+	for i := monthsCount - 1; i >= 0; i-- {
+		t := start.AddDate(0, i, 0)
+		point := CashflowDataPoint{Month: t.Format("2006-01"), Label: t.Format("Jan")}
+		if totals, ok := byMonth[point.Month]; ok {
+			point.Income = totals.Income
+			point.Expense = totals.Expense
+		}
+		points = append(points, point)
+	}
 	return points, nil
 }
 
-func (r *Repository) GetMonthlyNetWorthTrend(userID string, monthsCount int) ([]NetWorthDataPoint, error) {
+func (r Repository) GetMonthlyNetWorthTrend(userID string, monthsCount int) ([]NetWorthDataPoint, error) {
 	wallets, err := r.GetWalletsByUserID(userID)
 	if err != nil {
 		return nil, err

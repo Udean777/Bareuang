@@ -29,7 +29,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.domain.model.Goal
 import com.ssajudn.barebudget.ui.components.AppConfirmDialog
 import com.ssajudn.barebudget.ui.components.AppFormDialog
-import com.ssajudn.barebudget.ui.components.TranslatableUserText
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.ui.theme.*
@@ -609,7 +608,7 @@ fun GoalCard(
                             .background(cardAccentColor)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    TranslatableUserText(
+                    Text(
                         text = goal.name,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
                         color = MaterialTheme.colorScheme.onSurface

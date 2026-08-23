@@ -270,7 +270,6 @@ fun TransactionItem(
     transaction: Transaction,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
-    enableTranslation: Boolean = false,
 ) {
     val category = transaction.category
     val colors = categoryColors
@@ -308,11 +307,7 @@ fun TransactionItem(
             }
         },
         headlineContent = {
-            if (enableTranslation && merchantName != category.displayName) {
-                TranslatableUserText(text = merchantName, style = MaterialTheme.typography.bodyLarge, enabled = true)
-            } else {
-                Text(text = merchantName, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+            Text(text = merchantName, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
             Text(

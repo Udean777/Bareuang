@@ -35,9 +35,8 @@ class UserSessionManager @Inject constructor(
         set(value) = prefs.edit { putBoolean(KEY_IS_GUEST, value) }
 
     /**
-     * The current user id. Read by [com.ssajudn.barebudget.data.network.AuthInterceptor]
-     * on every request, so a login/logout takes effect immediately without
-     * the old `ApiClient.authToken` mutable global.
+     * The current user id, used by repositories and the sync outbox to scope
+     * local data ownership.
      */
     var userId: String
         get() = prefs.getString(KEY_USER_ID, "") ?: ""

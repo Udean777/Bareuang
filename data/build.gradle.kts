@@ -53,8 +53,8 @@ dependencies {
 
     // Translation & Preferences
     implementation(libs.androidx.datastore.preferences)
-    api(libs.google.mlkit.translate)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)
