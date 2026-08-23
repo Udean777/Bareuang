@@ -117,6 +117,7 @@ fun AuthScreen(
                             is AuthResult.Success -> onAuthSuccess()
                             is AuthResult.Error -> errorMessage = result.message
                             is AuthResult.Cancelled -> { /* No-op */ }
+                            AuthResult.Offline -> { /* Snackbar shown by ViewModel */ }
                         }
                     }
                 },

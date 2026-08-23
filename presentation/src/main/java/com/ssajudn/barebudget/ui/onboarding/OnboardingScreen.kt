@@ -143,6 +143,7 @@ fun OnboardingScreen(
                                     is AuthResult.Success -> onFinishOnboarding()
                                     is AuthResult.Error -> errorMessage = result.message
                                     is AuthResult.Cancelled -> { /* No-op on user cancel */ }
+                                    AuthResult.Offline -> { /* Snackbar shown by ViewModel */ }
                                 }
                             }
                         },

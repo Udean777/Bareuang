@@ -15,13 +15,13 @@ import javax.inject.Singleton
  * Previously this was a mutable `object` with `var authToken` — an anti-pattern
  * that made the token a race-prone global and impossible to swap in tests.
  * It is now a `@Singleton` class constructed by [com.ssajudn.barebudget.di.NetworkModule]
- * and receives its auth header via [AuthInterceptor], which reads the current
- * token from [com.ssajudn.barebudget.data.local.UserSessionManager] on every
- * request.
+ * and receives its auth header via [AuthInterceptor], which attaches a verified
+ * Firebase ID token on every request (refreshed on 401 by [TokenAuthenticator]).
  */
 @Singleton
 class ApiClient @Inject constructor(
     private val authInterceptor: AuthInterceptor,
+    private val tokenAuthenticator: TokenAuthenticator,
     private val languageInterceptor: LanguageInterceptor
 ) {
 
@@ -37,6 +37,7 @@ class ApiClient @Inject constructor(
 
     val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
+        .authenticator(tokenAuthenticator)
         .addInterceptor(languageInterceptor)
         .addInterceptor(loggingInterceptor)
         .connectTimeout(15, TimeUnit.SECONDS)

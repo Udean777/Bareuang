@@ -58,6 +58,7 @@ dependencies {
     // User Onboarding Tour & Preferences & Translation
     implementation(libs.compose.showcase)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.appcompat)
     implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

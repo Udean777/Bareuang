@@ -61,3 +61,6 @@ server/barebudget-api
 
 # Google Services
 app/google-services.json
+
+keystores/
+keystore.properties
