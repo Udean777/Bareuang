@@ -37,6 +37,8 @@ import com.ssajudn.barebudget.ui.theme.AppShapes
 import com.ssajudn.barebudget.ui.theme.categoryColors
 import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +77,7 @@ fun AllTransactionsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    AppIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
@@ -394,7 +396,7 @@ fun AllTransactionsScreen(
                                         }
                                     }
 
-                                    Button(
+                                    AppButton(
                                         onClick = {
                                             viewModel.applyFilters(
                                                 category = draftCategory,
@@ -451,7 +453,7 @@ fun AllTransactionsScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = { viewModel.loadTransactions() }) {
+                                AppButton(onClick = { viewModel.loadTransactions() }) {
                                     Text(stringResource(R.string.common_retry))
                                 }
                             }

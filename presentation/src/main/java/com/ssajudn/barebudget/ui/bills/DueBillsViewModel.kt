@@ -2,6 +2,7 @@ package com.ssajudn.barebudget.ui.bills
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssajudn.barebudget.data.notification.BillReminderScheduler
 import com.ssajudn.barebudget.domain.model.CreateDueBillRequest
 import com.ssajudn.barebudget.domain.model.DueBill
 import com.ssajudn.barebudget.domain.model.DueBillStatus
@@ -36,11 +37,12 @@ sealed interface DueBillsUiState {
 @HiltViewModel
 class DueBillsViewModel @Inject constructor(
     private val repository: DueBillRepository,
-    private val walletRepository: WalletRepository
+    private val walletRepository: WalletRepository,
+    private val reminderScheduler: BillReminderScheduler
 ) : ViewModel() {
 
-    private val _selectedStatus = MutableStateFlow<DueBillStatus?>(null)
-    val selectedStatus: StateFlow<DueBillStatus?> = _selectedStatus.asStateFlow()
+    private val _selectedStatus = MutableStateFlow(DueBillStatus.UNPAID)
+    val selectedStatus: StateFlow<DueBillStatus> = _selectedStatus.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -63,7 +65,7 @@ class DueBillsViewModel @Inject constructor(
         _selectedStatus,
         _searchQuery
     ) { bills, status, query ->
-        var filtered = if (status == null) bills else bills.filter { it.status == status }
+        var filtered = bills.filter { it.status == status }
         if (query.isNotBlank()) {
             filtered = filtered.filter { bill ->
                 bill.providerName.contains(query, ignoreCase = true) ||
@@ -83,7 +85,7 @@ class DueBillsViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    fun setFilterStatus(status: DueBillStatus?) {
+    fun setFilterStatus(status: DueBillStatus) {
         _selectedStatus.value = status
     }
 
@@ -95,7 +97,7 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             walletRepository.getWallets()
-            repository.getDueBills(_selectedStatus.value?.name)
+            repository.getDueBills(_selectedStatus.value.name)
             _isRefreshing.value = false
         }
     }
@@ -105,7 +107,10 @@ class DueBillsViewModel @Inject constructor(
             _operation.value = OperationState.Loading
             val r = repository.createDueBill(CreateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            if (r.isSuccess) {
+                reminderScheduler.runNow()
+                _effect.send(UiEffect.PopBackStack)
+            } else _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
         }
     }
 
@@ -114,7 +119,7 @@ class DueBillsViewModel @Inject constructor(
             _operation.value = OperationState.Loading
             val r = repository.updateDueBill(id, UpdateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal")) else reminderScheduler.runNow()
         }
     }
 
@@ -126,10 +131,10 @@ class DueBillsViewModel @Inject constructor(
                 val result = repository.updateDueBillStatus(bid, DueBillStatus.PAID, walletId)
                 if (result.isSuccess && bill.isRecurring && bill.recurringInterval != RecurringInterval.NONE) {
                     val nextDueDate = DateUtils.calculateNextDueDate(bill.dueDate, bill.recurringInterval.name)
-                    repository.createDueBill(CreateDueBillRequest(bill.providerName, totalAmount = bill.totalAmount, dueDate = nextDueDate, isRecurring = true, recurringInterval = bill.recurringInterval, notes = bill.notes ?: ""))
+                    repository.createDueBill(CreateDueBillRequest(bill.providerName, providerIconUrl = bill.providerIconUrl, totalAmount = bill.totalAmount, dueDate = nextDueDate, isRecurring = true, recurringInterval = bill.recurringInterval, notes = bill.notes ?: ""))
                 }
                 _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error(result.exceptionOrNull()?.message ?: "Gagal bayar")
-                if (result.isFailure) _effect.send(UiEffect.ShowSnackbar(result.exceptionOrNull()?.message ?: "Gagal bayar"))
+                if (result.isFailure) _effect.send(UiEffect.ShowSnackbar(result.exceptionOrNull()?.message ?: "Gagal bayar")) else reminderScheduler.runNow()
             }
         }
     }
@@ -139,7 +144,7 @@ class DueBillsViewModel @Inject constructor(
             val bid = bill.id
             if (bid != null) {
                 val r = repository.updateDueBillStatus(bid, DueBillStatus.UNPAID)
-                if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+                if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal")) else reminderScheduler.runNow()
             }
         }
     }
@@ -150,6 +155,9 @@ class DueBillsViewModel @Inject constructor(
     }
 
     fun deleteBill(id: String) {
-        viewModelScope.launch { repository.deleteDueBill(id) }
+        viewModelScope.launch {
+            repository.deleteDueBill(id)
+            reminderScheduler.runNow()
+        }
     }
 }

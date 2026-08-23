@@ -1,5 +1,7 @@
 package com.ssajudn.barebudget.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -8,6 +10,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,20 +35,33 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.max
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -106,6 +122,12 @@ fun FinancialRunwayCard(
         label = "runwayProgress",
     )
 
+    // Count-up money display — animates from the previous value to the new one
+    val countUp = remember { Animatable(0f) }
+    LaunchedEffect(remainingBudget) {
+        countUp.animateTo(remainingBudget.toFloat(), tween(900, easing = FastOutSlowInEasing))
+    }
+
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
@@ -120,7 +142,36 @@ fun FinancialRunwayCard(
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        // Aurora sheen — a soft light band sweeping across the hero card forever
+        val aurora = rememberInfiniteTransition(label = "aurora")
+        val sweep by aurora.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(7000, easing = androidx.compose.animation.core.LinearEasing)),
+            label = "auroraSweep",
+        )
+        Box {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawBehind {
+                        val angle = sweep * 2f * PI.toFloat()
+                        val radius = max(size.width, size.height)
+                        val dir = Offset(cos(angle), sin(angle))
+                        drawRect(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    accentColor.copy(alpha = 0.16f),
+                                    Color.Transparent,
+                                ),
+                                start = size.center - dir * radius,
+                                end = size.center + dir * radius,
+                            )
+                        )
+                    }
+            )
+            Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -155,7 +206,7 @@ fun FinancialRunwayCard(
                     )
                 }
 
-                FilledTonalButton(
+                AppFilledTonalButton(
                     onClick = onSetBudgetClick,
                     shape = AppShapes.Pill,
                     colors = ButtonDefaults.filledTonalButtonColors(
@@ -179,7 +230,7 @@ fun FinancialRunwayCard(
 
             // Main remaining runway budget display using dedicated money typography
             Text(
-                text = CurrencyFormatter.formatRupiah(remainingBudget),
+                text = CurrencyFormatter.formatRupiah(countUp.value.toLong()),
                 style = MoneyHeadlineStyle.copy(fontSize = 32.sp),
             )
 
@@ -253,6 +304,7 @@ fun FinancialRunwayCard(
                     )
                 }
             }
+            }
         }
     }
 }
@@ -282,11 +334,17 @@ fun TransactionItem(
         TransactionType.EXPENSE -> "-" to MaterialTheme.colorScheme.onSurface
     }
 
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+
     ListItem(
-        modifier = modifier.clickable(
-            onClickLabel = stringResource(R.string.runway_view_detail, merchantName),
-            onClick = onClick,
-        ),
+        modifier = modifier
+            .pressScale(interactionSource, pressedScale = 0.98f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClickLabel = stringResource(R.string.runway_view_detail, merchantName),
+                onClick = onClick,
+            ),
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
@@ -307,7 +365,32 @@ fun TransactionItem(
             }
         },
         headlineContent = {
-            Text(text = merchantName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = merchantName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (transaction.isRecurringParent || transaction.recurringInterval != com.ssajudn.barebudget.domain.model.RecurringInterval.NONE || transaction.parentRecurringId != null) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        shape = AppShapes.Pill,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.tx_badge_recurring),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         },
         supportingContent = {
             Text(
@@ -328,6 +411,95 @@ fun TransactionItem(
                 color = trailingColor
             )
         },
+    )
+}
+
+/**
+ * Dedicated UI item for scheduled recurring transactions.
+ * Shows neutral amount without +/- signs, cycle info, and next scheduled date.
+ */
+@Composable
+fun RecurringTransactionItem(
+    transaction: Transaction,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    val category = transaction.category
+    val colors = categoryColors
+    val merchantName = transaction.merchant?.takeIf { it.isNotBlank() } ?: category.displayName
+    val amountText = CurrencyFormatter.formatRupiah(transaction.amount)
+    val nextDate = transaction.nextOccurrenceDate ?: transaction.date
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+
+    ListItem(
+        modifier = modifier
+            .pressScale(interactionSource, pressedScale = 0.98f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.foundation.LocalIndication.current,
+                onClick = onClick
+            ),
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(CategoryIconContainerSize)
+                    .clip(AppShapes.Squircle)
+                    .background(colors.container(category)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getCategoryIcon(category),
+                    contentDescription = null,
+                    tint = colors.onContainer(category),
+                    modifier = Modifier.size(CategoryIconSize)
+                )
+            }
+        },
+        headlineContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = merchantName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Surface(
+                    shape = AppShapes.Pill,
+                    color = MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Text(
+                        text = transaction.recurringInterval.displayName,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        },
+        supportingContent = {
+            Text(
+                text = stringResource(R.string.dashboard_recurring_next, DateUtils.formatDisplayDate(nextDate)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        trailingContent = {
+            Text(
+                text = amountText,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     )
 }
 
@@ -381,6 +553,127 @@ fun AppDatePickerDialog(
         }
     ) {
         androidx.compose.material3.DatePicker(state = datePickerState)
+    }
+}
+
+data class SpeedDialItem(
+    val label: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit,
+    val containerColor: Color? = null,
+    val contentColor: Color? = null
+)
+
+@Composable
+fun AppSpeedDialFab(
+    items: List<SpeedDialItem>,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val rotation by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isExpanded) 135f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "fab_rotation"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = modifier
+    ) {
+        // Sub-items
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isExpanded,
+            enter = androidx.compose.animation.fadeIn(animationSpec = tween(180)) +
+                    androidx.compose.animation.scaleIn(
+                        initialScale = 0.6f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)
+                    ) +
+                    androidx.compose.animation.slideInVertically(
+                        initialOffsetY = { it / 2 },
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                    ),
+            exit = androidx.compose.animation.fadeOut(animationSpec = tween(120)) +
+                    androidx.compose.animation.scaleOut(targetScale = 0.6f, animationSpec = tween(120)) +
+                    androidx.compose.animation.slideOutVertically(
+                        targetOffsetY = { it / 2 },
+                        animationSpec = tween(120)
+                    )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items.forEach { item ->
+                    val subInteraction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = subInteraction,
+                                indication = null
+                            ) {
+                                onExpandedChange(false)
+                                item.onClick()
+                            }
+                    ) {
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            tonalElevation = 3.dp,
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.padding(end = 10.dp)
+                        ) {
+                            Text(
+                                text = item.label,
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        SmallFloatingActionButton(
+                            onClick = {
+                                onExpandedChange(false)
+                                item.onClick()
+                            },
+                            interactionSource = subInteraction,
+                            containerColor = item.containerColor ?: MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = item.contentColor ?: MaterialTheme.colorScheme.primary,
+                            shape = CircleShape,
+                            modifier = Modifier.pressScale(subInteraction, pressedScale = 0.88f)
+                        ) {
+                            Icon(item.icon, contentDescription = item.label, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Main FAB
+        val mainInteraction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+        FloatingActionButton(
+            onClick = { onExpandedChange(!isExpanded) },
+            interactionSource = mainInteraction,
+            shape = CircleShape,
+            containerColor = if (isExpanded) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.primary,
+            contentColor = if (isExpanded) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier
+                .pressScale(mainInteraction, pressedScale = 0.90f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = if (isExpanded) "Tutup" else "Menu Aksi",
+                modifier = Modifier
+                    .size(26.dp)
+                    .rotate(rotation)
+            )
+        }
     }
 }
 

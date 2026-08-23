@@ -90,6 +90,13 @@ class DueBillLocalDataSource @Inject constructor(
                     val bill = db.dueBillDao().getDueBillById(id)
                     var newPaidWalletId: String? = bill?.paidWalletId
                     if (status == DueBillStatus.PAID && walletId != null) {
+                        if (bill != null) {
+                            val wallet = db.walletDao().getWalletById(walletId)
+                                ?: throw IllegalArgumentException("Dompet tidak ditemukan")
+                            if (wallet.balance < bill.totalAmount) {
+                                throw IllegalStateException("Saldo dompet tidak cukup. Saldo: ${wallet.balance}, tagihan: ${bill.totalAmount}")
+                            }
+                        }
                         newPaidWalletId = walletId
                         if (bill != null) {
                             val newTx = Transaction(id = UUID.randomUUID().toString(), amount = bill.totalAmount, type = TransactionType.EXPENSE, category = TransactionCategory.BILLS, merchant = bill.providerName, date = DateUtils.getCurrentDateISO(), notes = "Pembayaran tagihan: ${bill.providerName}", walletId = walletId)

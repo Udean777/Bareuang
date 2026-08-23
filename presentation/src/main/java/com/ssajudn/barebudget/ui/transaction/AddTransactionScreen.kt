@@ -36,8 +36,11 @@ import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 import com.ssajudn.barebudget.utils.DateUtils
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.AppTextButton
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTransactionScreen(
     onNavigateBack: () -> Unit,
@@ -77,7 +80,7 @@ fun AddTransactionScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    AppIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
@@ -89,9 +92,11 @@ fun AddTransactionScreen(
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.background,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
             ) {
-                Button(
+                AppButton(
                     onClick = { viewModel.saveTransaction() },
                     enabled = !uiState.isLoading && uiState.parsedAmount > 0 && !isOperationLoading,
                     modifier = Modifier
@@ -148,7 +153,7 @@ fun AddTransactionScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.weight(1f)
                         )
-                        TextButton(onClick = onNavigateToBudget) {
+                        AppTextButton(onClick = onNavigateToBudget) {
                             Text(stringResource(R.string.tx_budget_set_action), fontWeight = FontWeight.Bold)
                         }
                     }
@@ -202,7 +207,21 @@ fun AddTransactionScreen(
                         ) {
                             uiState.wallets.forEach { wallet ->
                                 DropdownMenuItem(
-                                    text = { Text(wallet.name) },
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(wallet.name, fontWeight = FontWeight.SemiBold)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                CurrencyFormatter.formatRupiah(wallet.balance),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    },
                                     onClick = {
                                         viewModel.onWalletChange(wallet.id!!)
                                         fromWalletExpanded = false
@@ -214,7 +233,7 @@ fun AddTransactionScreen(
 
                     // Destination Wallet (Ke)
                     var toWalletExpanded by remember { mutableStateOf(false) }
-                    val selectedToWalletName = uiState.wallets.find { it.id == uiState.selectedToWalletId }?.name ?: stringResource(R.string.common_add)
+                    val selectedToWalletName = uiState.wallets.find { it.id == uiState.selectedToWalletId }?.let { "${it.name} (${CurrencyFormatter.formatRupiah(it.balance)})" } ?: stringResource(R.string.common_add)
                     ExposedDropdownMenuBox(
                         expanded = toWalletExpanded,
                         onExpandedChange = { toWalletExpanded = !toWalletExpanded },
@@ -235,7 +254,21 @@ fun AddTransactionScreen(
                         ) {
                             uiState.wallets.forEach { wallet ->
                                 DropdownMenuItem(
-                                    text = { Text(wallet.name) },
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(wallet.name, fontWeight = FontWeight.SemiBold)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                CurrencyFormatter.formatRupiah(wallet.balance),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    },
                                     onClick = {
                                         viewModel.onToWalletChange(wallet.id!!)
                                         toWalletExpanded = false
@@ -252,7 +285,7 @@ fun AddTransactionScreen(
                     onExpandedChange = { walletDropdownExpanded = !walletDropdownExpanded },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val selectedWalletName = uiState.wallets.find { it.id == uiState.selectedWalletId }?.name ?: stringResource(R.string.tx_choose_wallet)
+                    val selectedWalletName = uiState.wallets.find { it.id == uiState.selectedWalletId }?.let { "${it.name} (${CurrencyFormatter.formatRupiah(it.balance)})" } ?: stringResource(R.string.tx_choose_wallet)
                     OutlinedTextField(
                         value = selectedWalletName,
                         onValueChange = {},
@@ -268,7 +301,21 @@ fun AddTransactionScreen(
                     ) {
                         uiState.wallets.forEach { wallet ->
                             DropdownMenuItem(
-                                text = { Text(wallet.name) },
+                                text = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(wallet.name, fontWeight = FontWeight.SemiBold)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            CurrencyFormatter.formatRupiah(wallet.balance),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
                                 onClick = {
                                     viewModel.onWalletChange(wallet.id!!)
                                     walletDropdownExpanded = false
@@ -404,13 +451,19 @@ fun AddTransactionScreen(
                         items(filteredCats) { category ->
                             val isSelected = category == uiState.selectedCategory
                             val catColors = categoryColors
+                            val catBudget = uiState.categoryBudgets.find { it.category == category }
 
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { viewModel.onCategoryChange(category) },
                                 label = {
+                                    val labelText = if (catBudget != null && catBudget.limitAmount > 0) {
+                                        "${category.displayName} (${CurrencyFormatter.formatCompact(catBudget.remainingAmount)})"
+                                    } else {
+                                        category.displayName
+                                    }
                                     Text(
-                                        text = category.displayName,
+                                        text = labelText,
                                         style = MaterialTheme.typography.labelMedium.copy(
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )
@@ -508,6 +561,143 @@ fun AddTransactionScreen(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            // 4.5. RECURRING TRANSACTION SECTION (Hanya untuk Income & Expense)
+            if (uiState.transactionType != TransactionType.TRANSFER) {
+                Surface(
+                    shape = AppShapes.Squircle,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .crispBorder(
+                            shape = AppShapes.Squircle,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.tx_recurring_label),
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.tx_recurring_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(
+                                checked = uiState.isRecurring,
+                                onCheckedChange = { viewModel.onRecurringChange(it) }
+                            )
+                        }
+
+                        if (uiState.isRecurring) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = stringResource(R.string.tx_recurring_interval),
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val intervals = listOf(
+                                    com.ssajudn.barebudget.domain.model.RecurringInterval.WEEKLY to stringResource(R.string.tx_recurring_weekly),
+                                    com.ssajudn.barebudget.domain.model.RecurringInterval.MONTHLY to stringResource(R.string.tx_recurring_monthly),
+                                    com.ssajudn.barebudget.domain.model.RecurringInterval.YEARLY to stringResource(R.string.tx_recurring_yearly)
+                                )
+                                intervals.forEach { (interval, label) ->
+                                    val isSelected = uiState.recurringInterval == interval
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { viewModel.onRecurringIntervalChange(interval) },
+                                        label = {
+                                            Text(
+                                                text = label,
+                                                style = MaterialTheme.typography.labelMedium.copy(
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                                )
+                                            )
+                                        },
+                                        shape = AppShapes.Pill
+                                    )
+                                }
+                            }
+
+                            // Day of week selector when WEEKLY is selected
+                            if (uiState.recurringInterval == com.ssajudn.barebudget.domain.model.RecurringInterval.WEEKLY) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = stringResource(R.string.tx_recurring_on_day),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                val days = listOf(
+                                    1 to stringResource(R.string.day_mon),
+                                    2 to stringResource(R.string.day_tue),
+                                    3 to stringResource(R.string.day_wed),
+                                    4 to stringResource(R.string.day_thu),
+                                    5 to stringResource(R.string.day_fri),
+                                    6 to stringResource(R.string.day_sat),
+                                    7 to stringResource(R.string.day_sun)
+                                )
+                                val currentDayOfWeek = DateUtils.getDayOfWeek(uiState.date)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    days.forEach { (dayIso, dayName) ->
+                                        val isCurrentDay = currentDayOfWeek == dayIso
+                                        Surface(
+                                            shape = AppShapes.Pill,
+                                            color = if (isCurrentDay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable {
+                                                    val nextDate = DateUtils.calculateNextWeeklyDay(uiState.date, dayIso)
+                                                    viewModel.onDateChange(nextDate)
+                                                }
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.padding(vertical = 8.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = dayName,
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontWeight = if (isCurrentDay) FontWeight.Bold else FontWeight.Medium
+                                                    ),
+                                                    color = if (isCurrentDay) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if (uiState.recurringInterval == com.ssajudn.barebudget.domain.model.RecurringInterval.MONTHLY) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                val dayOfMonth = DateUtils.getDayOfMonth(uiState.date)
+                                Text(
+                                    text = stringResource(R.string.tx_recurring_on_date, dayOfMonth),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             if (uiState.errorMessage != null) {

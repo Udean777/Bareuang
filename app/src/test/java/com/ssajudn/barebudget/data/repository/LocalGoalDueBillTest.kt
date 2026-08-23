@@ -35,7 +35,7 @@ private class FakeWalletDao2 : WalletDao {
     override fun observeWalletsByOwner(ownerId: String): Flow<List<LocalWalletEntity>> = flowOf(getWalletsByOwner(ownerId))
     override fun observeAllWallets(): Flow<List<LocalWalletEntity>> = flowOf(getAllWallets())
     override fun getFirstWallet(): LocalWalletEntity? = null
-    override fun getWalletById(id: String): LocalWalletEntity? = null
+    override fun getWalletById(id: String): LocalWalletEntity? = getAllWallets().firstOrNull { it.id == id }
     override fun insertWallet(wallet: LocalWalletEntity) { balances[wallet.id] = wallet.balance }
     override fun insertWallets(wallets: List<LocalWalletEntity>) { wallets.forEach { balances[it.id] = it.balance } }
     override fun updateBalance(id: String, amount: Long) { balances[id] = (balances[id] ?: 0L) + amount }
@@ -84,6 +84,14 @@ private class FakeTxDao2 : TransactionDao {
     override fun getTransactionById(id: String): LocalTransactionEntity? = txs.find { it.id == id }
     override fun insertTransaction(transaction: LocalTransactionEntity) { txs.add(transaction) }
     override fun insertTransactions(transactions: List<LocalTransactionEntity>) { txs.addAll(transactions) }
+    override fun getRecurringTemplates(): List<LocalTransactionEntity> = txs.filter { it.isRecurringParent }
+    override fun getRecurringTemplatesByOwner(ownerId: String): List<LocalTransactionEntity> = getRecurringTemplates()
+    override fun updateNextOccurrence(id: String, nextDate: String) {
+        val index = txs.indexOfFirst { it.id == id }
+        if (index != -1) {
+            txs[index] = txs[index].copy(nextOccurrenceDate = nextDate)
+        }
+    }
     override fun deleteTransaction(id: String) { txs.removeIf { it.id == id } }
     override fun clearAll() { txs.clear() }
 }
@@ -95,6 +103,12 @@ private class FakeBudgetDao2 : BudgetDao {
     override fun insertBudget(budget: LocalBudgetEntity) {}
     override fun insertBudgets(budgets: List<LocalBudgetEntity>) {}
     override fun clearAll() {}
+    override fun getCategoryBudgets(monthYear: String): List<com.ssajudn.barebudget.data.local.room.LocalCategoryBudgetEntity> = emptyList()
+    override fun observeCategoryBudgets(monthYear: String): Flow<List<com.ssajudn.barebudget.data.local.room.LocalCategoryBudgetEntity>> = flowOf(emptyList())
+    override fun insertCategoryBudget(categoryBudget: com.ssajudn.barebudget.data.local.room.LocalCategoryBudgetEntity) {}
+    override fun insertCategoryBudgets(categoryBudgets: List<com.ssajudn.barebudget.data.local.room.LocalCategoryBudgetEntity>) {}
+    override fun deleteCategoryBudget(monthYear: String, category: String) {}
+    override fun clearAllCategoryBudgets() {}
 }
 
 private fun fakeDb(

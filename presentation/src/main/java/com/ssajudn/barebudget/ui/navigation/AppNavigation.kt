@@ -19,6 +19,8 @@ import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Payments
@@ -27,6 +29,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -38,6 +42,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ssajudn.barebudget.ui.analytics.AnalyticsScreen
 import com.ssajudn.barebudget.ui.bills.DueBillsScreen
+import com.ssajudn.barebudget.ui.goals.GoalsScreen
+import com.ssajudn.barebudget.ui.components.AppSpeedDialFab
+import com.ssajudn.barebudget.ui.components.SpeedDialItem
+import com.ssajudn.barebudget.ui.components.pressScale
 import com.ssajudn.barebudget.ui.budget.BudgetScreen
 import com.ssajudn.barebudget.ui.components.AppNavigationBar
 import com.ssajudn.barebudget.ui.components.NavigationBarItemData
@@ -140,6 +148,9 @@ fun AppNavigation(
     val showNavigationBar = currentRoute in TopLevelRoutes
     val topLevelDestinations = rememberTopLevelDestinations()
 
+    var requestAddBill by remember { mutableStateOf(false) }
+    var requestAddGoal by remember { mutableStateOf(false) }
+
     // ---- Tour guide state (hoisted here so the overlay covers FAB + bottom bar too) ----
     val context = androidx.compose.ui.platform.LocalContext.current
     val tourPrefs = remember { com.ssajudn.barebudget.data.local.TourPreferences.getInstance(context) }
@@ -158,7 +169,6 @@ fun AppNavigation(
 
     fun navigateToStepRoute(route: String) {
         if (navController.currentDestination?.route == route) return
-        // ponytail: plain navigate, no popUpTo games — endTour resets the whole stack anyway
         navController.navigate(route) { launchSingleTop = true }
     }
 
@@ -223,17 +233,72 @@ fun AppNavigation(
             }
         },
         floatingActionButton = {
+            val showFab = showNavigationBar && currentRoute != Screen.Transfer.route
             AnimatedVisibility(
-                visible = showNavigationBar,
-                enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)),
-                exit = scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200)),
+                visible = showFab,
+                enter = scaleIn(
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(250)),
+                exit = scaleOut(
+                    animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                ) + fadeOut(animationSpec = tween(180)),
             ) {
-                FloatingActionButton(
-                    onClick = { navController.navigate(Screen.AddTransaction.route) },
-                    modifier = Modifier.tourAnchor("fab_add_transaction"),
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Catat pengeluaran")
+                var isSpeedDialExpanded by remember { mutableStateOf(false) }
+
+                // Auto-collapse speed dial when route changes
+                androidx.compose.runtime.LaunchedEffect(currentRoute) {
+                    isSpeedDialExpanded = false
                 }
+
+                val speedDialItems = listOf(
+                    SpeedDialItem(
+                        label = stringResource(R.string.fab_menu_transaction),
+                        icon = Icons.Default.Receipt,
+                        onClick = {
+                            navController.navigate(Screen.AddTransaction.route)
+                        }
+                    ),
+                    SpeedDialItem(
+                        label = stringResource(R.string.fab_menu_bill),
+                        icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                        onClick = {
+                            if (currentRoute == Screen.DueBills.route) {
+                                requestAddBill = true
+                            } else {
+                                navController.navigate(Screen.DueBills.route) {
+                                    popUpTo(Screen.Dashboard.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        }
+                    ),
+                    SpeedDialItem(
+                        label = stringResource(R.string.fab_menu_goal),
+                        icon = Icons.Default.Savings,
+                        onClick = {
+                            if (currentRoute == Screen.Goals.route) {
+                                requestAddGoal = true
+                            } else {
+                                navController.navigate(Screen.Goals.route) {
+                                    popUpTo(Screen.Dashboard.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        }
+                    )
+                )
+
+                AppSpeedDialFab(
+                    items = speedDialItems,
+                    isExpanded = isSpeedDialExpanded,
+                    onExpandedChange = { isSpeedDialExpanded = it },
+                    modifier = Modifier.tourAnchor("fab_add_transaction")
+                )
             }
         },
     ) { innerPadding ->
@@ -384,7 +449,12 @@ fun AppNavigation(
             }
 
             composable(Screen.DueBills.route) {
-                DueBillsScreen()
+                DueBillsScreen(
+                    onAddBillRequest = if (requestAddBill) {
+                        requestAddBill = false
+                        { }
+                    } else null
+                )
             }
 
             composable(Screen.Transfer.route) {
@@ -405,7 +475,12 @@ fun AppNavigation(
 
 
             composable(Screen.Goals.route) {
-                GoalsScreen()
+                GoalsScreen(
+                    onAddGoalRequest = if (requestAddGoal) {
+                        requestAddGoal = false
+                        { }
+                    } else null
+                )
             }
 
             composable(Screen.Budget.route) {

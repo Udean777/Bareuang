@@ -37,6 +37,8 @@ import com.ssajudn.barebudget.ui.theme.categoryColors
 import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +75,7 @@ fun AnalyticsScreen(
                 },
                 navigationIcon = {
                     if (onNavigateBack != null) {
-                        IconButton(onClick = onNavigateBack) {
+                        AppIconButton(onClick = onNavigateBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                         }
                     }
@@ -119,7 +121,7 @@ fun AnalyticsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadAnalyticsData() }) {
+                        AppButton(onClick = { viewModel.loadAnalyticsData() }) {
                             Text(stringResource(R.string.common_retry))
                         }
                     }
@@ -165,21 +167,24 @@ fun AnalyticsContent(
                         text = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 val icon = when (tab) {
                                     AnalyticsTab.CASHFLOW -> Icons.Default.SwapVert
                                     AnalyticsTab.NET_WORTH -> Icons.Default.ShowChart
                                     AnalyticsTab.CATEGORIES -> Icons.Default.PieChart
                                 }
-                                Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp))
                                 Text(
                                     text = when (tab) {
                                         AnalyticsTab.CASHFLOW -> stringResource(R.string.analytics_tab_cashflow)
                                         AnalyticsTab.NET_WORTH -> stringResource(R.string.analytics_tab_networth)
                                         AnalyticsTab.CATEGORIES -> stringResource(R.string.analytics_tab_categories)
                                     },
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
                         }
@@ -221,7 +226,7 @@ fun AnalyticsContent(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             Icons.Default.ArrowDownward,
@@ -233,18 +238,23 @@ fun AnalyticsContent(
                                         Text(
                                             text = stringResource(R.string.analytics_income),
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "+${CurrencyFormatter.formatRupiah(state.totalIncome)}",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFF2ECC71)
+                                        color = Color(0xFF2ECC71),
+                                        maxLines = 1
                                     )
                                 }
 
-                                Column(horizontalAlignment = Alignment.End) {
+                                Column(
+                                    horizontalAlignment = Alignment.End,
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             Icons.Default.ArrowUpward,
@@ -256,14 +266,16 @@ fun AnalyticsContent(
                                         Text(
                                             text = stringResource(R.string.analytics_expense),
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "-${CurrencyFormatter.formatRupiah(state.totalSpent)}",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFFE74C3C)
+                                        color = Color(0xFFE74C3C),
+                                        maxLines = 1
                                     )
                                 }
                             }
@@ -279,9 +291,11 @@ fun AnalyticsContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isSurplus) stringResource(R.string.analytics_net_cashflow_surplus) else stringResource(R.string.analytics_net_cashflow_deficit),
+                                    text = stringResource(R.string.analytics_net_cashflow),
                                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     text = "${if (isSurplus) "+" else "-"}${
@@ -292,7 +306,8 @@ fun AnalyticsContent(
                                         )
                                     }",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = if (isSurplus) Color(0xFF2ECC71) else Color(0xFFE74C3C)
+                                    color = if (isSurplus) Color(0xFF2ECC71) else Color(0xFFE74C3C),
+                                    maxLines = 1
                                 )
                             }
                         }
@@ -595,7 +610,10 @@ fun CategoryBreakdownRow(item: CategoryBreakdownItem) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     Box(
                         modifier = Modifier
                             .size(34.dp)
@@ -616,9 +634,13 @@ fun CategoryBreakdownRow(item: CategoryBreakdownItem) {
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
@@ -626,12 +648,14 @@ fun CategoryBreakdownRow(item: CategoryBreakdownItem) {
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
                     )
                     Text(
                         text = "$percentageInt% (${pluralStringResource(R.plurals.transactions_count, item.transactionCount.toInt(), item.transactionCount.toInt())})",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
                     )
                 }
             }

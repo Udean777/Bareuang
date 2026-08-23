@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,6 +21,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.domain.model.DashboardSummary
 import com.ssajudn.barebudget.ui.components.FinancialRunwayCard
 import com.ssajudn.barebudget.ui.components.TransactionItem
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.AppTextButton
+import com.ssajudn.barebudget.ui.components.pressScale
 import com.ssajudn.barebudget.ui.theme.*
 import com.ssajudn.barebudget.data.local.ThemePreferences
 import com.ssajudn.barebudget.domain.model.AppThemeDarkMode
@@ -33,7 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
@@ -112,14 +114,14 @@ fun DashboardScreen(
                         AppThemeDarkMode.FollowSystem -> Icons.Default.BrightnessAuto
                     }
 
-                    IconButton(onClick = { showThemeDialog = true }) {
+                    AppIconButton(onClick = { showThemeDialog = true }) {
                         Icon(
                             imageVector = themeIcon,
                             contentDescription = stringResource(R.string.dashboard_theme_desc)
                         )
                     }
 
-                    IconButton(onClick = onNavigateToSettings) {
+                    AppIconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings_title))
                     }
 
@@ -144,7 +146,6 @@ fun DashboardScreen(
                                         Surface(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clip(MaterialTheme.shapes.medium)
                                                 .clickable {
                                                     themePrefs.setDarkMode(mode)
                                                     showThemeDialog = false
@@ -185,7 +186,7 @@ fun DashboardScreen(
                                 }
                             },
                             confirmButton = {
-                                TextButton(onClick = { showThemeDialog = false }) {
+                                AppTextButton(onClick = { showThemeDialog = false }) {
                                     Text(stringResource(R.string.common_close))
                                 }
                             }
@@ -232,7 +233,7 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadDashboardData() }) {
+                        AppButton(onClick = { viewModel.loadDashboardData() }) {
                             Text(stringResource(R.string.common_retry))
                         }
                     }
@@ -327,16 +328,6 @@ fun DashboardContent(
                     modifier = Modifier.weight(1f),
                     onClick = onGoalsClick
                 )
-
-                QuickActionCard(
-                    title = stringResource(R.string.dashboard_quick_analytics),
-                    subtitle = stringResource(R.string.dashboard_quick_analytics_desc),
-                    icon = Icons.Default.TrendingUp,
-                    bgColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tintColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f),
-                    onClick = onAnalyticsClick
-                )
             }
         }
 
@@ -388,7 +379,33 @@ fun DashboardContent(
             }
         }
 
-        // 4. RECENT TRANSACTIONS HEADER
+        // 4. RECURRING SCHEDULES (Hanya jika ada template recurring aktif)
+        if (summary.recurringTransactions.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.dashboard_recurring_schedule),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            items(summary.recurringTransactions) { tx ->
+                com.ssajudn.barebudget.ui.components.RecurringTransactionItem(
+                    transaction = tx,
+                    onClick = { tx.id?.let(onTransactionClick) }
+                )
+            }
+        }
+
+        // 5. RECENT TRANSACTIONS HEADER
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -417,7 +434,8 @@ fun DashboardContent(
             }
         }
 
-        if (summary.recentTransactions!!.isNullOrEmpty()) {
+        val recent = summary.recentTransactions
+        if (recent.isNullOrEmpty()) {
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -439,7 +457,7 @@ fun DashboardContent(
                 }
             }
         } else {
-            items(summary.recentTransactions!!) { tx ->
+            items(recent) { tx ->
                 TransactionItem(
                     transaction = tx,
                     onClick = { tx.id?.let(onTransactionClick) }
@@ -460,14 +478,20 @@ fun QuickActionCard(
     onClick: () -> Unit
 ) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
 
     Surface(
         modifier = modifier
             .clip(AppShapes.Squircle)
-            .clickable {
-                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                onClick()
-            },
+            .pressScale(interactionSource, pressedScale = 0.90f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
+                onClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            ),
         color = bgColor,
         shape = AppShapes.Squircle,
         border = androidx.compose.foundation.BorderStroke(

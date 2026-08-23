@@ -12,6 +12,7 @@ import com.ssajudn.barebudget.domain.repository.WalletRepository
 import com.ssajudn.barebudget.utils.DateUtils
 import com.ssajudn.barebudget.domain.error.AppException
 import com.ssajudn.barebudget.domain.error.userMessage
+import com.ssajudn.barebudget.utils.CurrencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,10 +35,13 @@ data class AddTransactionUiState(
     val selectedCategory: TransactionCategory = TransactionCategory.FOOD,
     val date: String = DateUtils.getCurrentDateISO(),
     val notes: String = "",
+    val isRecurring: Boolean = false,
+    val recurringInterval: com.ssajudn.barebudget.domain.model.RecurringInterval = com.ssajudn.barebudget.domain.model.RecurringInterval.MONTHLY,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
-    val isBudgetMissing: Boolean = false
+    val isBudgetMissing: Boolean = false,
+    val categoryBudgets: List<com.ssajudn.barebudget.domain.model.CategoryBudget> = emptyList()
 )
 
 @HiltViewModel
@@ -58,9 +62,17 @@ class AddTransactionViewModel @Inject constructor(
     init {
         loadWallets()
         loadBudgetStatus()
+        observeCategoryBudgets()
     }
 
-    // ponytail: snapshot untuk banner saja; save selalu cek ulang langsung ke repository
+    private fun observeCategoryBudgets() {
+        viewModelScope.launch {
+            budgetRepository.getCategoryBudgets("").collect { list ->
+                _uiState.value = _uiState.value.copy(categoryBudgets = list)
+            }
+        }
+    }
+
     private fun loadBudgetStatus() {
         viewModelScope.launch {
             val budget = budgetRepository.getMonthlyBudget("")
@@ -70,16 +82,28 @@ class AddTransactionViewModel @Inject constructor(
 
     private fun loadWallets() {
         viewModelScope.launch {
-            val result = walletRepository.getWallets()
-            if (result.isSuccess) {
-                val wallets = result.getOrNull() ?: emptyList()
-                val defaultWallet = wallets.firstOrNull()?.id
-                val defaultToWallet = wallets.getOrNull(1)?.id ?: defaultWallet
+            val initial = walletRepository.getWallets().getOrNull()
+            if (!initial.isNullOrEmpty()) {
+                val defaultWallet = initial.firstOrNull()?.id
+                val defaultToWallet = initial.getOrNull(1)?.id ?: defaultWallet
                 _uiState.value = _uiState.value.copy(
-                    wallets = wallets,
+                    wallets = initial,
                     selectedWalletId = defaultWallet,
                     selectedToWalletId = defaultToWallet
                 )
+            }
+            walletRepository.observeWallets().collect { wallets ->
+                if (wallets.isNotEmpty()) {
+                    val currentSelected = _uiState.value.selectedWalletId
+                    val defaultWallet = if (wallets.any { it.id == currentSelected }) currentSelected else wallets.firstOrNull()?.id
+                    val currentSelectedTo = _uiState.value.selectedToWalletId
+                    val defaultToWallet = if (wallets.any { it.id == currentSelectedTo }) currentSelectedTo else (wallets.getOrNull(1)?.id ?: defaultWallet)
+                    _uiState.value = _uiState.value.copy(
+                        wallets = wallets,
+                        selectedWalletId = defaultWallet,
+                        selectedToWalletId = defaultToWallet
+                    )
+                }
             }
         }
     }
@@ -193,6 +217,14 @@ class AddTransactionViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(notes = notes)
     }
 
+    fun onRecurringChange(isRecurring: Boolean) {
+        _uiState.value = _uiState.value.copy(isRecurring = isRecurring)
+    }
+
+    fun onRecurringIntervalChange(interval: com.ssajudn.barebudget.domain.model.RecurringInterval) {
+        _uiState.value = _uiState.value.copy(recurringInterval = interval)
+    }
+
     fun saveTransaction() {
         val state = _uiState.value
         if (state.parsedAmount <= 0) {
@@ -211,6 +243,18 @@ class AddTransactionViewModel @Inject constructor(
             }
             if (state.selectedWalletId == state.selectedToWalletId) {
                 _uiState.value = state.copy(errorMessage = "Dompet asal dan dompet tujuan tidak boleh sama")
+                return
+            }
+        }
+
+        // Validasi saldo untuk expense & transfer
+        if (state.transactionType == TransactionType.EXPENSE || state.transactionType == TransactionType.TRANSFER) {
+            val sourceWallet = state.wallets.find { it.id == state.selectedWalletId }
+            if (sourceWallet != null && sourceWallet.balance < state.parsedAmount) {
+                val msg = "Saldo dompet tidak cukup (${CurrencyFormatter.formatRupiah(sourceWallet.balance)})"
+                _uiState.value = state.copy(errorMessage = msg)
+                _operation.value = OperationState.Error(msg)
+                viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
                 return
             }
         }
@@ -249,7 +293,8 @@ class AddTransactionViewModel @Inject constructor(
                 category = state.selectedCategory,
                 merchant = state.merchant.ifBlank { defaultMerchant },
                 date = state.date,
-                notes = state.notes
+                notes = state.notes,
+                recurringInterval = if (state.isRecurring) state.recurringInterval else com.ssajudn.barebudget.domain.model.RecurringInterval.NONE
             )
 
             transactionRepository.createTransaction(request)

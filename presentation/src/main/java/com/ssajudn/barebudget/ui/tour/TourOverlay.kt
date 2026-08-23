@@ -21,6 +21,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -148,9 +150,9 @@ fun TourOverlay(
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    TextButton(onClick = onSkip) { Text(stringResource(R.string.tour_skip)) }
+                    AppTextButton(onClick = onSkip) { Text(stringResource(R.string.tour_skip)) }
                     Spacer(Modifier.width(4.dp))
-                    Button(onClick = onNext) {
+                    AppButton(onClick = onNext) {
                         Text(stringResource(if (isLast) R.string.tour_finish else R.string.tour_next))
                     }
                 }

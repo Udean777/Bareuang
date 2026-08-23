@@ -35,7 +35,9 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val monthlyBudget = budgetRepository.getMonthlyBudget(monthYear).getOrDefault(0L)
 
             val allTx = transactionRepository.getTransactions(limit = 500).getOrDefault(emptyList())
-            val currentMonthTx = allTx.filter { it.date.startsWith(monthYear) }
+            val recurringTemplates = allTx.filter { it.isRecurringParent }
+            val executedTx = allTx.filter { !it.isRecurringParent }
+            val currentMonthTx = executedTx.filter { it.date.startsWith(monthYear) }
 
             val expensesTx = currentMonthTx.filter { it.type == TransactionType.EXPENSE && it.category != com.ssajudn.barebudget.domain.model.TransactionCategory.BILLS }
             val totalSpent = expensesTx.sumOf { it.amount }
@@ -95,7 +97,8 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 recentTransactions = currentMonthTx
                     .reversed()
                     .sortedByDescending { it.date }
-                    .take(5)
+                    .take(5),
+                recurringTransactions = recurringTemplates
             )
             Result.success(summary)
         } catch (e: Exception) {

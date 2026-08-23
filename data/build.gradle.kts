@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.google.mlkit.text.recognition)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
     ksp(libs.hilt.compiler)
 
     // Translation & Preferences

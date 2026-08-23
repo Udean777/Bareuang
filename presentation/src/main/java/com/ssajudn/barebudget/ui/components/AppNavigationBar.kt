@@ -104,6 +104,8 @@ fun AppNavigationBar(
                         label = "navItemContent"
                     )
 
+                    val navInteractionSource = remember { MutableInteractionSource() }
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -111,9 +113,10 @@ fun AppNavigationBar(
                                 if (item.tourAnchorKey != null) Modifier.tourAnchor(item.tourAnchorKey)
                                 else Modifier
                             )
+                            .pressScale(navInteractionSource, pressedScale = 0.88f)
                             .clip(AppShapes.Pill)
                             .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
+                                interactionSource = navInteractionSource,
                                 indication = null
                             ) { onNavigate(item.route) }
                             .padding(vertical = 4.dp),
@@ -150,7 +153,8 @@ fun AppNavigationBar(
                                     fontSize = 10.5.sp,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                                 ),
-                                color = animatedContentColor
+                                // Warna teks tetap mengikuti tema, tidak ikut warna ikon terpilih.
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

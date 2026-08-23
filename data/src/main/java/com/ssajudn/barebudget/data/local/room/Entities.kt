@@ -27,11 +27,20 @@ data class LocalTransactionEntity(
     val walletId: String? = null,
     val toWalletId: String? = null,
     val isSynced: Boolean = false,
-    val ownerId: String = ""
+    val ownerId: String = "",
+    val recurringInterval: String = "NONE",
+    val isRecurringParent: Boolean = false,
+    val parentRecurringId: String? = null,
+    val nextOccurrenceDate: String? = null
 ) {
     fun toTransaction(): Transaction {
         val cat = DomainMappers.safeCategory(category)
         val txType = DomainMappers.safeTransactionType(type)
+        val interval = try {
+            RecurringInterval.valueOf(recurringInterval)
+        } catch (_: Exception) {
+            RecurringInterval.NONE
+        }
         return Transaction(
             id = id,
             amount = amount,
@@ -42,7 +51,11 @@ data class LocalTransactionEntity(
             notes = notes,
             receiptUrl = receiptUrl,
             walletId = walletId,
-            toWalletId = toWalletId
+            toWalletId = toWalletId,
+            recurringInterval = interval,
+            isRecurringParent = isRecurringParent,
+            parentRecurringId = parentRecurringId,
+            nextOccurrenceDate = nextOccurrenceDate
         )
     }
 
@@ -59,7 +72,11 @@ data class LocalTransactionEntity(
                 receiptUrl = tx.receiptUrl,
                 walletId = tx.walletId,
                 toWalletId = tx.toWalletId,
-                isSynced = isSynced
+                isSynced = isSynced,
+                recurringInterval = tx.recurringInterval.name,
+                isRecurringParent = tx.isRecurringParent,
+                parentRecurringId = tx.parentRecurringId,
+                nextOccurrenceDate = tx.nextOccurrenceDate
             )
         }
     }
@@ -122,6 +139,18 @@ data class LocalDueBillEntity(
 data class LocalBudgetEntity(
     @PrimaryKey val monthYear: String,
     val monthlyLimit: Long,
+    val isSynced: Boolean = false,
+    val ownerId: String = ""
+)
+
+@Entity(
+    tableName = "local_category_budgets",
+    primaryKeys = ["monthYear", "category"]
+)
+data class LocalCategoryBudgetEntity(
+    val monthYear: String,
+    val category: String,
+    val limitAmount: Long,
     val isSynced: Boolean = false,
     val ownerId: String = ""
 )

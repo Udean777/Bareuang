@@ -10,12 +10,13 @@ import androidx.room.RoomDatabase
         LocalTransactionEntity::class,
         LocalDueBillEntity::class,
         LocalBudgetEntity::class,
+        LocalCategoryBudgetEntity::class,
         LocalGoalEntity::class,
         LocalWalletEntity::class,
         OutboxEntity::class,
         CachedTranslationEntity::class
     ],
-    version = 10,
+    version = 12,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -68,6 +69,21 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_10_11 = object : androidx.room.migration.Migration(10, 11) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS local_category_budgets (monthYear TEXT NOT NULL, category TEXT NOT NULL, limitAmount INTEGER NOT NULL, isSynced INTEGER NOT NULL DEFAULT 0, ownerId TEXT NOT NULL DEFAULT '', PRIMARY KEY(monthYear, category))")
+            }
+        }
+
+        val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN recurringInterval TEXT NOT NULL DEFAULT 'NONE'")
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN isRecurringParent INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN parentRecurringId TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE local_transactions ADD COLUMN nextOccurrenceDate TEXT DEFAULT NULL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -75,7 +91,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "bare_budget_offline.db"
                 )
-                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                    .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -40,6 +40,8 @@ import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.pressScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +84,7 @@ fun WalletsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.wallets_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    AppIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
@@ -92,14 +94,19 @@ fun WalletsScreen(
             )
         },
         floatingActionButton = {
+            val fabInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
             ExtendedFloatingActionButton(
                 onClick = { showAddDialog = true },
+                interactionSource = fabInteractionSource,
+                modifier = Modifier
+                    .tourAnchor("wallets_fab_add")
+                    .pressScale(fabInteractionSource, pressedScale = 0.92f),
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.wallets_add)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -276,7 +283,7 @@ fun WalletItem(
                         }
                     }
 
-                    IconButton(
+                    AppIconButton(
                         onClick = onEdit,
                         modifier = Modifier.size(32.dp)
                     ) {
@@ -288,14 +295,14 @@ fun WalletItem(
                         )
                     }
 
-                    IconButton(
+                    AppIconButton(
                         onClick = { showDeleteConfirm = true },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = stringResource(R.string.wallets_delete_desc),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                             modifier = Modifier.size(18.dp)
                         )
                     }

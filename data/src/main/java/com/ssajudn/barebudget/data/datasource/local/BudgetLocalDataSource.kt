@@ -149,4 +149,72 @@ class BudgetLocalDataSource @Inject constructor(
             Result.failure(ApiErrorParser.fromThrowable(e))
         }
     }
+
+    fun observeCategoryBudgets(monthYear: String): kotlinx.coroutines.flow.Flow<List<com.ssajudn.barebudget.domain.model.CategoryBudget>> {
+        val my = if (monthYear.isBlank()) {
+            SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
+        } else monthYear
+
+        return kotlinx.coroutines.flow.combine(
+            db.budgetDao().observeCategoryBudgets(my),
+            db.transactionDao().observeAllTransactions()
+        ) { categoryEntities, transactions ->
+            val monthTx = transactions.filter {
+                it.date.startsWith(my) &&
+                DomainMappers.safeTransactionType(it.type) == TransactionType.EXPENSE
+            }
+            val spentPerCategory = monthTx.groupBy { it.category }
+                .mapValues { (_, txList) -> txList.sumOf { it.amount } }
+
+            categoryEntities.map { entity ->
+                val cat = DomainMappers.safeCategory(entity.category)
+                com.ssajudn.barebudget.domain.model.CategoryBudget(
+                    category = cat,
+                    limitAmount = entity.limitAmount,
+                    spentAmount = spentPerCategory[entity.category] ?: 0L,
+                    monthYear = entity.monthYear
+                )
+            }
+        }
+    }
+
+    suspend fun setCategoryBudget(
+        category: com.ssajudn.barebudget.domain.model.TransactionCategory,
+        limitAmount: Long,
+        monthYear: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val my = if (monthYear.isBlank()) {
+                SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
+            } else monthYear
+            val ownerId = sessionManager?.userId ?: ""
+            db.budgetDao().insertCategoryBudget(
+                com.ssajudn.barebudget.data.local.room.LocalCategoryBudgetEntity(
+                    monthYear = my,
+                    category = category.name,
+                    limitAmount = limitAmount,
+                    isSynced = false,
+                    ownerId = ownerId
+                )
+            )
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(ApiErrorParser.fromThrowable(e))
+        }
+    }
+
+    suspend fun deleteCategoryBudget(
+        category: com.ssajudn.barebudget.domain.model.TransactionCategory,
+        monthYear: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val my = if (monthYear.isBlank()) {
+                SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
+            } else monthYear
+            db.budgetDao().deleteCategoryBudget(my, category.name)
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(ApiErrorParser.fromThrowable(e))
+        }
+    }
 }

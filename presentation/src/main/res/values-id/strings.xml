@@ -67,14 +67,13 @@
     <string name="analytics_title">Analisis Finansial</string>
     <string name="analytics_error_title">Gagal memuat analisis</string>
     <string name="analytics_tab_cashflow">Arus Kas</string>
-    <string name="analytics_tab_networth">Kekayaan Bersih</string>
+    <string name="analytics_tab_networth">Kekayaan</string>
     <string name="analytics_tab_categories">Kategori</string>
     <string name="analytics_cashflow_summary">RINGKASAN ARUS KAS</string>
     <string name="analytics_income">Pemasukan</string>
     <string name="analytics_expense">Pengeluaran</string>
-    <string name="analytics_net_cashflow_surplus">Arus Kas Bersih (Surplus)</string>
-    <string name="analytics_net_cashflow_deficit">Arus Kas Bersih (Defisit)</string>
-    <string name="analytics_cashflow_trend">Tren Arus Kas (6 Bulan Terakhir)</string>
+    <string name="analytics_net_cashflow">Arus Kas Bersih</string>
+    <string name="analytics_cashflow_trend">Tren Arus Kas (6 Bln Terakhir)</string>
     <string name="analytics_networth_current">Total Kekayaan Saat Ini</string>
     <string name="analytics_networth_growth">Pertumbuhan Kekayaan Bersih</string>
     <string name="analytics_savage_streak"><xliff:g id="days">%1$d</xliff:g> Hari Savage Streak!</string>
@@ -276,6 +275,10 @@
     <string name="appearance_dynamic_need">Memerlukan Android 12 ke atas</string>
     <!-- Transactions -->
     <string name="tx_add_title">Tambah Transaksi</string>
+    <!-- Bill reminder settings -->
+    <string name="settings_bill_reminder_title">Pengingat Tagihan</string>
+    <string name="settings_bill_reminder_time">Jam pengingat harian</string>
+    <string name="settings_bill_reminder_time_desc">Periksa dan notifikasikan tagihan jatuh tempo pada jam ini</string>
     <string name="tx_expense">Pengeluaran</string>
     <string name="tx_income">Pemasukan</string>
     <string name="tx_transfer">Transfer</string>
@@ -341,6 +344,10 @@
     <string name="onboarding_auth_desc">Masuk untuk sinkronisasi data cloud atau langsung lanjutkan dengan profil tamu.</string>
     <string name="auth_offline_message">Kamu sedang tidak terhubung ke internet. Sambungkan dulu ya untuk masuk dengan Google.</string>
     <string name="auth_guest_offline_message">Tidak ada koneksi internet. Mode tetamu tetap bisa dipakai offline — data kamu tersimpan di perangkat ini.</string>
+    <string name="notif_perm_title">Jangan Sampai Ada Tagihan Terlewat</string>
+    <string name="notif_perm_desc">BareBudget bisa mengingatkan saat tagihan mendekati jatuh tempo — 3 hari lagi, besok, dan hari-H. Notifikasi dibuat sepenuhnya di perangkatmu; tidak ada data yang dikirim ke mana pun.</string>
+    <string name="notif_perm_allow">Izinkan Notifikasi</string>
+    <string name="notif_perm_later">Lain Kali</string>
     <string name="onboarding_google_title">Masuk dengan Google</string>
     <string name="onboarding_google_desc">Direkomendasikan. Semua riwayat transaksi, budget, dan tagihan tersimpan aman di cloud. Data tidak akan hilang saat berganti perangkat.</string>
     <string name="onboarding_guest_title">Mode Tamu</string>

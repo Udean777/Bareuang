@@ -17,7 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.AppOutlinedButton
 import com.ssajudn.barebudget.ui.theme.AppShapes
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 
@@ -68,8 +73,10 @@ fun SplitBillBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .imePadding()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header
@@ -82,7 +89,7 @@ fun SplitBillBottomSheet(
                     text = stringResource(R.string.split_title),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
-                IconButton(onClick = onDismiss) {
+                AppIconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_close))
                 }
             }
@@ -227,7 +234,7 @@ fun SplitBillBottomSheet(
             // Action Buttons
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Share WhatsApp button
-                OutlinedButton(
+                AppOutlinedButton(
                     onClick = {
                         shareSplitToWhatsApp(
                             context = context,
@@ -247,7 +254,7 @@ fun SplitBillBottomSheet(
                 }
 
                 // Apply My Share only
-                Button(
+                AppButton(
                     onClick = {
                         onApplyMyPortion(perPersonAmount)
                         onDismiss()

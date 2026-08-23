@@ -66,15 +66,14 @@
     <!-- Analytics -->
     <string name="analytics_title">Financial Analytics</string>
     <string name="analytics_error_title">Failed to load analytics</string>
-    <string name="analytics_tab_cashflow">Cash Flow</string>
+    <string name="analytics_tab_cashflow">Cashflow</string>
     <string name="analytics_tab_networth">Net Worth</string>
-    <string name="analytics_tab_categories">Categories</string>
+    <string name="analytics_tab_categories">Category</string>
     <string name="analytics_cashflow_summary">CASH FLOW SUMMARY</string>
     <string name="analytics_income">Income</string>
     <string name="analytics_expense">Expense</string>
-    <string name="analytics_net_cashflow_surplus">Net Cash Flow (Surplus)</string>
-    <string name="analytics_net_cashflow_deficit">Net Cash Flow (Deficit)</string>
-    <string name="analytics_cashflow_trend">Cash Flow Trend (Last 6 Months)</string>
+    <string name="analytics_net_cashflow">Net Cash Flow</string>
+    <string name="analytics_cashflow_trend">Cash Flow Trend (Last 6 Mos)</string>
     <string name="analytics_networth_current">Current Net Worth</string>
     <string name="analytics_networth_growth">Net Worth Growth</string>
     <string name="analytics_savage_streak"><xliff:g id="days">%1$d</xliff:g> Days Savage Streak!</string>
@@ -115,11 +114,11 @@
     <string name="tour_step1_title">Financial Runway</string>
     <string name="tour_step1_desc">This card shows your remaining budget and estimates when your money runs out this month.</string>
     <string name="tour_step2_title">Quick Actions</string>
-    <string name="tour_step2_desc">Quick access to Wallets, Bills, Savings Goals, and Analytics.</string>
+    <string name="tour_step2_desc">Quick access to Wallets, Bills, and Savings Goals.</string>
     <string name="tour_step3_title">Set Monthly Budget</string>
-    <string name="tour_step3_desc">Set this month\'s budget here first — expense &amp; income transactions stay locked until it\'s set.</string>
-    <string name="tour_step4_title">My Wallets</string>
-    <string name="tour_step4_desc">A \"Cash\" wallet is created automatically. Every transaction must go through a wallet — create more (bank, e-wallet) here.</string>
+    <string name="tour_step3_desc">Input your monthly target here or choose quick presets. You can also allocate specific spending limits per category below to keep your burn rate in check.</string>
+    <string name="tour_step4_title">Wallet Management</string>
+    <string name="tour_step4_desc">Track your total Net Worth here. You can add new bank/e-wallet accounts, edit names/colors, transfer funds between wallets, or delete unused accounts.</string>
     <string name="tour_step5_title">Record Transaction</string>
     <string name="tour_step5_desc">Tap + to record an expense or income, then pick the source/destination wallet.</string>
     <string name="tour_step6_title">Recurring Bills</string>
@@ -244,6 +243,8 @@
     <string name="dashboard_load_error">Failed to load data</string>
     <string name="dashboard_total_spent">Total Spent This Month</string>
     <string name="dashboard_daily_avg">Daily Average</string>
+    <string name="dashboard_recurring_schedule">Recurring Schedules</string>
+    <string name="dashboard_recurring_next">Next: %1$s</string>
     <string name="dashboard_recent">Recent Transactions</string>
     <string name="dashboard_see_all">See All</string>
     <string name="dashboard_no_tx">No transactions recorded yet. Log your first expense!</string>
@@ -268,12 +269,38 @@
     <string name="budget_locked_desc">Currently %1$s. You can only change your budget once per month. It will be editable again next month.</string>
     <string name="budget_input_label">Target Monthly Budget</string>
     <string name="budget_presets_label">Quick Presets</string>
+    <string name="budget_category_title">Category Budgets</string>
+    <string name="budget_category_subtitle">Allocate limits per spending category</string>
+    <string name="budget_category_add">Set Category Limit</string>
+    <string name="budget_category_edit">Edit Category Limit</string>
+    <string name="budget_category_empty">No category budgets set yet.</string>
+    <string name="budget_category_allocated">Allocated %1$s of %2$s</string>
+    <string name="budget_category_over_warning">Total category allocation exceeds monthly budget!</string>
+    <string name="budget_category_select">Select Category</string>
+    <string name="budget_category_limit">Limit Amount</string>
+    <string name="budget_category_delete">Delete Category Budget</string>
+    <string name="budget_category_delete_confirm">Delete budget for %1$s?</string>
+
+    <!-- Speed Dial FAB Labels -->
+    <string name="fab_menu_transaction">Transaction</string>
+    <string name="fab_menu_bill">Due Bill</string>
+    <string name="fab_menu_goal">Savings Goal</string>
+
     <!-- Appearance -->
     <string name="appearance_title">Appearance</string>
     <string name="appearance_dark_mode">Dark Mode</string>
     <string name="appearance_dynamic">Dynamic Colors</string>
     <string name="appearance_dynamic_desc">Follow wallpaper palette (Material You)</string>
     <string name="appearance_dynamic_need">Requires Android 12 or higher</string>
+
+    <!-- Widget settings -->
+    <string name="settings_widget_title">Home screen widget</string>
+    <string name="settings_widget_hide_balance">Hide balance on widget</string>
+    <string name="settings_widget_hide_balance_desc">Show dots instead of amounts</string>
+    <!-- Bill reminder settings -->
+    <string name="settings_bill_reminder_title">Bill reminders</string>
+    <string name="settings_bill_reminder_time">Daily reminder time</string>
+    <string name="settings_bill_reminder_time_desc">Check and notify due bills at this time</string>
     <!-- Transactions -->
     <string name="tx_add_title">Add Transaction</string>
     <string name="tx_expense">Expense</string>
@@ -292,6 +319,22 @@
     <string name="tx_date">Date</string>
     <string name="tx_notes_label">Notes (Optional)</string>
     <string name="tx_notes_hint">Add detail…</string>
+    <string name="tx_recurring_label">Recurring Transaction</string>
+    <string name="tx_recurring_desc">Automatically record this transaction on every cycle</string>
+    <string name="tx_recurring_interval">Repeat Interval</string>
+    <string name="tx_recurring_weekly">Weekly</string>
+    <string name="tx_recurring_monthly">Monthly</string>
+    <string name="tx_recurring_yearly">Yearly</string>
+    <string name="tx_recurring_on_day">Repeat on</string>
+    <string name="tx_recurring_on_date">Every date %1$d</string>
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+    <string name="tx_badge_recurring">Recurring</string>
     <string name="tx_all_title">All Transactions</string>
     <string name="tx_search_hint">Search transactions…</string>
     <string name="tx_filter">Filter Transactions</string>
@@ -341,6 +384,10 @@
     <string name="onboarding_auth_desc">Sign in to sync your cloud records or continue instantly with a guest profile.</string>
     <string name="auth_offline_message">You are offline. Connect to the internet to sign in with Google.</string>
     <string name="auth_guest_offline_message">No internet connection. Guest mode still works offline — your data stays on this device.</string>
+    <string name="notif_perm_title">Never Miss a Bill</string>
+    <string name="notif_perm_desc">BareBudget can remind you when bills are due — 3 days ahead, tomorrow, and today. Reminders are generated entirely on your device; nothing is sent anywhere.</string>
+    <string name="notif_perm_allow">Allow Notifications</string>
+    <string name="notif_perm_later">Maybe later</string>
     <string name="onboarding_google_title">Sign In with Google</string>
     <string name="onboarding_google_desc">Recommended. All your transaction history, budgets, and bills are backed up securely to the cloud. You won\'t lose your data when reinstalling.</string>
     <string name="onboarding_guest_title">Guest Mode</string>

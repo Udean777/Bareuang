@@ -16,6 +16,7 @@ import com.ssajudn.barebudget.domain.model.AppThemeDarkMode
 import com.ssajudn.barebudget.ui.theme.BareBudgetTheme
 import com.ssajudn.barebudget.ui.theme.ThemeColorMode
 import com.ssajudn.barebudget.ui.theme.ThemeDarkMode
+import com.ssajudn.barebudget.widget.BudgetWidgetWorker
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -56,5 +57,11 @@ class MainActivity : ComponentActivity() {
                 AppNavigation()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh the home screen widget every time the app comes to the foreground.
+        BudgetWidgetWorker.runNow(this)
     }
 }
