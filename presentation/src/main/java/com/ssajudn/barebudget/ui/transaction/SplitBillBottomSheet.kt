@@ -23,6 +23,7 @@ import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.ui.components.AppButton
 import com.ssajudn.barebudget.ui.components.AppIconButton
 import com.ssajudn.barebudget.ui.components.AppOutlinedButton
+import com.ssajudn.barebudget.ui.components.bareuangOutlinedTextFieldColors
 import com.ssajudn.barebudget.ui.theme.AppShapes
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 
@@ -216,18 +217,20 @@ fun SplitBillBottomSheet(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = bareuangOutlinedTextFieldColors()
                 )
 
                 OutlinedTextField(
                     value = servicePercentage,
                     onValueChange = { servicePercentage = it.filter { c -> c.isDigit() }.take(2) },
-                    label = { Text("Service (%)") },
+                    label = { Text(stringResource(R.string.split_service_label)) },
                     placeholder = { Text("5") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = bareuangOutlinedTextFieldColors()
                 )
             }
 
@@ -238,7 +241,7 @@ fun SplitBillBottomSheet(
                     onClick = {
                         shareSplitToWhatsApp(
                             context = context,
-                            merchant = merchantName.ifBlank { "Patungan" },
+                            merchant = merchantName.ifBlank { context.getString(R.string.split_default_merchant) },
                             total = grandTotal,
                             peopleCount = peopleCount,
                             perPerson = perPersonAmount,
@@ -282,21 +285,21 @@ private fun shareSplitToWhatsApp(
 ) {
     val builder = StringBuilder()
     builder.append("*BareBudget Split Bill - $merchant*\n")
-    builder.append("Total Tagihan: ${CurrencyFormatter.formatRupiah(total)}\n")
-    builder.append("Jumlah Orang: $peopleCount\n")
-    builder.append("Tagihan per Orang: *${CurrencyFormatter.formatRupiah(perPerson)}*\n")
+    builder.append(context.getString(R.string.split_message_total, CurrencyFormatter.formatRupiah(total))+"\n")
+    builder.append(context.getString(R.string.split_message_people, peopleCount)+"\n")
+    builder.append(context.getString(R.string.split_message_per_person, CurrencyFormatter.formatRupiah(perPerson))+"\n")
     builder.append("------------------------------------\n")
     names.forEachIndexed { index, name ->
         builder.append("${index + 1}. $name: ${CurrencyFormatter.formatRupiah(perPerson)}\n")
     }
     builder.append("------------------------------------\n")
-    builder.append("Dihitung otomatis dengan BareBudget")
+    builder.append(context.getString(R.string.split_message_auto))
 
     val sendIntent = Intent().apply {
         action = Intent.ACTION_SEND
         putExtra(Intent.EXTRA_TEXT, builder.toString())
         type = "text/plain"
     }
-    val shareIntent = Intent.createChooser(sendIntent, "Bagikan rincian split bill:")
+    val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.split_share_title))
     context.startActivity(shareIntent)
 }

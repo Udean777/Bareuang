@@ -47,7 +47,7 @@
     <string name="settings_danger_desc">Hapus sesi saat ini dan kembali ke onboarding</string>
     <string name="settings_reset_local">Reset Data Lokal</string>
     <string name="settings_sign_out">Keluar Akun</string>
-    <string name="settings_footer_tagline">Keuangan Pribadi Tanpa Ribet</string>
+    <string name="settings_footer_tagline">Uang tenang, hati senang</string>
     <string name="settings_dialog_reset_title">Reset Sesi Tamu?</string>
     <string name="settings_dialog_signout_title">Keluar Akun?</string>
     <string name="settings_dialog_reset_message">Yakin ingin keluar? Karena kamu berada dalam Mode Tamu, transaksi dan catatan lokalmu akan dihapus.</string>
@@ -234,7 +234,7 @@
     <string name="bills_wallet_balance">Saldo: <xliff:g id="amount">%1$s</xliff:g></string>
     <string name="bills_auto_deduct">Saldo dompet akan otomatis terpotong dan dicatat sebagai pengeluaran.</string>
     <!-- Dashboard -->
-    <string name="dashboard_subtitle">Pencatat Pengeluaran Tanpa Ribet</string>
+    <string name="dashboard_subtitle">Teman cozy buat uangmu</string>
     <string name="dashboard_theme_desc">Tema</string>
     <string name="dashboard_choose_theme">Pilih Tema Tampilan</string>
     <string name="dashboard_follow_system">Ikuti Sistem</string>
@@ -401,4 +401,8 @@
     <string name="onboarding_slide3_desc">Jangan sampai terlewat tanggal jatuh tempo PayLater atau langganan bulanan lagi.</string>
     <string name="onboarding_slide4_title">Pilih Cara Memulai</string>
     <string name="onboarding_slide4_desc">Pilih untuk masuk dengan akun Google atau langsung coba dalam Mode Tamu.</string>
+    <!-- Splash -->
+    <string name="splash_brand">Bareuang</string>
+    <string name="splash_runway_tracker">TAHU UANGMU TAHAN SAMPAI KAPAN</string>
+    <string name="splash_bubbly_desc">Lembut. Simpel. Bikin betah.</string>
 </resources>

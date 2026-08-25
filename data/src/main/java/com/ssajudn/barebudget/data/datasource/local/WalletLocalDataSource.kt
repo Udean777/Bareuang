@@ -7,6 +7,7 @@ import com.ssajudn.barebudget.domain.model.Wallet
 import com.ssajudn.barebudget.data.repository.DomainMappers
 import com.ssajudn.barebudget.domain.repository.WalletRepository
 import com.ssajudn.barebudget.data.error.ApiErrorParser
+import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -43,12 +44,13 @@ class WalletLocalDataSource @Inject constructor(
                 // Mencegah dan membersihkan duplikasi otomatis jika ada nama dompet yang sama persis
                 val uniqueWallets = local.distinctBy { it.name }
                 if (uniqueWallets.size < local.size) {
-                    // Jika ada duplikasi di DB lokal, bersihkan duplikat
-                    db.walletDao().clearAll()
-                    uniqueWallets.forEach { w ->
-                        db.walletDao().insertWallet(
-                            LocalWalletEntity.fromWallet(w, isSynced = false)
-                        )
+                    db.withTransaction {
+                        db.walletDao().clearAll()
+                        uniqueWallets.forEach { w ->
+                            db.walletDao().insertWallet(
+                                LocalWalletEntity.fromWallet(w, isSynced = false)
+                            )
+                        }
                     }
                 }
                 Result.success(uniqueWallets)

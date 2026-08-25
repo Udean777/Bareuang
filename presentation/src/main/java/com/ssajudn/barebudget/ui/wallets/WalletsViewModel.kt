@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.common.UiText
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
 import javax.inject.Inject
@@ -24,7 +26,8 @@ data class WalletsUiState(
     val wallets: List<Wallet> = emptyList(),
     val netWorth: Long = 0L,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val errorText: UiText? = null
 )
 
 @HiltViewModel
@@ -39,7 +42,7 @@ class WalletsViewModel @Inject constructor(
 
     val uiState: StateFlow<WalletsUiState> = repository.observeWallets()
         .map { wallets -> WalletsUiState(wallets = wallets, netWorth = wallets.sumOf { it.balance }) }
-        .catch { e -> emit(WalletsUiState(error = e.message ?: "Gagal memuat dompet")) }
+        .catch { e -> emit(WalletsUiState(error = e.message ?: "Gagal memuat dompet", errorText = UiText.Res(R.string.wallets_load_error))) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WalletsUiState(isLoading = true))
 
     // Triggers initial remote refresh and default wallet provisioning; observed Flow remains source of truth
@@ -55,8 +58,8 @@ class WalletsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createWallet(CreateWalletRequest(name, startingBalance, colorHex, "account_balance_wallet"))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 
@@ -64,15 +67,15 @@ class WalletsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateWallet(wallet.copy(name = name, colorHex = colorHex))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 
     fun deleteWallet(id: String) {
         viewModelScope.launch {
             val r = repository.deleteWallet(id)
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 }

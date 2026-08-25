@@ -77,11 +77,7 @@ class GoalLocalDataSource @Inject constructor(
                         LocalTransactionEntity.fromTransaction(localTx, isSynced = false).copy(ownerId = sessionManager.userId)
                     )
                 }
-                try {
-                    db.runInTransaction { block() }
-                } catch (_: Exception) {
-                    block()
-                }
+                db.runInTransaction { block() }
                 Result.success(true)
             } catch (e: Exception) {
                 Result.failure(ApiErrorParser.fromThrowable(e))

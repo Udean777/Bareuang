@@ -20,16 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ssajudn.barebudget.ui.theme.IncomeAccent
+import com.ssajudn.barebudget.ui.theme.ExpenseAccent
 import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.components.ErrorState
 import com.ssajudn.barebudget.ui.components.getCategoryIcon
 import com.ssajudn.barebudget.ui.theme.AppShapes
 import com.ssajudn.barebudget.ui.theme.Spacing
@@ -37,7 +37,6 @@ import com.ssajudn.barebudget.ui.theme.categoryColors
 import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import com.ssajudn.barebudget.ui.components.AppButton
 import com.ssajudn.barebudget.ui.components.AppIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,18 +47,9 @@ fun AnalyticsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.loadAnalyticsData()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        viewModel.loadAnalyticsData()
+        onPauseOrDispose { }
     }
 
     Scaffold(
@@ -103,28 +93,13 @@ fun AnalyticsScreen(
                 }
 
                 is AnalyticsUiState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.analytics_error_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = state.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        AppButton(onClick = { viewModel.loadAnalyticsData() }) {
-                            Text(stringResource(R.string.common_retry))
-                        }
-                    }
+                    ErrorState(
+                        title = stringResource(R.string.analytics_error_title),
+                        message = state.message,
+                        retryLabel = stringResource(R.string.common_retry),
+                        modifier = Modifier.align(Alignment.Center),
+                        onRetry = { viewModel.loadAnalyticsData() }
+                    )
                 }
 
                 is AnalyticsUiState.Success -> {
@@ -146,7 +121,7 @@ fun AnalyticsContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = Spacing.ScreenHorizontal),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = Spacing.Small, bottom = Spacing.FabClearance)
     ) {
@@ -204,12 +179,12 @@ fun AnalyticsContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .crispBorder(
-                                shape = AppShapes.Squircle,
+                                shape = MaterialTheme.shapes.medium,
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
                             ),
-                        shape = AppShapes.Squircle,
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                         ),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
@@ -231,7 +206,7 @@ fun AnalyticsContent(
                                         Icon(
                                             Icons.Default.ArrowDownward,
                                             contentDescription = null,
-                                            tint = Color(0xFF2ECC71),
+                                            tint = IncomeAccent,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
@@ -246,7 +221,7 @@ fun AnalyticsContent(
                                     Text(
                                         text = "+${CurrencyFormatter.formatRupiah(state.totalIncome)}",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFF2ECC71),
+                                        color = IncomeAccent,
                                         maxLines = 1
                                     )
                                 }
@@ -259,7 +234,7 @@ fun AnalyticsContent(
                                         Icon(
                                             Icons.Default.ArrowUpward,
                                             contentDescription = null,
-                                            tint = Color(0xFFE74C3C),
+                                            tint = ExpenseAccent,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
@@ -274,7 +249,7 @@ fun AnalyticsContent(
                                     Text(
                                         text = "-${CurrencyFormatter.formatRupiah(state.totalSpent)}",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFFE74C3C),
+                                        color = ExpenseAccent,
                                         maxLines = 1
                                     )
                                 }
@@ -306,7 +281,7 @@ fun AnalyticsContent(
                                         )
                                     }",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = if (isSurplus) Color(0xFF2ECC71) else Color(0xFFE74C3C),
+                                    color = if (isSurplus) IncomeAccent else ExpenseAccent,
                                     maxLines = 1
                                 )
                             }
@@ -318,11 +293,11 @@ fun AnalyticsContent(
                 item {
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = AppShapes.LargeIncreased,
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                         ),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text(
@@ -392,11 +367,11 @@ fun AnalyticsContent(
                 item {
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = AppShapes.LargeIncreased,
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                         ),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text(
@@ -466,11 +441,11 @@ fun AnalyticsContent(
                 item {
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = AppShapes.LargeIncreased,
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                         ),
-                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
                             Text(
@@ -559,7 +534,7 @@ fun AnalyticsContent(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.large,
-                            color = MaterialTheme.colorScheme.surfaceVariant
+                            color = MaterialTheme.colorScheme.surfaceContainerLow
                         ) {
                             Box(
                                 modifier = Modifier
@@ -575,9 +550,10 @@ fun AnalyticsContent(
                             }
                         }
                     }
-                } else {
-                    items(state.categories) { item ->
-                        CategoryBreakdownRow(item = item)
+                    if (state.categories.isNotEmpty()) {
+                        items(state.categories) { item ->
+                            CategoryBreakdownRow(item = item)
+                        }
                     }
                 }
             }
@@ -667,7 +643,7 @@ fun CategoryBreakdownRow(item: CategoryBreakdownItem) {
                     .height(6.dp)
                     .clip(MaterialTheme.shapes.extraSmall),
                 color = accent,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
             )
         }
     }

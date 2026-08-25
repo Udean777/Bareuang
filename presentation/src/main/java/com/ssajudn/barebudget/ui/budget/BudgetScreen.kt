@@ -1,7 +1,11 @@
 package com.ssajudn.barebudget.ui.budget
 
+import com.ssajudn.barebudget.ui.theme.IncomeAccent
+import com.ssajudn.barebudget.ui.theme.ExpenseAccent
+import com.ssajudn.barebudget.ui.theme.BudgetWarningAccent
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.common.asString
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,11 +34,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.ui.theme.AppShapes
+import com.ssajudn.barebudget.ui.theme.Spacing
 import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.ui.tour.tourAnchor
 import com.ssajudn.barebudget.utils.CurrencyFormatter
-import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
+import com.ssajudn.barebudget.ui.components.AmountTextField
+
 import com.ssajudn.barebudget.ui.components.AppButton
+import com.ssajudn.barebudget.ui.components.BaruangPrimaryButton
 import com.ssajudn.barebudget.ui.components.AppIconButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -43,12 +51,14 @@ fun BudgetScreen(
     viewModel: BudgetViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val operation by viewModel.operation.collectAsState()
+    val context = LocalContext.current
+    val operation by viewModel.operation.collectAsStateWithLifecycle()
     val isOperationLoading = operation is OperationState.Loading
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> {}
                 is UiEffect.PopBackStack -> {}
             }
@@ -90,22 +100,17 @@ fun BudgetScreen(
                     .fillMaxWidth()
                     .imePadding()
             ) {
-                AppButton(
+                BaruangPrimaryButton(
                     onClick = { viewModel.saveBudget() },
                     enabled = !uiState.isLoading && uiState.parsedAmount > 0 && !uiState.isLocked && !isOperationLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp)
-                        .height(56.dp),
-                    shape = MaterialTheme.shapes.large,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .height(52.dp)
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(24.dp)
                         )
                     } else {
@@ -125,7 +130,7 @@ fun BudgetScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = Spacing.ScreenHorizontal)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
@@ -135,10 +140,10 @@ fun BudgetScreen(
                     .fillMaxWidth()
                     .tourAnchor("budget_explainer")
                     .crispBorder(
-                        shape = AppShapes.AsymmetricHero,
+                        shape = MaterialTheme.shapes.extraLarge,
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
                     ),
-                shape = AppShapes.AsymmetricHero,
+                shape = MaterialTheme.shapes.extraLarge,
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
@@ -191,17 +196,24 @@ fun BudgetScreen(
                 }
             }
 
-            // Amount Input (M3 Display Card)
-            ElevatedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .tourAnchor("budget_input_amount"),
-                shape = MaterialTheme.shapes.extraLarge,
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                ),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-            ) {
+            // Amount Input — bear peek when amount entered
+            Box(modifier = Modifier.fillMaxWidth()) {
+                com.ssajudn.barebudget.ui.components.BearPeek(
+                    visible = uiState.parsedAmount > 0,
+                    modifier = Modifier.align(Alignment.TopEnd).offset(y = (-10).dp, x = 4.dp),
+                    size = 38.dp
+                )
+                ElevatedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = if (uiState.parsedAmount > 0) 12.dp else 0.dp)
+                        .tourAnchor("budget_input_amount"),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                ) {
                 Column(
                     modifier = Modifier.padding(22.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -212,7 +224,7 @@ fun BudgetScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
+                    AmountTextField(
                         value = uiState.rawAmount,
                         onValueChange = { if (!uiState.isLocked) viewModel.onAmountChange(it) },
                         enabled = !uiState.isLocked,
@@ -230,15 +242,13 @@ fun BudgetScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 32.sp
                         ),
-                        singleLine = true,
-                        visualTransformation = CurrencyVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
                 }
             }
 
@@ -317,7 +327,7 @@ fun BudgetScreen(
                 Surface(
                     shape = AppShapes.Squircle,
                     color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            else MaterialTheme.colorScheme.surfaceContainerLow,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -442,7 +452,7 @@ private fun CategoryBudgetCard(
     val progress = categoryBudget.progressPercentage
     val progressColor = when {
         categoryBudget.isOverspent -> MaterialTheme.colorScheme.error
-        categoryBudget.isWarning -> Color(0xFFF39C12)
+        categoryBudget.isWarning -> BudgetWarningAccent
         else -> MaterialTheme.colorScheme.primary
     }
 
@@ -450,7 +460,7 @@ private fun CategoryBudgetCard(
         modifier = Modifier.fillMaxWidth(),
         shape = AppShapes.Squircle,
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
     ) {
@@ -517,7 +527,7 @@ private fun CategoryBudgetCard(
                     .fillMaxWidth()
                     .height(6.dp),
                 color = progressColor,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
             )
         }
@@ -599,18 +609,13 @@ private fun SetCategoryBudgetDialog(
             Spacer(modifier = Modifier.height(10.dp))
         }
 
-        OutlinedTextField(
+        AmountTextField(
             value = rawAmount,
             onValueChange = { input ->
-                val digitsOnly = input.filter { it.isDigit() }.take(12)
-                rawAmount = digitsOnly
-                parsedAmount = digitsOnly.toLongOrNull() ?: 0L
+                rawAmount = input
+                parsedAmount = input.toLongOrNull() ?: 0L
             },
-            label = { Text(stringResource(R.string.budget_category_limit)) },
-            placeholder = { Text("Rp 0") },
-            singleLine = true,
-            visualTransformation = CurrencyVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            label = stringResource(R.string.budget_category_limit),
             modifier = Modifier.fillMaxWidth()
         )
     }

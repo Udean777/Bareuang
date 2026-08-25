@@ -8,6 +8,9 @@ interface TransactionDao {
     @Query("SELECT * FROM local_transactions ORDER BY date DESC")
     fun getAllTransactions(): List<LocalTransactionEntity>
 
+    @Query("SELECT * FROM local_transactions ORDER BY date DESC LIMIT :limit OFFSET :offset")
+    fun getTransactionsPaged(limit: Int, offset: Int): List<LocalTransactionEntity>
+
     @Query("SELECT * FROM local_transactions WHERE ownerId = :ownerId ORDER BY date DESC")
     fun getAllTransactionsByOwner(ownerId: String): List<LocalTransactionEntity>
 
@@ -19,6 +22,9 @@ interface TransactionDao {
 
     @Query("SELECT * FROM local_transactions WHERE category = :category ORDER BY date DESC")
     fun getTransactionsByCategory(category: String): List<LocalTransactionEntity>
+
+    @Query("SELECT * FROM local_transactions WHERE category = :category ORDER BY date DESC LIMIT :limit OFFSET :offset")
+    fun getTransactionsByCategoryPaged(category: String, limit: Int, offset: Int): List<LocalTransactionEntity>
 
     @Query("SELECT * FROM local_transactions WHERE id = :id LIMIT 1")
     fun getTransactionById(id: String): LocalTransactionEntity?

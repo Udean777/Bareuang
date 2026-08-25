@@ -1,5 +1,6 @@
 package com.ssajudn.barebudget.data.local.room
 
+import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.ssajudn.barebudget.domain.model.DueBill
@@ -99,7 +100,7 @@ data class LocalDueBillEntity(
 ) {
     fun toDueBill(): DueBill {
         val s = runCatching { DueBillStatus.valueOf(status) }
-            .onFailure { println("[Entities] Unknown DueBillStatus: $status: ${it.message}") }
+            .onFailure { android.util.Log.w("Entities", "Unknown DueBillStatus: $status: ${it.message}") }
             .getOrDefault(DueBillStatus.UNPAID)
         val interval = DomainMappers.safeRecurringInterval(recurringInterval)
         return DueBill(

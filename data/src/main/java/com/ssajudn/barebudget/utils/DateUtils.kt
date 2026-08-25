@@ -1,179 +1,107 @@
 package com.ssajudn.barebudget.utils
 
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.Locale
 
+/**
+ * Date helpers built on java.time (safe: minSdk 26).
+ *
+ * Contract: functions taking an ISO date string expect `yyyy-MM-dd` (an optional
+ * `T…` timestamp suffix is tolerated) and THROW [IllegalArgumentException] on
+ * unparseable input — silent fallbacks masked real bugs. The one exception is
+ * [formatDisplayDate], which returns the raw input so corrupt values remain
+ * visible in the UI instead of crashing a list render.
+ */
 object DateUtils {
 
     private val indonesianLocale = Locale("id", "ID")
+    private val displayFormat = DateTimeFormatter.ofPattern("dd MMM yyyy", indonesianLocale)
 
-    fun getCurrentDateISO(): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(Date())
-    }
+    /** ISO local date of "today". */
+    fun getCurrentDateISO(): String = LocalDate.now().toString()
 
-    fun getCurrentMonthYear(): String {
-        val sdf = SimpleDateFormat("yyyy-MM", Locale.getDefault())
-        return sdf.format(Date())
-    }
+    fun getCurrentMonthYear(): String = YearMonth.now().toString()
+
+    private fun parseLocalDate(isoDate: String): LocalDate =
+        LocalDate.parse(isoDate.substring(0, 10))
 
     /**
-     * Format "2026-08-19" or ISO timestamp to "19 Agu 2026"
+     * Format "2026-08-19" or ISO timestamp to "19 Agu 2026".
+     * Returns the raw input unchanged when unparseable (display-only concern).
      */
-    fun formatDisplayDate(rawDate: String): String {
-        return try {
-            val inputFormat = if (rawDate.contains("T")) {
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            } else {
-                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            }
-            val date = inputFormat.parse(rawDate.substring(0, minOf(19, rawDate.length)))
-            val outputFormat = SimpleDateFormat("dd MMM yyyy", indonesianLocale)
-            if (date != null) outputFormat.format(date) else rawDate
-        } catch (e: Exception) {
+    fun formatDisplayDate(rawDate: String): String =
+        try {
+            parseLocalDate(rawDate).format(displayFormat)
+        } catch (_: Exception) {
             rawDate
         }
-    }
 
     /**
-     * Calculate days remaining until due date
+     * Days remaining until due date (negative = past). Throws on unparseable input.
      */
-    fun getDaysUntilDue(dueDateString: String): Long {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val dueDate = sdf.parse(dueDateString.substring(0, 10)) ?: return 0
-            val today = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.time
-
-            val diffMillis = dueDate.time - today.time
-            TimeUnit.DAYS.convert(diffMillis, TimeUnit.MILLISECONDS)
-        } catch (e: Exception) {
-            0
-        }
-    }
+    fun getDaysUntilDue(dueDateString: String): Long =
+        ChronoUnit.DAYS.between(LocalDate.now(), parseLocalDate(dueDateString))
 
     /**
-     * Human readable countdown e.g. "3 hari lagi", "Hari ini", "Terlewat 2 hari"
-     */
-    fun getDueStatusMessage(dueDateString: String): String {
-        val days = getDaysUntilDue(dueDateString)
-        return when {
-            days > 1 -> "$days hari lagi"
-            days == 1L -> "Besok"
-            days == 0L -> "Jatuh tempo hari ini!"
-            else -> "Terlewat ${Math.abs(days)} hari"
-        }
-    }
-
-    /**
-     * Calculates the next due date based on recurring interval
+     * Calculates the next due date based on recurring interval.
      */
     fun calculateNextDueDate(currentDueDateStr: String, interval: String): String {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(currentDueDateStr.substring(0, 10)) ?: Date()
-            val cal = Calendar.getInstance().apply { time = date }
-
-            when (interval.uppercase()) {
-                "WEEKLY" -> cal.add(Calendar.WEEK_OF_YEAR, 1)
-                "MONTHLY" -> cal.add(Calendar.MONTH, 1)
-                "YEARLY" -> cal.add(Calendar.YEAR, 1)
-                else -> return currentDueDateStr
-            }
-
-            sdf.format(cal.time)
-        } catch (e: Exception) {
-            currentDueDateStr
+        val date = parseLocalDate(currentDueDateStr)
+        val next = when (interval.uppercase()) {
+            "WEEKLY" -> date.plusWeeks(1)
+            "MONTHLY" -> date.plusMonths(1)
+            "YEARLY" -> date.plusYears(1)
+            else -> return currentDueDateStr
         }
+        return next.toString()
     }
 
     /**
      * Calculates next occurrence matching a target day of week (1 = Monday ... 7 = Sunday)
      */
     fun calculateNextWeeklyDay(fromDateStr: String, targetDayOfWeek: Int): String {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(fromDateStr.substring(0, minOf(10, fromDateStr.length))) ?: Date()
-            val cal = Calendar.getInstance().apply { time = date }
-
-            // Convert Calendar.DAY_OF_WEEK (Sunday=1, Monday=2..Saturday=7) to ISO (Monday=1..Sunday=7)
-            val currentCalDay = cal.get(Calendar.DAY_OF_WEEK)
-            val currentIsoDay = if (currentCalDay == Calendar.SUNDAY) 7 else currentCalDay - 1
-
-            var daysToAdd = (targetDayOfWeek - currentIsoDay + 7) % 7
-            if (daysToAdd == 0) daysToAdd = 7 // next week
-            cal.add(Calendar.DAY_OF_MONTH, daysToAdd)
-            sdf.format(cal.time)
-        } catch (_: Exception) {
-            calculateNextDueDate(fromDateStr, "WEEKLY")
-        }
+        val date = parseLocalDate(fromDateStr)
+        // ISO day-of-week is already Monday=1..Sunday=7.
+        var daysToAdd = (targetDayOfWeek - date.dayOfWeek.value + 7) % 7
+        if (daysToAdd == 0) daysToAdd = 7 // next week
+        return date.plusDays(daysToAdd.toLong()).toString()
     }
 
     /**
      * Calculates next occurrence matching a target day of month (1..31)
      */
     fun calculateNextMonthlyDate(fromDateStr: String, targetDayOfMonth: Int): String {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(fromDateStr.substring(0, minOf(10, fromDateStr.length))) ?: Date()
-            val cal = Calendar.getInstance().apply { time = date }
-
-            cal.add(Calendar.MONTH, 1)
-            val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-            cal.set(Calendar.DAY_OF_MONTH, targetDayOfMonth.coerceIn(1, maxDay))
-            sdf.format(cal.time)
-        } catch (_: Exception) {
-            calculateNextDueDate(fromDateStr, "MONTHLY")
-        }
+        val nextMonth = parseLocalDate(fromDateStr).plusMonths(1)
+        val maxDay = nextMonth.lengthOfMonth()
+        return nextMonth.withDayOfMonth(targetDayOfMonth.coerceIn(1, maxDay)).toString()
     }
 
     /**
      * Extracts ISO day of week (1=Monday ... 7=Sunday) from YYYY-MM-DD
      */
-    fun getDayOfWeek(dateStr: String): Int {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(dateStr.substring(0, minOf(10, dateStr.length))) ?: Date()
-            val cal = Calendar.getInstance().apply { time = date }
-            val calDay = cal.get(Calendar.DAY_OF_WEEK)
-            if (calDay == Calendar.SUNDAY) 7 else calDay - 1
-        } catch (_: Exception) {
-            1
-        }
-    }
+    fun getDayOfWeek(dateStr: String): Int = parseLocalDate(dateStr).dayOfWeek.value
 
     /**
      * Extracts Day of Month (1..31) from YYYY-MM-DD
      */
-    fun getDayOfMonth(dateStr: String): Int {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val date = sdf.parse(dateStr.substring(0, minOf(10, dateStr.length))) ?: Date()
-            val cal = Calendar.getInstance().apply { time = date }
-            cal.get(Calendar.DAY_OF_MONTH)
+    fun getDayOfMonth(dateStr: String): Int = parseLocalDate(dateStr).dayOfMonth
+
+    /**
+     * Millis at UTC midnight of the given date, or null when unparseable.
+     * UTC keeps the date-picker round-trip stable across device timezones.
+     */
+    fun parseIsoToMillis(isoDate: String): Long? =
+        try {
+            parseLocalDate(isoDate).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         } catch (_: Exception) {
-            1
+            null
         }
-    }
 
-    fun parseIsoToMillis(isoDate: String): Long {
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            sdf.parse(isoDate.substring(0, 10))?.time ?: System.currentTimeMillis()
-        } catch (e: Exception) {
-            System.currentTimeMillis()
-        }
-    }
-
-    fun formatMillisToIso(millis: Long): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        // Avoid timezone shift issues with date picker
-        sdf.timeZone = TimeZone.getTimeZone("UTC")
-        return sdf.format(Date(millis))
-    }
+    fun formatMillisToIso(millis: Long): String =
+        Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()
 }

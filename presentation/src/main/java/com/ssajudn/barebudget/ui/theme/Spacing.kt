@@ -3,7 +3,7 @@ package com.ssajudn.barebudget.ui.theme
 import androidx.compose.ui.unit.dp
 
 /**
- * Spacing scale, in 4dp steps per the Material 3 layout grid.
+ * Spacing scale anchored by an 8px base unit — per DESIGN.MD §4 "Spacing & Layout Grid".
  *
  * Exists because spacing was previously invented per screen: horizontal screen
  * padding was 20dp in some places and 24dp in others, and the gap left for the
@@ -12,36 +12,54 @@ import androidx.compose.ui.unit.dp
  *
  * A plain object, not a CompositionLocal: these values never vary by theme, and a
  * local would add indirection for nothing.
+ *
+ * DESIGN.MD token → Kotlin name mapping:
+ *   unit            → ExtraSmall (4dp) / Small (8dp)
+ *   stack-sm        → StackSm   (8dp)
+ *   gutter / stack-md → Medium  (16dp)
+ *   container-margin → ScreenHorizontal (24dp)
+ *   stack-lg        → StackLg   (32dp)
+ *   section-padding → SectionPadding (40dp)
  */
 object Spacing {
     /** 4dp — between tightly related items, e.g. a label and its value. */
     val ExtraSmall = 4.dp
 
-    /** 8dp — icon-to-text, chip gaps. */
+    /** 8dp — icon-to-text gap, chip gaps. DESIGN.MD: stack-sm */
     val Small = 8.dp
+
+    /** 8dp — alias for DESIGN.MD `stack-sm` token */
+    val StackSm = 8.dp
 
     /** 12dp — inside compact containers. */
     val MediumSmall = 12.dp
 
-    /** 16dp — the default. Card padding, list row insets, gaps between cards. */
+    /** 16dp — default. Card padding, list row insets, grid gutters. DESIGN.MD: gutter / stack-md */
     val Medium = 16.dp
 
     /** 20dp — generous card interiors. */
     val MediumLarge = 20.dp
 
-    /** 24dp — between major sections. */
+    /** 24dp — between major sections. DESIGN.MD: container-margin */
     val Large = 24.dp
 
-    /** 32dp — around hero content. */
-    val ExtraLarge = 32.dp
-
     /**
-     * 20dp — horizontal inset from the screen edge (M3 Expressive breathing room).
+     * 24dp — horizontal inset from the screen edge.
+     * DESIGN.MD: container-margin = 24px (Mobile: 4-column layout with 24px horizontal margins).
      *
      * One value for every screen. Vertical list padding should come from the
      * Scaffold's inner padding, not a constant.
      */
-    val ScreenHorizontal = 20.dp
+    val ScreenHorizontal = 24.dp
+
+    /** 32dp — around hero content. DESIGN.MD: stack-lg */
+    val ExtraLarge = 32.dp
+
+    /** 32dp — alias for DESIGN.MD `stack-lg` token */
+    val StackLg = 32.dp
+
+    /** 40dp — major view and layout section gutters. DESIGN.MD: section-padding */
+    val SectionPadding = 40.dp
 
     /**
      * 88dp — bottom padding so scrollable content can clear the FAB.

@@ -2,9 +2,9 @@ package com.ssajudn.barebudget.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ssajudn.barebudget.data.local.ThemePreferences
+import com.ssajudn.barebudget.domain.model.AppThemeDarkMode
 import com.ssajudn.barebudget.domain.model.DashboardSummary
-import com.ssajudn.barebudget.domain.repository.BudgetRepository
-import com.ssajudn.barebudget.domain.repository.TransactionRepository
 import com.ssajudn.barebudget.domain.usecase.GetDashboardSummaryUseCase
 import com.ssajudn.barebudget.domain.error.AppException
 import com.ssajudn.barebudget.domain.error.userMessage
@@ -24,9 +24,12 @@ sealed interface DashboardUiState {
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getDashboardSummary: GetDashboardSummaryUseCase,
-    private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository
+    private val themePreferences: ThemePreferences
 ) : ViewModel() {
+
+    val darkMode get() = themePreferences.darkMode
+
+    fun setDarkMode(mode: AppThemeDarkMode) = themePreferences.setDarkMode(mode)
 
     private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
@@ -56,24 +59,6 @@ class DashboardViewModel @Inject constructor(
                     if (_uiState.value !is DashboardUiState.Success) {
                         _uiState.value = DashboardUiState.Error((error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Failed to load dashboard data")
                     }
-                }
-        }
-    }
-
-    fun updateBudget(newBudget: Long) {
-        viewModelScope.launch {
-            budgetRepository.setBudget(newBudget)
-                .onSuccess {
-                    loadDashboardData()
-                }
-        }
-    }
-
-    fun deleteTransaction(id: String) {
-        viewModelScope.launch {
-            transactionRepository.deleteTransaction(id)
-                .onSuccess {
-                    loadDashboardData()
                 }
         }
     }

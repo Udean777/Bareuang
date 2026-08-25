@@ -37,8 +37,6 @@ android {
         applicationId = "com.ssajudn.barebudget"
         minSdk = 26
         targetSdk = 37
-        // ponytail: CI injects VERSION_CODE (= github run number, always
-        // increasing); local builds fall back to 1.
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.0"
 
@@ -81,6 +79,8 @@ android {
     }
     testOptions {
         unitTests.all { it.jvmArgs("-Dnet.bytebuddy.experimental=true") }
+        // android.util.Log (used by data-layer mappers) returns defaults in JVM tests.
+        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -160,7 +160,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     
-    // Theme generation from Overture
-    implementation(libs.material.kolor)
     implementation(libs.androidx.palette.ktx)
 }

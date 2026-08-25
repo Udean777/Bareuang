@@ -68,7 +68,7 @@ fun EmptyState(
     StateLayout(
         modifier = modifier,
         icon = icon,
-        iconContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        iconContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
         title = title,
         description = description,

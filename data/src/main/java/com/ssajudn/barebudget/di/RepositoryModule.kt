@@ -14,12 +14,20 @@ import com.ssajudn.barebudget.domain.repository.TransactionRepository
 import com.ssajudn.barebudget.domain.repository.WalletRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideClock(): java.time.Clock = java.time.Clock.systemDefaultZone()
+    }
 
     @Binds
     abstract fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository

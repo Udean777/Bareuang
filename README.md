@@ -123,7 +123,7 @@ BareBudget/
 │   │   ├── repository/         # *RepositoryImpl (local-only), DomainMappers
 │   │   ├── notification/       # BillReminderWorker (WorkManager+Hilt), Scheduler, Prefs, NotificationHelper
 │   │   ├── service/            # WalletBalanceService (single writer)
-│   │   └── utils/              # AppConfig (BuildConfig data), DateUtils
+│   │   └── utils/              # DateUtils
 │   └── schemas/                # Room schema history
 ├── presentation/               # Android Library — Jetpack Compose UI, ViewModels, Navigation (→ :domain, :data)
 │   └── src/main/java/com/ssajudn/barebudget/

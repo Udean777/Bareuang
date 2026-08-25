@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.common.UiText
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
 import javax.inject.Inject
@@ -27,7 +29,7 @@ import com.ssajudn.barebudget.domain.model.UpdateGoalRequest
 sealed interface GoalsUiState {
     object Loading : GoalsUiState
     data class Success(val goals: List<Goal>) : GoalsUiState
-    data class Error(val message: String) : GoalsUiState
+    data class Error(val message: String, val uiText: UiText = UiText.Res(R.string.goals_load_error)) : GoalsUiState
 }
 
 @HiltViewModel
@@ -43,10 +45,18 @@ class GoalsViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _selectedFilter = MutableStateFlow(GoalFilter.ALL)
+    val selectedFilter: StateFlow<GoalFilter> = _selectedFilter.asStateFlow()
+
+    fun onFilterChange(filter: GoalFilter) {
+        _selectedFilter.value = filter
+    }
+
     val uiState: StateFlow<GoalsUiState> = combine(
         repository.observeGoals(),
-        _searchQuery
-    ) { goals, query ->
+        _searchQuery,
+        _selectedFilter
+    ) { goals, query, filter ->
         var filtered = goals
         if (query.isNotBlank()) {
             filtered = filtered.filter { goal ->
@@ -54,8 +64,16 @@ class GoalsViewModel @Inject constructor(
                     (goal.notes?.contains(query, ignoreCase = true) == true)
             }
         }
+        filtered = filtered.filter { goal ->
+            val isDone = goal.currentAmount >= goal.targetAmount
+            when (filter) {
+                GoalFilter.ALL -> true
+                GoalFilter.ACTIVE -> !isDone
+                GoalFilter.COMPLETED -> isDone
+            }
+        }
         GoalsUiState.Success(filtered) as GoalsUiState
-    }.catch { e -> emit(GoalsUiState.Error(e.message ?: "Failed to load savings goals")) }
+    }.catch { e -> emit(GoalsUiState.Error(e.message ?: "Failed to load savings goals", UiText.Res(R.string.goals_load_error))) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GoalsUiState.Loading)
 
     val wallets: StateFlow<List<Wallet>> =
@@ -90,8 +108,8 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createGoal(CreateGoalRequest(name, targetAmount, targetDate, colorHex, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 
@@ -99,8 +117,8 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateGoal(id, UpdateGoalRequest(name, targetAmount, targetDate, colorHex, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 
@@ -108,15 +126,15 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.depositToGoal(id, amount, walletId)
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 
     fun deleteGoal(id: String) {
         viewModelScope.launch {
             val r = repository.deleteGoal(id)
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 }

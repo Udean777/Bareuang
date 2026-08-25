@@ -48,7 +48,8 @@ class AddTransactionViewModelTest {
     private fun createVm(monthlyBudget: Long = 2_000_000L): AddTransactionViewModel {
         coEvery { budgetRepository.getMonthlyBudget(any()) } returns Result.success(monthlyBudget)
         every { budgetRepository.getCategoryBudgets(any()) } returns kotlinx.coroutines.flow.flowOf(emptyList())
-        return AddTransactionViewModel(walletRepository, transactionRepository, budgetRepository)
+        val hasMonthlyBudget = com.ssajudn.barebudget.domain.usecase.HasMonthlyBudgetUseCase(budgetRepository)
+        return AddTransactionViewModel(walletRepository, transactionRepository, budgetRepository, hasMonthlyBudget)
     }
 
     private fun walletsFixture(): List<Wallet> = listOf(

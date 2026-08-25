@@ -47,7 +47,7 @@
     <string name="settings_danger_desc">Clear current session and return to onboarding</string>
     <string name="settings_reset_local">Reset Local Data</string>
     <string name="settings_sign_out">Sign Out</string>
-    <string name="settings_footer_tagline">Frictionless Personal Finance</string>
+    <string name="settings_footer_tagline">Finance that feels like a warm hug</string>
     <string name="settings_dialog_reset_title">Reset Guest Session?</string>
     <string name="settings_dialog_signout_title">Sign Out?</string>
     <string name="settings_dialog_reset_message">Are you sure you want to exit? Since you are in Guest Mode, your local transactions and records will be cleared.</string>
@@ -234,7 +234,7 @@
     <string name="bills_wallet_balance">Balance: <xliff:g id="amount">%1$s</xliff:g></string>
     <string name="bills_auto_deduct">Wallet balance will be automatically deducted and recorded as expense.</string>
     <!-- Dashboard -->
-    <string name="dashboard_subtitle">Frictionless Expense Tracker</string>
+    <string name="dashboard_subtitle">Your cozy money companion</string>
     <string name="dashboard_theme_desc">Theme</string>
     <string name="dashboard_choose_theme">Choose Theme</string>
     <string name="dashboard_follow_system">Follow System</string>
@@ -401,4 +401,56 @@
     <string name="onboarding_slide3_desc">Never get caught off-guard by PayLater or monthly subscription due dates ever again.</string>
     <string name="onboarding_slide4_title">Choose How You Start</string>
     <string name="onboarding_slide4_desc">Select whether to sign in or explore immediately in Guest Mode.</string>
+    <!-- Tx validation (Phase 6 structured errors) -->
+    <string name="tx_error_invalid_amount">Please enter a valid amount</string>
+    <string name="tx_error_wallet_required">Please select a wallet first</string>
+    <string name="tx_error_to_wallet_required">Please select destination wallet for transfer</string>
+    <string name="tx_error_same_wallet">Source and destination wallet must not be the same</string>
+    <string name="tx_error_insufficient_balance">Insufficient wallet balance (%1$s)</string>
+    <string name="tx_error_budget_required">Please set this month\'s budget first</string>
+    <string name="tx_error_save_failed">Failed to save transaction</string>
+    <string name="bills_error_insufficient">Insufficient balance to pay this bill</string>
+    <!-- Settings backup/restore -->
+    <string name="settings_backup_success_msg">Backup successfully exported to file! Keep this file to restore anytime.</string>
+    <string name="settings_backup_success_snack">Backup exported</string>
+    <string name="settings_backup_failed">Failed to export backup: %1$s</string>
+    <string name="settings_restore_success_msg">Successfully restored %1$d items from backup file!</string>
+    <string name="settings_restore_success_snack">Restore successful</string>
+    <string name="settings_restore_failed">Failed to restore backup. Please check file format: %1$s</string>
+    <!-- Generic -->
+    <string name="error_generic">Failed</string>
+    <string name="error_pay_failed">Payment failed</string>
+    <string name="common_rp_zero">Rp 0</string>
+    <!-- Budget errors -->
+    <string name="budget_error_locked">Budget for this month is locked. It can only be changed next month.</string>
+    <string name="budget_error_invalid">Please enter a valid budget amount</string>
+    <string name="budget_error_set_failed">Failed to set budget</string>
+    <string name="budget_error_category_set">Failed to set category limit</string>
+    <string name="budget_error_category_delete">Failed to delete category limit</string>
+    <!-- Wallet -->
+    <string name="wallets_load_error">Failed to load wallets</string>
+    <!-- Tx detail -->
+    <string name="tx_detail_error_load">Failed to load transaction</string>
+    <string name="tx_detail_error_delete">Failed to delete transaction</string>
+    <!-- Split bill extras -->
+    <string name="split_default_merchant">Split</string>
+    <string name="split_person_default">Friend %1$d</string>
+    <string name="split_share_title">Share split bill details:</string>
+    <string name="split_message_total">Total Bill: %1$s</string>
+    <string name="split_message_people">Number of People: %1$d</string>
+    <string name="split_message_per_person">Bill per Person: %1$s</string>
+    <string name="split_message_auto">Calculated automatically with BareBudget</string>
+    <string name="split_service_label">Service (%)</string>
+    <!-- AppDialogs defaults -->
+    <string name="dialog_default_title">Delete this item?</string>
+    <string name="dialog_default_message">This action cannot be undone.</string>
+    <string name="dialog_confirm_save">Save</string>
+    <string name="dialog_confirm_delete">Delete</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="state_error_title">An error occurred</string>
+    <string name="state_retry">Retry</string>
+    <!-- Splash -->
+    <string name="splash_brand">Bareuang</string>
+    <string name="splash_runway_tracker">KNOW HOW LONG YOUR MONEY LASTS</string>
+    <string name="splash_bubbly_desc">Soft. Simple. Surprisingly fun.</string>
 </resources>

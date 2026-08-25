@@ -85,39 +85,6 @@ class DateUtilsTest {
     }
 
     @Test
-    fun `getDueStatusMessage returns today message for zero days`() {
-        val today = DateUtils.getCurrentDateISO()
-        val msg = DateUtils.getDueStatusMessage(today)
-        assertEquals("Jatuh tempo hari ini!", msg)
-    }
-
-    @Test
-    fun `getDueStatusMessage returns tomorrow message for 1 day`() {
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-            .parse(DateUtils.getCurrentDateISO())!!
-        val cal = java.util.Calendar.getInstance().apply {
-            time = today
-            add(java.util.Calendar.DAY_OF_MONTH, 1)
-        }
-        val tomorrow = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(cal.time)
-        val msg = DateUtils.getDueStatusMessage(tomorrow)
-        assertEquals("Besok", msg)
-    }
-
-    @Test
-    fun `getDueStatusMessage returns future message for more than 1 day`() {
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-            .parse(DateUtils.getCurrentDateISO())!!
-        val cal = java.util.Calendar.getInstance().apply {
-            time = today
-            add(java.util.Calendar.DAY_OF_MONTH, 7)
-        }
-        val future = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(cal.time)
-        val msg = DateUtils.getDueStatusMessage(future)
-        assertTrue("Expected 'hari lagi' suffix, got: $msg", msg.contains("hari lagi"))
-    }
-
-    @Test
     fun `calculateNextDueDate advances monthly by one month`() {
         val out = DateUtils.calculateNextDueDate("2026-01-15", "MONTHLY")
         assertEquals("2026-02-15", out)
@@ -148,12 +115,12 @@ class DateUtilsTest {
     }
 
     @Test
-    @org.junit.Ignore("KNOWN BUG (locked for Phase 8): parseIsoToMillis uses JVM default TZ while formatMillisToIso forces UTC, causing 2026-08-19 to round-trip to 2026-08-18 in UTC+7. This test documents the bug; fixing it requires unifying timezones in DateUtils.")
-    fun `parseIsoToMillis and formatMillisToIso roundtrip preserves date`() {
+    fun `parseIsoToMillis and formatMillisToIso roundtrip preserves date across timezones`() {
         val original = "2026-08-19"
-        val millis = DateUtils.parseIsoToMillis(original)
-        val back = DateUtils.formatMillisToIso(millis)
-        assertEquals(original, back)
+        val millis = DateUtils.parseIsoToMillis(original)!!
+        assertEquals(original, DateUtils.formatMillisToIso(millis))
+        // UTC midnight must round-trip regardless of JVM default timezone.
+        assertEquals(0L, millis % java.util.concurrent.TimeUnit.DAYS.toMillis(1))
     }
 
     @Test
@@ -169,9 +136,7 @@ class DateUtilsTest {
     }
 
     @Test
-    fun `parseIsoToMillis returns current time for garbage input`() {
-        val now = System.currentTimeMillis()
-        val out = DateUtils.parseIsoToMillis("garbage")
-        assertTrue("Expected ~now fallback, got: $out", out in (now - 5000)..(now + 5000))
+    fun `parseIsoToMillis returns null for garbage input`() {
+        assertEquals(null, DateUtils.parseIsoToMillis("garbage"))
     }
 }

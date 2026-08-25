@@ -27,7 +27,6 @@ hiltNavigationCompose = "1.2.0"
 turbine = "1.1.0"
 mockk = "1.13.10"
 robolectric = "4.12.1"
-materialKolor = "5.0.0-alpha07"
 paletteKtx = "1.0.0"
 datastore = "1.1.1"
 appcompat = "1.7.1"
@@ -37,7 +36,6 @@ playServicesCoroutines = "1.8.0"
 glance = "1.1.1"
 
 [libraries]
-material-kolor = { group = "com.materialkolor", name = "material-kolor", version.ref = "materialKolor" }
 androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version = "2.6.0" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

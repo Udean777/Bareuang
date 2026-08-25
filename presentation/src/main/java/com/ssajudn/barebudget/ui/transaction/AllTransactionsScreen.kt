@@ -20,15 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ssajudn.barebudget.ui.theme.IncomeAccent
+import com.ssajudn.barebudget.ui.theme.ExpenseAccent
 import com.ssajudn.barebudget.domain.model.TransactionCategory
 import com.ssajudn.barebudget.domain.model.TransactionType
+import com.ssajudn.barebudget.ui.components.ErrorState
 import com.ssajudn.barebudget.ui.components.TransactionItem
 import com.ssajudn.barebudget.ui.components.getCategoryIcon
 import androidx.compose.ui.res.stringResource
@@ -49,20 +49,11 @@ fun AllTransactionsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    val lifecycleOwner = LocalLifecycleOwner.current
-
     var showFilterBottomSheet by remember { mutableStateOf(false) }
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.loadTransactions()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        viewModel.loadTransactions()
+        onPauseOrDispose { }
     }
 
     Scaffold(
@@ -231,7 +222,7 @@ fun AllTransactionsScreen(
                                             Text(
                                                 text = "+${CurrencyFormatter.formatRupiah(state.filteredIncomeTotal)}",
                                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                                color = Color(0xFF2ECC71)
+                                                color = IncomeAccent
                                             )
                                         }
                                     }
@@ -435,28 +426,13 @@ fun AllTransactionsScreen(
                             )
                         }
                         is AllTransactionsUiState.Error -> {
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.tx_load_error),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = state.message,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                AppButton(onClick = { viewModel.loadTransactions() }) {
-                                    Text(stringResource(R.string.common_retry))
-                                }
-                            }
+                            ErrorState(
+                                title = stringResource(R.string.tx_load_error),
+                                message = state.message,
+                                retryLabel = stringResource(R.string.common_retry),
+                                modifier = Modifier.align(Alignment.Center),
+                                onRetry = { viewModel.loadTransactions() }
+                            )
                         }
                         is AllTransactionsUiState.Success -> {
                             if (state.transactions.isEmpty()) {

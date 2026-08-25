@@ -125,6 +125,27 @@ data class Goal(
 
     val remainingAmount: Long
         get() = (targetAmount - currentAmount).coerceAtLeast(0L)
+
+    /**
+     * Days until [targetDate] (ISO yyyy-MM-dd…), or null when unset/unparseable.
+     */
+    fun daysLeftUntilTarget(): Int? {
+        val isoDate = targetDate?.takeIf { it.length >= 10 }?.substring(0, 10) ?: return null
+        return runCatching {
+            java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), java.time.LocalDate.parse(isoDate))
+        }.getOrNull()?.toInt()
+    }
+
+    /**
+     * Suggested savings pace to reach the target date: per-month and per-day
+     * amounts, or null when there is no future target date.
+     */
+    fun suggestedSavingsPace(): Pair<Long, Long>? {
+        val daysLeft = daysLeftUntilTarget() ?: return null
+        if (daysLeft <= 0 || remainingAmount <= 0L) return null
+        val monthsLeft = maxOf(1L, daysLeft / 30L)
+        return (remainingAmount / monthsLeft) to (remainingAmount / daysLeft)
+    }
 }
 
 data class CashflowDataPoint(
