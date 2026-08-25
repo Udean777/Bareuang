@@ -16,7 +16,7 @@ rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.u
 }
 
 android {
-    namespace = "com.ssajudn.barebudget"
+    namespace = "com.ssajudn.bareuang"
     compileSdk {
         version = release(37)
     }
@@ -34,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.ssajudn.barebudget"
+        applicationId = "com.ssajudn.bareuang"
         minSdk = 26
         targetSdk = 37
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
@@ -54,7 +54,7 @@ android {
         }
         release {
             signingConfig = signingConfigs.getByName("release")
-            buildConfigField("String", "BASE_URL", "\"https://api.barebudget.app/\"")
+            buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\"")
             buildConfigField(
                 "String",
                 "WEB_CLIENT_ID",

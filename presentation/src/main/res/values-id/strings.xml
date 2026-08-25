@@ -1,5 +1,5 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Bare Budget</string>
+    <string name="app_name">Bareuang</string>
     <!-- Language -->
     <string name="language_settings">Bahasa</string>
     <string name="language_english">English</string>
@@ -36,13 +36,13 @@
     <string name="settings_link_google_desc">Sinkronisasi data otomatis ke cloud</string>
     <string name="settings_support_title">Dukungan &amp; Apresiasi</string>
     <string name="settings_donate_title">Donasi untuk Pengembang</string>
-    <string name="settings_donate_desc">Traktir kopi atau dukung pengembangan BareBudget</string>
+    <string name="settings_donate_desc">Traktir kopi atau dukung pengembangan Bareuang</string>
     <string name="settings_star_title">Beri Bintang di GitHub</string>
-    <string name="settings_star_desc">Beri bintang pada repositori BareBudget di GitHub</string>
+    <string name="settings_star_desc">Beri bintang pada repositori Bareuang di GitHub</string>
     <string name="settings_share_title">Bagikan Aplikasi</string>
     <string name="settings_share_desc">Ajak teman mengelola keuangan &amp; financial runway</string>
-    <string name="settings_share_message">Kelola keuangan dan pantau runway finansialmu dengan BareBudget! Cek repositori di: https://github.com/Udean777/Bare-Budget</string>
-    <string name="settings_share_chooser">Bagikan BareBudget</string>
+    <string name="settings_share_message">Kelola keuangan dan pantau runway finansialmu dengan Bareuang! Cek repositori di: https://github.com/Udean777/Bare-Budget</string>
+    <string name="settings_share_chooser">Bagikan Bareuang</string>
     <string name="settings_danger_title">Sesi &amp; Zona Bahaya</string>
     <string name="settings_danger_desc">Hapus sesi saat ini dan kembali ke onboarding</string>
     <string name="settings_reset_local">Reset Data Lokal</string>
@@ -262,7 +262,7 @@
     <string name="budget_locked_btn">Budget Terkunci Bulan Ini</string>
     <string name="budget_save_btn">Simpan Anggaran Bulanan</string>
     <string name="budget_runway_banner_title">LACAK FINANCIAL RUNWAY</string>
-    <string name="budget_runway_banner_desc">Menentukan batas belanja bulanan memungkinkan Bare Budget menghitung kecepatan pengeluaran harian dan tanggal bertahan hidup finansialmu secara akurat.</string>
+    <string name="budget_runway_banner_desc">Menentukan batas belanja bulanan memungkinkan Bareuang menghitung kecepatan pengeluaran harian dan tanggal bertahan hidup finansialmu secara akurat.</string>
     <string name="budget_locked_title">Budget bulan ini sudah terkunci</string>
     <string name="budget_locked_desc">Saat ini %1$s. Kamu hanya bisa mengubah budget 1x per bulan. Budget akan bisa diubah lagi bulan depan.</string>
     <string name="budget_input_label">Target Anggaran Bulanan</string>
@@ -339,13 +339,13 @@
     <string name="split_share_whatsapp">Bagikan Rincian ke WhatsApp</string>
     <string name="split_apply">Terapkan Porsi Saya (<xliff:g id="amount">%1$s</xliff:g>)</string>
     <!-- Onboarding -->
-    <string name="onboarding_welcome">Selamat Datang di Bare Budget</string>
+    <string name="onboarding_welcome">Selamat Datang di Bareuang</string>
     <string name="onboarding_choose_mode">Pilih mode akun untuk melanjutkan</string>
     <string name="onboarding_auth_desc">Masuk untuk sinkronisasi data cloud atau langsung lanjutkan dengan profil tamu.</string>
     <string name="auth_offline_message">Kamu sedang tidak terhubung ke internet. Sambungkan dulu ya untuk masuk dengan Google.</string>
     <string name="auth_guest_offline_message">Tidak ada koneksi internet. Mode tetamu tetap bisa dipakai offline — data kamu tersimpan di perangkat ini.</string>
     <string name="notif_perm_title">Jangan Sampai Ada Tagihan Terlewat</string>
-    <string name="notif_perm_desc">BareBudget bisa mengingatkan saat tagihan mendekati jatuh tempo — 3 hari lagi, besok, dan hari-H. Notifikasi dibuat sepenuhnya di perangkatmu; tidak ada data yang dikirim ke mana pun.</string>
+    <string name="notif_perm_desc">Bareuang bisa mengingatkan saat tagihan mendekati jatuh tempo — 3 hari lagi, besok, dan hari-H. Notifikasi dibuat sepenuhnya di perangkatmu; tidak ada data yang dikirim ke mana pun.</string>
     <string name="notif_perm_allow">Izinkan Notifikasi</string>
     <string name="notif_perm_later">Lain Kali</string>
     <string name="onboarding_google_title">Masuk dengan Google</string>
@@ -359,6 +359,11 @@
     <string name="onboarding_slide2_desc">Dapatkan prediksi akurat berapa lama uangmu bertahan berdasarkan laju pengeluaran harianmu.</string>
     <string name="onboarding_slide3_title">Tagihan Jatuh Tempo &amp; Komitmen</string>
     <string name="onboarding_slide3_desc">Jangan sampai terlewat tanggal jatuh tempo PayLater atau langganan bulanan lagi.</string>
+    <string name="onboarding_theme_title">Pilih Nuansa Favoritmu</string>
+    <string name="onboarding_theme_desc">Sesuaikan tema tampilan sesuai kenyamanan matamu, baik siang maupun malam.</string>
+    <string name="onboarding_theme_system">Sistem</string>
+    <string name="onboarding_theme_light">Terang</string>
+    <string name="onboarding_theme_dark">Gelap</string>
     <string name="onboarding_slide4_title">Pilih Cara Memulai</string>
     <string name="onboarding_slide4_desc">Pilih untuk masuk dengan akun Google atau langsung coba dalam Mode Tamu.</string>
 </resources>

@@ -57,7 +57,7 @@ server/bin/
 server/.env
 server/build-errors.log
 server/main
-server/barebudget-api
+server/bareuang-api
 
 # Google Services
 app/google-services.json

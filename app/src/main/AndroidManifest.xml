@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name=".BareBudgetApplication"
+        android:name=".BareuangApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -24,12 +24,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:localeConfig="@xml/locales_config"
-        android:theme="@style/Theme.BareBudget">
+        android:theme="@style/Theme.Bareuang">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:configChanges="locale|layoutDirection|orientation|screenSize|screenLayout|keyboardHidden"
-            android:theme="@style/Theme.BareBudget"
+            android:theme="@style/Theme.Bareuang"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,7 +42,7 @@
         <receiver
             android:name=".widget.BudgetWidgetReceiver"
             android:exported="false"
-            android:label="Bare Budget">
+            android:label="Bareuang">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -52,7 +52,7 @@
         </receiver>
 
         <!-- WorkManager is initialized on-demand via Configuration.Provider in
-             BareBudgetApplication; disable the default initializer. -->
+             BareuangApplication; disable the default initializer. -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

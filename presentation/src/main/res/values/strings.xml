@@ -1,5 +1,5 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Bare Budget</string>
+    <string name="app_name">Bareuang</string>
     <!-- Language -->
     <string name="language_settings">Language</string>
     <string name="language_english">English</string>
@@ -36,13 +36,13 @@
     <string name="settings_link_google_desc">Sync data automatically to the cloud</string>
     <string name="settings_support_title">Support &amp; Appreciation</string>
     <string name="settings_donate_title">Donate to Developer</string>
-    <string name="settings_donate_desc">Buy a coffee or support BareBudget development</string>
+    <string name="settings_donate_desc">Buy a coffee or support Bareuang development</string>
     <string name="settings_star_title">Star on GitHub</string>
-    <string name="settings_star_desc">Star the BareBudget repository on GitHub</string>
+    <string name="settings_star_desc">Star the Bareuang repository on GitHub</string>
     <string name="settings_share_title">Share App</string>
     <string name="settings_share_desc">Invite friends to manage finances &amp; financial runway</string>
-    <string name="settings_share_message">Manage your finances and calculate your financial runway with BareBudget! Check the repo at: https://github.com/Udean777/Bare-Budget</string>
-    <string name="settings_share_chooser">Share BareBudget</string>
+    <string name="settings_share_message">Manage your finances and calculate your financial runway with Bareuang! Check the repo at: https://github.com/Udean777/Bare-Budget</string>
+    <string name="settings_share_chooser">Share Bareuang</string>
     <string name="settings_danger_title">Session &amp; Danger Zone</string>
     <string name="settings_danger_desc">Clear current session and return to onboarding</string>
     <string name="settings_reset_local">Reset Local Data</string>
@@ -264,7 +264,7 @@
     <string name="budget_locked_btn">Budget Locked This Month</string>
     <string name="budget_save_btn">Save Monthly Budget</string>
     <string name="budget_runway_banner_title">TRACK FINANCIAL RUNWAY</string>
-    <string name="budget_runway_banner_desc">Setting a monthly spending limit allows BareBudget to calculate your daily burn rate and financial survival horizon accurately.</string>
+    <string name="budget_runway_banner_desc">Setting a monthly spending limit allows Bareuang to calculate your daily burn rate and financial survival horizon accurately.</string>
     <string name="budget_locked_title">This month\'s budget is locked</string>
     <string name="budget_locked_desc">Currently %1$s. You can only change your budget once per month. It will be editable again next month.</string>
     <string name="budget_input_label">Target Monthly Budget</string>
@@ -379,13 +379,13 @@
     <string name="split_share_whatsapp">Share Details to WhatsApp</string>
     <string name="split_apply">Apply My Share (<xliff:g id="amount">%1$s</xliff:g>)</string>
     <!-- Onboarding -->
-    <string name="onboarding_welcome">Welcome to Bare Budget</string>
+    <string name="onboarding_welcome">Welcome to Bareuang</string>
     <string name="onboarding_choose_mode">Select an account mode to proceed</string>
     <string name="onboarding_auth_desc">Sign in to sync your cloud records or continue instantly with a guest profile.</string>
     <string name="auth_offline_message">You are offline. Connect to the internet to sign in with Google.</string>
     <string name="auth_guest_offline_message">No internet connection. Guest mode still works offline — your data stays on this device.</string>
     <string name="notif_perm_title">Never Miss a Bill</string>
-    <string name="notif_perm_desc">BareBudget can remind you when bills are due — 3 days ahead, tomorrow, and today. Reminders are generated entirely on your device; nothing is sent anywhere.</string>
+    <string name="notif_perm_desc">Bareuang can remind you when bills are due — 3 days ahead, tomorrow, and today. Reminders are generated entirely on your device; nothing is sent anywhere.</string>
     <string name="notif_perm_allow">Allow Notifications</string>
     <string name="notif_perm_later">Maybe later</string>
     <string name="onboarding_google_title">Sign In with Google</string>
@@ -399,6 +399,11 @@
     <string name="onboarding_slide2_desc">Get honest predictions of how long your money will last based on your real-time daily burn rate.</string>
     <string name="onboarding_slide3_title">Due Bills &amp; Commitments</string>
     <string name="onboarding_slide3_desc">Never get caught off-guard by PayLater or monthly subscription due dates ever again.</string>
+    <string name="onboarding_theme_title">Choose Your Vibe</string>
+    <string name="onboarding_theme_desc">Personalize your theme anytime. Comfortable for your eyes day and night.</string>
+    <string name="onboarding_theme_system">System</string>
+    <string name="onboarding_theme_light">Light</string>
+    <string name="onboarding_theme_dark">Dark</string>
     <string name="onboarding_slide4_title">Choose How You Start</string>
     <string name="onboarding_slide4_desc">Select whether to sign in or explore immediately in Guest Mode.</string>
     <!-- Tx validation (Phase 6 structured errors) -->
@@ -439,7 +444,7 @@
     <string name="split_message_total">Total Bill: %1$s</string>
     <string name="split_message_people">Number of People: %1$d</string>
     <string name="split_message_per_person">Bill per Person: %1$s</string>
-    <string name="split_message_auto">Calculated automatically with BareBudget</string>
+    <string name="split_message_auto">Calculated automatically with Bareuang</string>
     <string name="split_service_label">Service (%)</string>
     <!-- AppDialogs defaults -->
     <string name="dialog_default_title">Delete this item?</string>
