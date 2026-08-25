@@ -31,7 +31,7 @@ class ThemePreferences @Inject constructor(
             ?: AppThemeDarkMode.FollowSystem
 
     companion object {
-        private const val PREF_NAME = "bare_budget_appearance"
+        private const val PREF_NAME = "bareuang_appearance"
         private const val KEY_DARK_MODE = "dark_mode"
     }
 }

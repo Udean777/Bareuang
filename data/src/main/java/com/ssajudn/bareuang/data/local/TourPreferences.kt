@@ -33,7 +33,7 @@ class TourPreferences @Inject constructor(
     }
 
     companion object {
-        private const val PREF_NAME = "bare_budget_tour"
+        private const val PREF_NAME = "bareuang_tour"
         private const val KEY_TOUR_COMPLETED = "tour_completed"
 
     }

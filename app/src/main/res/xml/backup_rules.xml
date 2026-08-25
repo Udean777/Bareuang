@@ -4,8 +4,8 @@
    device via backup; harmless preferences (theme, tour, onboarding) do.
 -->
 <full-backup-content>
-    <exclude domain="database" path="bare_budget_offline.db" />
-    <exclude domain="database" path="bare_budget_offline.db-wal" />
-    <exclude domain="database" path="bare_budget_offline.db-shm" />
-    <exclude domain="sharedpref" path="bare_budget_session.xml" />
+    <exclude domain="database" path="bareuang_offline.db" />
+    <exclude domain="database" path="bareuang_offline.db-wal" />
+    <exclude domain="database" path="bareuang_offline.db-shm" />
+    <exclude domain="sharedpref" path="bareuang_session.xml" />
 </full-backup-content>

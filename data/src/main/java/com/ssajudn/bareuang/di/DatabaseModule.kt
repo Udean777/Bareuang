@@ -25,7 +25,7 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context.applicationContext,
             AppDatabase::class.java,
-            "bare_budget_offline.db"
+            "bareuang_offline.db"
         )
             .addMigrations(
                 AppDatabase.MIGRATION_5_6,

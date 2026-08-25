@@ -30,7 +30,7 @@ class WidgetPreferences @Inject constructor(
     }
 
     companion object {
-        private const val PREF_NAME = "bare_budget_widget"
+        private const val PREF_NAME = "bareuang_widget"
         private const val KEY_HIDE_BALANCE = "hide_balance"
 
     }

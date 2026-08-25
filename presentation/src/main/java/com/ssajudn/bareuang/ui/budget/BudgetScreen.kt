@@ -41,7 +41,6 @@ import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.ui.components.AmountTextField
 
 import com.ssajudn.bareuang.ui.components.AppButton
-import com.ssajudn.bareuang.ui.components.BaruangPrimaryButton
 import com.ssajudn.bareuang.ui.components.AppIconButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -100,13 +99,20 @@ fun BudgetScreen(
                     .fillMaxWidth()
                     .imePadding()
             ) {
-                BaruangPrimaryButton(
+                AppButton(
                     onClick = { viewModel.saveBudget() },
                     enabled = !uiState.isLoading && uiState.parsedAmount > 0 && !uiState.isLocked && !isOperationLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 16.dp)
-                        .height(52.dp)
+                        .height(52.dp),
+                    shape = AppShapes.Pill,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
@@ -281,153 +287,155 @@ fun BudgetScreen(
                 }
             }
 
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 4.dp),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-            )
+            // CATEGORY BUDGETS SECTION — only shown after a budget has been saved
+            if (uiState.currentLimit > 0) {
+                var showCategoryDialog by remember { mutableStateOf(false) }
+                var editingCategoryBudget by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
+                var categoryToDelete by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
 
-            // CATEGORY BUDGETS SECTION
-            var showCategoryDialog by remember { mutableStateOf(false) }
-            var editingCategoryBudget by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
-            var categoryToDelete by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.budget_category_title),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.budget_category_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                FilledTonalButton(
-                    onClick = {
-                        editingCategoryBudget = null
-                        showCategoryDialog = true
-                    },
-                    shape = AppShapes.Pill,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.common_add), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
-                }
-            }
-
-            // Allocation Summary
-            if (uiState.categoryBudgets.isNotEmpty()) {
-                Surface(
-                    shape = AppShapes.Squircle,
-                    color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-                            else MaterialTheme.colorScheme.surfaceContainerLow,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (uiState.isOverAllocated) Icons.Default.Warning else Icons.Default.PieChart,
-                            contentDescription = null,
-                            tint = if (uiState.isOverAllocated) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
+                    Column {
                         Text(
-                            text = if (uiState.isOverAllocated) {
-                                stringResource(R.string.budget_category_over_warning)
-                            } else {
-                                stringResource(
-                                    R.string.budget_category_allocated,
-                                    CurrencyFormatter.formatCompact(uiState.totalAllocatedCategory),
-                                    if (uiState.currentLimit > 0) CurrencyFormatter.formatCompact(uiState.currentLimit) else "unlimited"
-                                )
-                            },
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = if (uiState.isOverAllocated) FontWeight.Bold else FontWeight.Medium,
-                                color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            text = stringResource(R.string.budget_category_title),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    }
-                }
-            }
-
-            // Category list
-            if (uiState.categoryBudgets.isEmpty()) {
-                Surface(
-                    shape = AppShapes.Squircle,
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Category,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = stringResource(R.string.budget_category_empty),
+                            text = stringResource(R.string.budget_category_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
-            } else {
-                uiState.categoryBudgets.forEach { catBudget ->
-                    CategoryBudgetCard(
-                        categoryBudget = catBudget,
-                        onEdit = {
-                            editingCategoryBudget = catBudget
+                    FilledTonalButton(
+                        onClick = {
+                            editingCategoryBudget = null
                             showCategoryDialog = true
                         },
-                        onDelete = {
-                            categoryToDelete = catBudget
+                        shape = AppShapes.Pill,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.common_add), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+
+                // Allocation Summary
+                if (uiState.categoryBudgets.isNotEmpty()) {
+                    Surface(
+                        shape = AppShapes.Squircle,
+                        color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                                else MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (uiState.isOverAllocated) Icons.Default.Warning else Icons.Default.PieChart,
+                                contentDescription = null,
+                                tint = if (uiState.isOverAllocated) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = if (uiState.isOverAllocated) {
+                                    stringResource(R.string.budget_category_over_warning)
+                                } else {
+                                    stringResource(
+                                        R.string.budget_category_allocated,
+                                        CurrencyFormatter.formatCompact(uiState.totalAllocatedCategory),
+                                        CurrencyFormatter.formatCompact(uiState.currentLimit)
+                                    )
+                                },
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = if (uiState.isOverAllocated) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (uiState.isOverAllocated) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // Category list
+                if (uiState.categoryBudgets.isEmpty()) {
+                    Surface(
+                        shape = AppShapes.Squircle,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Category,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = stringResource(R.string.budget_category_empty),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    uiState.categoryBudgets.forEach { catBudget ->
+                        CategoryBudgetCard(
+                            categoryBudget = catBudget,
+                            onEdit = {
+                                editingCategoryBudget = catBudget
+                                showCategoryDialog = true
+                            },
+                            onDelete = {
+                                categoryToDelete = catBudget
+                            }
+                        )
+                    }
+                }
+
+                // Category Form Dialog
+                if (showCategoryDialog) {
+                    SetCategoryBudgetDialog(
+                        initialBudget = editingCategoryBudget,
+                        existingCategories = uiState.categoryBudgets.map { it.category }.toSet(),
+                        onDismiss = { showCategoryDialog = false },
+                        onConfirm = { category, limit ->
+                            viewModel.setCategoryBudget(category, limit)
+                            showCategoryDialog = false
                         }
                     )
                 }
-            }
 
-            // Category Form Dialog
-            if (showCategoryDialog) {
-                SetCategoryBudgetDialog(
-                    initialBudget = editingCategoryBudget,
-                    existingCategories = uiState.categoryBudgets.map { it.category }.toSet(),
-                    onDismiss = { showCategoryDialog = false },
-                    onConfirm = { category, limit ->
-                        viewModel.setCategoryBudget(category, limit)
-                        showCategoryDialog = false
-                    }
-                )
-            }
-
-            // Category Delete Confirmation Dialog
-            if (categoryToDelete != null) {
-                com.ssajudn.bareuang.ui.components.AppConfirmDialog(
-                    title = stringResource(R.string.budget_category_delete),
-                    message = stringResource(R.string.budget_category_delete_confirm, categoryToDelete!!.category.displayName),
-                    confirmButtonText = stringResource(R.string.common_delete),
-                    dismissButtonText = stringResource(R.string.common_cancel),
-                    onConfirm = {
-                        viewModel.deleteCategoryBudget(categoryToDelete!!.category)
-                        categoryToDelete = null
-                    },
-                    onDismissRequest = { categoryToDelete = null }
-                )
+                // Category Delete Confirmation Dialog
+                if (categoryToDelete != null) {
+                    com.ssajudn.bareuang.ui.components.AppConfirmDialog(
+                        title = stringResource(R.string.budget_category_delete),
+                        message = stringResource(R.string.budget_category_delete_confirm, categoryToDelete!!.category.displayName),
+                        confirmButtonText = stringResource(R.string.common_delete),
+                        dismissButtonText = stringResource(R.string.common_cancel),
+                        onConfirm = {
+                            viewModel.deleteCategoryBudget(categoryToDelete!!.category)
+                            categoryToDelete = null
+                        },
+                        onDismissRequest = { categoryToDelete = null }
+                    )
+                }
             }
 
             if (uiState.errorMessage != null) {

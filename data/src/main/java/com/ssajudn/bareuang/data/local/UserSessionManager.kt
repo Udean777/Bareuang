@@ -18,7 +18,7 @@ class UserSessionManager @Inject constructor(
         .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     companion object {
-        private const val PREF_NAME = "bare_budget_session"
+        private const val PREF_NAME = "bareuang_session"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_IS_GUEST = "is_guest"
         private const val KEY_USER_ID = "user_id"
