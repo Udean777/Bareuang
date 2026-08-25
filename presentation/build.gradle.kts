@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ssajudn.barebudget.presentation"
+    namespace = "com.ssajudn.bareuang.presentation"
     compileSdk = 37
     defaultConfig {
         minSdk = 26

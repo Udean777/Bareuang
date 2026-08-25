@@ -1,9 +1,9 @@
-# R8 rules for BareBudget release builds.
+# R8 rules for Bareuang release builds.
 # Retrofit, Room, Hilt, and Firebase ship their own consumer rules; only
 # reflection-based Gson serialization needs explicit keeps here.
 
 # Gson resolves fields via reflection (LOWER_CASE_WITH_UNDERSCORES policy).
--keep class com.ssajudn.barebudget.data.network.dto.** { *; }
+-keep class com.ssajudn.bareuang.data.network.dto.** { *; }
 -keepclassmembers class * {
     @com.google.gson.annotations.SerializedName <fields>;
 }

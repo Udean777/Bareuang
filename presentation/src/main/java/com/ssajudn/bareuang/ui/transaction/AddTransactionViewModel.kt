@@ -1,0 +1,330 @@
+package com.ssajudn.bareuang.ui.transaction
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ssajudn.bareuang.domain.model.CreateTransactionRequest
+import com.ssajudn.bareuang.domain.model.TransactionCategory
+import com.ssajudn.bareuang.domain.model.TransactionType
+import com.ssajudn.bareuang.domain.model.Wallet
+import com.ssajudn.bareuang.domain.repository.BudgetRepository
+import com.ssajudn.bareuang.domain.repository.TransactionRepository
+import com.ssajudn.bareuang.domain.repository.WalletRepository
+import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
+import com.ssajudn.bareuang.utils.DateUtils
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.error.userMessage
+import com.ssajudn.bareuang.utils.CurrencyFormatter
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+import com.ssajudn.bareuang.ui.common.OperationState
+import com.ssajudn.bareuang.ui.common.UiEffect
+import javax.inject.Inject
+
+data class AddTransactionUiState(
+    val transactionType: TransactionType = TransactionType.EXPENSE,
+    val wallets: List<Wallet> = emptyList(),
+    val selectedWalletId: String? = null,
+    val selectedToWalletId: String? = null,
+    val rawAmount: String = "",
+    val parsedAmount: Long = 0L,
+    val merchant: String = "",
+    val selectedCategory: TransactionCategory = TransactionCategory.FOOD,
+    val date: String = DateUtils.getCurrentDateISO(),
+    val notes: String = "",
+    val isRecurring: Boolean = false,
+    val recurringInterval: com.ssajudn.bareuang.domain.model.RecurringInterval = com.ssajudn.bareuang.domain.model.RecurringInterval.MONTHLY,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val validationError: AddTransactionError? = null,
+    val isSuccess: Boolean = false,
+    val isBudgetMissing: Boolean = false,
+    val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList()
+)
+private fun errorText(error: AddTransactionError, arg: String? = null): String = when (error) {
+    AddTransactionError.INVALID_AMOUNT -> "Tolong masukkan jumlah nominal yang valid"
+    AddTransactionError.WALLET_REQUIRED -> "Tolong pilih dompet terlebih dahulu"
+    AddTransactionError.TO_WALLET_REQUIRED -> "Tolong pilih dompet tujuan transfer"
+    AddTransactionError.SAME_WALLET -> "Dompet asal dan dompet tujuan tidak boleh sama"
+    AddTransactionError.INSUFFICIENT_BALANCE -> "Saldo dompet tidak cukup (${arg ?: ""})"
+    AddTransactionError.BUDGET_REQUIRED -> "Setup anggaran bulan ini terlebih dahulu"
+    AddTransactionError.SAVE_FAILED -> arg ?: "Failed to save transaction"
+}
+
+@HiltViewModel
+class AddTransactionViewModel @Inject constructor(
+    private val walletRepository: WalletRepository,
+    private val transactionRepository: TransactionRepository,
+    private val budgetRepository: BudgetRepository,
+    private val hasMonthlyBudget: HasMonthlyBudgetUseCase
+) : ViewModel() {
+    private val _operation = kotlinx.coroutines.flow.MutableStateFlow<OperationState>(OperationState.Idle)
+    val operation: kotlinx.coroutines.flow.StateFlow<OperationState> = _operation.asStateFlow()
+    private val _effect = Channel<UiEffect>(Channel.BUFFERED)
+    val effect = _effect.receiveAsFlow()
+
+
+    private val _uiState = MutableStateFlow(AddTransactionUiState())
+    val uiState: StateFlow<AddTransactionUiState> = _uiState.asStateFlow()
+
+    init {
+        loadWallets()
+        loadBudgetStatus()
+        observeCategoryBudgets()
+    }
+
+    private fun observeCategoryBudgets() {
+        viewModelScope.launch {
+            budgetRepository.getCategoryBudgets("").collect { list ->
+                _uiState.value = _uiState.value.copy(categoryBudgets = list)
+            }
+        }
+    }
+
+    private fun loadBudgetStatus() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isBudgetMissing = !hasMonthlyBudget())
+        }
+    }
+
+    private fun loadWallets() {
+        viewModelScope.launch {
+            val initial = walletRepository.getWallets().getOrNull()
+            if (!initial.isNullOrEmpty()) {
+                val defaultWallet = initial.firstOrNull()?.id
+                val defaultToWallet = initial.getOrNull(1)?.id ?: defaultWallet
+                _uiState.value = _uiState.value.copy(
+                    wallets = initial,
+                    selectedWalletId = defaultWallet,
+                    selectedToWalletId = defaultToWallet
+                )
+            }
+            walletRepository.observeWallets().collect { wallets ->
+                if (wallets.isNotEmpty()) {
+                    val currentSelected = _uiState.value.selectedWalletId
+                    val defaultWallet = if (wallets.any { it.id == currentSelected }) currentSelected else wallets.firstOrNull()?.id
+                    val currentSelectedTo = _uiState.value.selectedToWalletId
+                    val defaultToWallet = if (wallets.any { it.id == currentSelectedTo }) currentSelectedTo else (wallets.getOrNull(1)?.id ?: defaultWallet)
+                    _uiState.value = _uiState.value.copy(
+                        wallets = wallets,
+                        selectedWalletId = defaultWallet,
+                        selectedToWalletId = defaultToWallet
+                    )
+                }
+            }
+        }
+    }
+
+    fun onTransactionTypeChange(type: TransactionType) {
+        val newCategory = when (type) {
+            TransactionType.INCOME -> TransactionCategory.SALARY
+            TransactionType.TRANSFER -> TransactionCategory.TRANSFER
+            TransactionType.EXPENSE -> TransactionCategory.FOOD
+        }
+        val currentState = _uiState.value
+        var targetWalletId = currentState.selectedToWalletId
+
+        // When switching to transfer, ensure destination is not identical to source if multiple wallets exist
+        if (type == TransactionType.TRANSFER && currentState.selectedWalletId != null) {
+            if (targetWalletId == null || targetWalletId == currentState.selectedWalletId) {
+                val alternate = currentState.wallets.firstOrNull { it.id != currentState.selectedWalletId }?.id
+                if (alternate != null) {
+                    targetWalletId = alternate
+                }
+            }
+        }
+
+        _uiState.value = currentState.copy(
+            transactionType = type,
+            selectedCategory = newCategory,
+            selectedToWalletId = targetWalletId
+        )
+    }
+
+    fun onWalletChange(walletId: String) {
+        val currentState = _uiState.value
+        var newToWalletId = currentState.selectedToWalletId
+
+        // Smart switch: if selected source matches destination in transfer mode, switch destination
+        if (currentState.transactionType == TransactionType.TRANSFER && walletId == currentState.selectedToWalletId) {
+            val previousSource = currentState.selectedWalletId
+            val alternateWalletId = if (previousSource != null && previousSource != walletId && currentState.wallets.any { it.id == previousSource }) {
+                previousSource
+            } else {
+                currentState.wallets.firstOrNull { it.id != walletId }?.id
+            }
+            if (alternateWalletId != null) {
+                newToWalletId = alternateWalletId
+            }
+        }
+
+        _uiState.value = currentState.copy(
+            selectedWalletId = walletId,
+            selectedToWalletId = newToWalletId
+        )
+    }
+
+    fun onToWalletChange(walletId: String) {
+        val currentState = _uiState.value
+        var newSourceWalletId = currentState.selectedWalletId
+
+        // Smart switch: if selected destination matches source in transfer mode, switch source
+        if (walletId == currentState.selectedWalletId) {
+            val previousDestination = currentState.selectedToWalletId
+            val alternateWalletId = if (previousDestination != null && previousDestination != walletId && currentState.wallets.any { it.id == previousDestination }) {
+                previousDestination
+            } else {
+                currentState.wallets.firstOrNull { it.id != walletId }?.id
+            }
+            if (alternateWalletId != null) {
+                newSourceWalletId = alternateWalletId
+            }
+        }
+
+        _uiState.value = currentState.copy(
+            selectedWalletId = newSourceWalletId,
+            selectedToWalletId = walletId
+        )
+    }
+
+    fun swapWallets() {
+        val currentState = _uiState.value
+        val source = currentState.selectedWalletId
+        val target = currentState.selectedToWalletId
+        if (source != null && target != null && source != target) {
+            _uiState.value = currentState.copy(
+                selectedWalletId = target,
+                selectedToWalletId = source
+            )
+        }
+    }
+
+    fun onAmountChange(input: String) {
+        val digitsOnly = input.filter { it.isDigit() }.take(12) // Limit up to hundreds of billions
+        val parsed = digitsOnly.toLongOrNull() ?: 0L
+        _uiState.value = _uiState.value.copy(
+            rawAmount = digitsOnly,
+            parsedAmount = parsed
+        )
+    }
+
+    fun onMerchantChange(merchant: String) {
+        _uiState.value = _uiState.value.copy(merchant = merchant)
+    }
+
+    fun onCategoryChange(category: TransactionCategory) {
+        _uiState.value = _uiState.value.copy(selectedCategory = category)
+    }
+
+    fun onDateChange(date: String) {
+        _uiState.value = _uiState.value.copy(date = date)
+    }
+
+    fun onNotesChange(notes: String) {
+        _uiState.value = _uiState.value.copy(notes = notes)
+    }
+
+    fun onRecurringChange(isRecurring: Boolean) {
+        _uiState.value = _uiState.value.copy(isRecurring = isRecurring)
+    }
+
+    fun onRecurringIntervalChange(interval: com.ssajudn.bareuang.domain.model.RecurringInterval) {
+        _uiState.value = _uiState.value.copy(recurringInterval = interval)
+    }
+
+    fun saveTransaction() {
+        val state = _uiState.value
+        if (state.parsedAmount <= 0) {
+            val e = AddTransactionError.INVALID_AMOUNT
+            _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+            return
+        }
+        if (state.selectedWalletId == null) {
+            val e = AddTransactionError.WALLET_REQUIRED
+            _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+            return
+        }
+
+        if (state.transactionType == TransactionType.TRANSFER) {
+            if (state.selectedToWalletId == null) {
+                val e = AddTransactionError.TO_WALLET_REQUIRED
+                _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+                return
+            }
+            if (state.selectedWalletId == state.selectedToWalletId) {
+                val e = AddTransactionError.SAME_WALLET
+                _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+                return
+            }
+        }
+
+        // Validasi saldo untuk expense & transfer
+        if (state.transactionType == TransactionType.EXPENSE || state.transactionType == TransactionType.TRANSFER) {
+            val sourceWallet = state.wallets.find { it.id == state.selectedWalletId }
+            if (sourceWallet != null && sourceWallet.balance < state.parsedAmount) {
+                val e = AddTransactionError.INSUFFICIENT_BALANCE
+                val formatted = CurrencyFormatter.formatRupiah(sourceWallet.balance)
+                val msg = errorText(e, formatted)
+                _uiState.value = state.copy(errorMessage = msg, validationError = e)
+                _operation.value = OperationState.Error(msg)
+                viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
+                return
+            }
+        }
+
+        viewModelScope.launch {
+            _uiState.value = state.copy(isLoading = true, errorMessage = null, validationError = null)
+            _operation.value = OperationState.Loading
+
+            // Gerbang budget: income/expense wajib punya budget bulan berjalan; transfer bebas
+            if (state.transactionType != TransactionType.TRANSFER && !hasMonthlyBudget()) {
+                val e = AddTransactionError.BUDGET_REQUIRED
+                val msg = errorText(e)
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, validationError = e)
+                _operation.value = OperationState.Error(msg)
+                _effect.send(UiEffect.ShowSnackbar(msg))
+                _effect.send(UiEffect.Navigate(com.ssajudn.bareuang.ui.navigation.Screen.Budget.route))
+                return@launch
+            }
+
+            val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: "Dompet"
+            val targetWalletName = state.wallets.find { it.id == state.selectedToWalletId }?.name ?: "Dompet"
+
+            val defaultMerchant = if (state.transactionType == TransactionType.TRANSFER) {
+                "Transfer $sourceWalletName ke $targetWalletName"
+            } else {
+                state.selectedCategory.displayName
+            }
+
+            val request = CreateTransactionRequest(
+                amount = state.parsedAmount,
+                type = state.transactionType,
+                walletId = state.selectedWalletId,
+                toWalletId = if (state.transactionType == TransactionType.TRANSFER) state.selectedToWalletId else null,
+                category = state.selectedCategory,
+                merchant = state.merchant.ifBlank { defaultMerchant },
+                date = state.date,
+                notes = state.notes,
+                recurringInterval = if (state.isRecurring) state.recurringInterval else com.ssajudn.bareuang.domain.model.RecurringInterval.NONE
+            )
+
+            transactionRepository.createTransaction(request)
+                .onSuccess {
+                    // Navigasi back ditangani screen via isSuccess — state yang
+                    // survive process death, tidak seperti one-shot effect.
+                    _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
+                    _operation.value = OperationState.Success()
+                }
+                .onFailure { error ->
+                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: errorText(AddTransactionError.SAVE_FAILED)
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, validationError = AddTransactionError.SAVE_FAILED)
+                    _operation.value = OperationState.Error(msg)
+                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
+                }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="art/app_logo_new.png" width="120" height="120" alt="Bareuang Logo" style="border-radius: 32px;" />
   
-  # BareBudget — Bareuang
+  # Bareuang — Bareuang
   **Your cozy money companion · Teman cozy buat uangmu**
   
   *Atur pengeluaran bulanan, tahu sampai kapan uangmu tahan (Runway), kelola banyak dompet, dan wujudkan target tabungan — dengan beruang madu yang menemanimu.*
@@ -18,15 +18,15 @@
 
 ---
 
-## 📖 Tentang BareBudget — Bareuang
+## 📖 Tentang Bareuang — Bareuang
 
-**BareBudget (Bareuang)** adalah aplikasi pencatat keuangan yang **hangat, bubbly, dan minimalis**. Dibangun di sekitar persona *friendly bear companion* — beruang madu dengan tas honey pot "B" dan koin Rp — yang mengubah tracking dari beban jadi kegiatan menyenangkan.
+**Bareuang (Bareuang)** adalah aplikasi pencatat keuangan yang **hangat, bubbly, dan minimalis**. Dibangun di sekitar persona *friendly bear companion* — beruang madu dengan tas honey pot "B" dan koin Rp — yang mengubah tracking dari beban jadi kegiatan menyenangkan.
 
 > *"Dengan pola jajan kayak sekarang, sampai kapan uangku tahan?"* → Beruang akan menjawab dengan **Financial Runway** & Death Day.
 
 Antarmuka **100% Bareuang Design System** (*Modern Bubbly Minimalism* — `DESIGN.MD`): Jetpack Compose tanpa `MaterialKolor` dinamis, palet statis `surface #FDF9F3 / primary #845400 / primary-container #F4A216`, tipografi `Plus Jakarta Sans + Be Vietnam Pro`, shape `pill/squircle/rounded-xl`.
 
-BareBudget **100% offline & privat**: tanpa backend Go, tanpa Firebase, tanpa izin `INTERNET`. Semua di Room lokal, ditambah **Backup & Restore JSON** & **Home Widget** beruang.
+Bareuang **100% offline & privat**: tanpa backend Go, tanpa Firebase, tanpa izin `INTERNET`. Semua di Room lokal, ditambah **Backup & Restore JSON** & **Home Widget** beruang.
 
 ---
 
@@ -105,15 +105,15 @@ BareBudget **100% offline & privat**: tanpa backend Go, tanpa Firebase, tanpa iz
 ## 🏛️ Struktur Arsitektur & Tech Stack
 
 ```
-BareBudget/
+Bareuang/
 ├── domain/                     # Pure Kotlin JVM — entities, repository ports, use-cases, AppTheme
-│   └── src/main/java/com/ssajudn/barebudget/domain/
+│   └── src/main/java/com/ssajudn/bareuang/domain/
 │       ├── model/              # Wallet, Transaction, Goal, DueBill, Budget, AppTheme, DomainModels
 │       ├── repository/         # WalletRepository, TransactionRepository, GoalRepository, DueBillRepository, BudgetRepository
 │       ├── usecase/            # GetDashboardSummary, GetCashflow/NetWorth, PayDueBill
 │       └── error/              # AppException (typed)
 ├── data/                       # Android Library — Room, Backup JSON (→ :domain)
-│   ├── src/main/java/com/ssajudn/barebudget/data/
+│   ├── src/main/java/com/ssajudn/bareuang/data/
 │   │   ├── datasource/local/   # LocalDataSource + withTransaction + ownerId
 │   │   ├── datasource/remote/  # RemoteDataSource (DTO→domain mapping)
 │   │   ├── local/room/         # Entities, Daos, AppDatabase
@@ -123,7 +123,7 @@ BareBudget/
 │   │   └── utils/              # DateUtils
 │   └── schemas/                # Room schema history
 ├── presentation/               # Android Library — Jetpack Compose UI, ViewModels, Navigation (→ :domain, :data)
-│   └── src/main/java/com/ssajudn/barebudget/
+│   └── src/main/java/com/ssajudn/bareuang/
 │       ├── ui/
 │       │   ├── analytics/      # Financial Breakdown & Category Charts
 │       │   ├── bills/          # Due Bills, 1-Line Search, Segmented Filter & Refund System
@@ -141,8 +141,8 @@ BareBudget/
 │       │   └── wallets/        # Physical Debit-Style Wallet Cards
 │       └── utils/              # CurrencyFormatter, CurrencyVisualTransformation, DateUtils (UI)
 ├── app/                        # Android Application — Composition Root & Application Entry (→ :presentation)
-│   └── src/main/java/com/ssajudn/barebudget/
-│       └── BareBudgetApplication.kt # Hilt + HiltWorkerFactory (WorkManager)
+│   └── src/main/java/com/ssajudn/bareuang/
+│       └── BareuangApplication.kt # Hilt + HiltWorkerFactory (WorkManager)
 ```
 
 **Teknologi:** Room `withTransaction`, Gson, Hilt, WorkManager + `androidx.hilt`, Jetpack Compose (tanpa `material-kolor`), Glance widget, `Channel<UiEffect>`.
@@ -153,7 +153,7 @@ BareBudget/
 
 ### 1. Tanpa Backend — 100% Lokal
 
-BareBudget tidak memerlukan server, API key, atau akun cloud apa pun. Cukup build dan jalankan.
+Bareuang tidak memerlukan server, API key, atau akun cloud apa pun. Cukup build dan jalankan.
 
 
 ---
@@ -175,12 +175,12 @@ BareBudget tidak memerlukan server, API key, atau akun cloud apa pun. Cukup buil
 
 Release build memakai **R8 minification** dan ditandatangani dengan keystore yang kredensialnya **tidak pernah masuk git**:
 
-1. Generate keystore: `keytool -genkey -v -keystore keystores/barebudget-release.keystore -alias barebudget -keyalg RSA -keysize 4096 -validity 10000`
+1. Generate keystore: `keytool -genkey -v -keystore keystores/bareuang-release.keystore -alias bareuang -keyalg RSA -keysize 4096 -validity 10000`
 2. Buat `keystore.properties` di root project (sudah di-gitignore):
    ```properties
-   storeFile=keystores/barebudget-release.keystore
+   storeFile=keystores/bareuang-release.keystore
    storePassword=****
-   keyAlias=barebudget
+   keyAlias=bareuang
    keyPassword=****
    ```
 3. Build:
@@ -196,16 +196,16 @@ Release build memakai **R8 minification** dan ditandatangani dengan keystore yan
 | Workflow | Trigger | Hasil |
 |----------|---------|-------|
 | **CI** (`ci.yml`) | PR ke `main`/`dev`, atau push ke `main` | Build debug + seluruh unit test |
-| **Release** (`release.yml`) | Push ke `main` | Test → build APK+AAB signed → update release **prerelease "Latest Build"** (aset `BareBudget-latest.*` di-replace tiap merge) |
-| **Release** (`release.yml`) | Push tag `v*` (mis. `v1.0.0`) | Test → build signed → **GitHub Release stabil** `BareBudget-v1.0.0.*` dengan auto release notes |
+| **Release** (`release.yml`) | Push ke `main` | Test → build APK+AAB signed → update release **prerelease "Latest Build"** (aset `Bareuang-latest.*` di-replace tiap merge) |
+| **Release** (`release.yml`) | Push tag `v*` (mis. `v1.0.0`) | Test → build signed → **GitHub Release stabil** `Bareuang-v1.0.0.*` dengan auto release notes |
 
 Setup sekali saja — tambahkan 4 secret di repo (**Settings → Secrets and variables → Actions**):
 
 | Secret | Isi |
 |--------|-----|
-| `SIGNING_KEYSTORE_BASE64` | Hasil `base64 -i keystores/barebudget-release.keystore` |
+| `SIGNING_KEYSTORE_BASE64` | Hasil `base64 -i keystores/bareuang-release.keystore` |
 | `KEYSTORE_PASSWORD` | Password keystore |
-| `KEY_ALIAS` | Alias key (mis. `barebudget`) |
+| `KEY_ALIAS` | Alias key (mis. `bareuang`) |
 | `KEY_PASSWORD` | Password key |
 
 CI membaca kredensial dari environment variable — `keystore.properties` lokal tidak pernah dibutuhkan di repo.
@@ -227,7 +227,7 @@ CI membaca kredensial dari environment variable — `keystore.properties` lokal 
 
 ## 🎨 Sistem Desain Bareuang
 
-BareBudget meninggalkan Material You dan mengikuti penuh **`DESIGN.MD`** — *Modern Bubbly Minimalism*:
+Bareuang meninggalkan Material You dan mengikuti penuh **`DESIGN.MD`** — *Modern Bubbly Minimalism*:
 * **Palet**: `surface #FDF9F3` cream, `primary #845400` bear brown, `primary-container #F4A216` honey, `secondary #396842` green, `tertiary #7A5648` brown. Surfaces `surfaceContainerLowest #FFFFFF` (card) → `Low #F7F3ED` → `High #EBE8E2`.
 * **Tipografi**: `Plus Jakarta Sans` (headline `40/800`, `32/700`, price `36/800 tabular`) + `Be Vietnam Pro` (body `18/500`, `16/400`, label `14/600 +0.05em`).
 * **Shape**: `sm 8 / DEFAULT 16 / md 24 / lg 32 / xl 48 / full pill`. Card `rounded-md/lg`, dialog `xl`, button `pill` + 2dp honey bottom border 3D.

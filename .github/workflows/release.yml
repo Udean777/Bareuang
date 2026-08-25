@@ -27,7 +27,7 @@ jobs:
           SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
         run: |
           mkdir -p keystores
-          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > keystores/barebudget-release.keystore
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > keystores/bareuang-release.keystore
 
       - name: Run unit tests
         run: ./gradlew test --no-daemon --continue
@@ -35,7 +35,7 @@ jobs:
       - name: Build signed APK
         env:
           VERSION_CODE: ${{ github.run_number }}
-          KEYSTORE_FILE: ${{ github.workspace }}/keystores/barebudget-release.keystore
+          KEYSTORE_FILE: ${{ github.workspace }}/keystores/bareuang-release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -45,13 +45,13 @@ jobs:
         run: |
           CODE="${{ github.run_number }}"
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/BareBudget-v1.0-${CODE}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-v1.0-${CODE}.apk"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0-${{ github.run_number }}
-          name: BareBudget v1.0 (build ${{ github.run_number }})
+          name: Bareuang v1.0 (build ${{ github.run_number }})
           body: |
             Build manual via GitHub Actions.
             - Commit: ${{ github.sha }}

@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "com.ssajudn.barebudget.data"
+    namespace = "com.ssajudn.bareuang.data"
     compileSdk = 37
     defaultConfig { minSdk = 26 }
     buildTypes {
         debug { buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\""); buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"") }
-        release { buildConfigField("String", "BASE_URL", "\"https://api.barebudget.app/\""); buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"") }
+        release { buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\""); buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"") }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
