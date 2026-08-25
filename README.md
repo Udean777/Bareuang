@@ -50,12 +50,28 @@ Semua data **100% tersimpan lokal**, tanpa server, tanpa akun, tanpa izin intern
 
 <div align="center">
 
-| | | |
-|:---:|:---:|:---:|
-| <img src="art/screenshots/Dashboard.png" width="220" alt="Dashboard & Financial Runway"> | <img src="art/screenshots/Budget.png" width="220" alt="Monthly Budget"> | <img src="art/screenshots/Due-Bills.png" width="220" alt="Bills & Commitments"> |
-| **Dashboard & Financial Runway** | **Monthly Budget** | **Bills & Commitments** |
-| <img src="art/screenshots/Goals.png" width="220" alt="Savings Goals"> | <img src="art/screenshots/Transfer.png" width="220" alt="Wallet Transfer"> | <img src="art/screenshots/Analytics.png" width="220" alt="Financial Analytics"> |
-| **Savings Goals** | **Wallet Transfer** | **Financial Analytics** |
+<table>
+  <tr>
+    <td align="center"><img src="art/screenshots/Dashboard.png" width="220" alt="Dashboard & Financial Runway" /></td>
+    <td align="center"><img src="art/screenshots/Budget.png" width="220" alt="Monthly Budget" /></td>
+    <td align="center"><img src="art/screenshots/Due-Bills.png" width="220" alt="Bills & Commitments" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Dashboard & Financial Runway</b></sub></td>
+    <td align="center"><sub><b>Monthly Budget</b></sub></td>
+    <td align="center"><sub><b>Bills & Commitments</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="art/screenshots/Goals.png" width="220" alt="Savings Goals" /></td>
+    <td align="center"><img src="art/screenshots/Transfer.png" width="220" alt="Wallet Transfer" /></td>
+    <td align="center"><img src="art/screenshots/Analytics.png" width="220" alt="Financial Analytics" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Savings Goals</b></sub></td>
+    <td align="center"><sub><b>Wallet Transfer</b></sub></td>
+    <td align="center"><sub><b>Financial Analytics</b></sub></td>
+  </tr>
+</table>
 
 </div>
 
