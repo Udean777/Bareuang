@@ -1,11 +1,6 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -37,51 +32,28 @@ jobs:
       - name: Run unit tests
         run: ./gradlew test --no-daemon --continue
 
-      - name: Build signed APK & AAB
+      - name: Build signed APK
         env:
+          VERSION_CODE: ${{ github.run_number }}
           KEYSTORE_FILE: ${{ github.workspace }}/keystores/barebudget-release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
+        run: ./gradlew :app:assembleRelease --no-daemon
 
-      - name: Rename artifacts (tagged release)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Collect artifacts
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          CODE="${{ github.run_number }}"
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/BareBudget-v${VERSION}.apk"
-          cp app/build/outputs/bundle/release/app-release.aab "dist/BareBudget-v${VERSION}.aab"
+          cp app/build/outputs/apk/release/app-release.apk "dist/BareBudget-v1.0-${CODE}.apk"
 
-      - name: Rename artifacts (main branch — rolling latest)
-        if: github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/BareBudget-latest.apk
-          cp app/build/outputs/bundle/release/app-release.aab dist/BareBudget-latest.aab
-
-      - name: Upload to GitHub Release (stable, dari tag)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
-          generate_release_notes: true
-
-      - name: Upload to GitHub Release (prerelease "latest", dari main)
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          name: Latest Build (main)
-          prerelease: true
-          files: dist/*
+          tag_name: v1.0-${{ github.run_number }}
+          name: BareBudget v1.0 (build ${{ github.run_number }})
           body: |
-            Build otomatis dari branch `main` (commit ${{ github.sha }}).
-            Aset di-replace setiap merge — unduh `BareBudget-latest.*` terbaru.
-
-      - name: Upload artifacts (manual dispatch)
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
-        with:
-          name: BareBudget-release
-          path: dist/*
+            Build manual via GitHub Actions.
+            - Commit: ${{ github.sha }}
+            - versionCode: ${{ github.run_number }}
+          files: dist/*
