@@ -399,6 +399,11 @@
     <string name="onboarding_slide2_desc">Dapatkan prediksi akurat berapa lama uangmu bertahan berdasarkan laju pengeluaran harianmu.</string>
     <string name="onboarding_slide3_title">Tagihan Jatuh Tempo &amp; Komitmen</string>
     <string name="onboarding_slide3_desc">Jangan sampai terlewat tanggal jatuh tempo PayLater atau langganan bulanan lagi.</string>
+    <string name="onboarding_theme_title">Pilih Nuansa Favoritmu</string>
+    <string name="onboarding_theme_desc">Sesuaikan tema tampilan sesuai kenyamanan matamu, baik siang maupun malam.</string>
+    <string name="onboarding_theme_system">Sistem</string>
+    <string name="onboarding_theme_light">Terang</string>
+    <string name="onboarding_theme_dark">Gelap</string>
     <string name="onboarding_slide4_title">Pilih Cara Memulai</string>
     <string name="onboarding_slide4_desc">Pilih untuk masuk dengan akun Google atau langsung coba dalam Mode Tamu.</string>
     <!-- Splash -->

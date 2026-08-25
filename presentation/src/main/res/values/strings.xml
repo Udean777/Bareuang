@@ -399,6 +399,11 @@
     <string name="onboarding_slide2_desc">Get honest predictions of how long your money will last based on your real-time daily burn rate.</string>
     <string name="onboarding_slide3_title">Due Bills &amp; Commitments</string>
     <string name="onboarding_slide3_desc">Never get caught off-guard by PayLater or monthly subscription due dates ever again.</string>
+    <string name="onboarding_theme_title">Choose Your Vibe</string>
+    <string name="onboarding_theme_desc">Personalize your theme anytime. Comfortable for your eyes day and night.</string>
+    <string name="onboarding_theme_system">System</string>
+    <string name="onboarding_theme_light">Light</string>
+    <string name="onboarding_theme_dark">Dark</string>
     <string name="onboarding_slide4_title">Choose How You Start</string>
     <string name="onboarding_slide4_desc">Select whether to sign in or explore immediately in Guest Mode.</string>
     <!-- Tx validation (Phase 6 structured errors) -->

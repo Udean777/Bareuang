@@ -12,7 +12,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,6 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.components.AppButton
 import com.ssajudn.bareuang.ui.components.AppTextButton
@@ -54,11 +59,13 @@ fun OnboardingScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var isStarting by remember { mutableStateOf(false) }
+    val currentDarkMode by viewModel.darkMode.collectAsStateWithLifecycle()
 
     val pages = listOf(
         OnboardingPageData(stringResource(R.string.onboarding_slide1_title), stringResource(R.string.onboarding_slide1_desc), R.drawable.img_onboarding_expense),
         OnboardingPageData(stringResource(R.string.onboarding_slide2_title), stringResource(R.string.onboarding_slide2_desc), R.drawable.img_onboarding_runway),
         OnboardingPageData(stringResource(R.string.onboarding_slide3_title), stringResource(R.string.onboarding_slide3_desc), R.drawable.img_onboarding_bills),
+        OnboardingPageData(stringResource(R.string.onboarding_theme_title), stringResource(R.string.onboarding_theme_desc), R.drawable.img_onboarding_theme),
         OnboardingPageData(stringResource(R.string.notif_perm_title), stringResource(R.string.notif_perm_desc), R.drawable.img_onboarding_notif)
     )
 
@@ -87,29 +94,6 @@ fun OnboardingScreen(
                 )
             )
     ) {
-        // Decorative warm blob top-right
-        Box(
-            modifier = Modifier
-                .size(260.dp)
-                .offset(x = 80.dp, y = (-60).dp)
-                .background(
-                    MaterialTheme.colorScheme.primaryFixed.copy(alpha = 0.12f),
-                    CircleShape
-                )
-                .align(Alignment.TopEnd)
-        )
-        // Decorative soft blob bottom-left
-        Box(
-            modifier = Modifier
-                .size(180.dp)
-                .offset(x = (-40).dp, y = 40.dp)
-                .background(
-                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.18f),
-                    CircleShape
-                )
-                .align(Alignment.BottomStart)
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -183,10 +167,15 @@ fun OnboardingScreen(
                     OnboardingSlide(
                         data = pages[pageIndex],
                         isFirstSlide = pageIndex == 0,
+                        isThemeSlide = pageIndex == 3,
                         currentLang = currentLang,
                         onLanguageChange = { code ->
                             currentLang = code
                             LanguageManager.setLanguage(context, code)
+                        },
+                        currentDarkMode = currentDarkMode,
+                        onDarkModeChange = { mode ->
+                            viewModel.setDarkMode(mode)
                         }
                     )
                 }
@@ -271,7 +260,13 @@ private fun animateDpAsset(isCurrent: Boolean) = animateDpAsState(
 
 @Composable
 fun OnboardingSlide(
-    data: OnboardingPageData, isFirstSlide: Boolean = false, currentLang: String = "", onLanguageChange: (String) -> Unit = {}
+    data: OnboardingPageData,
+    isFirstSlide: Boolean = false,
+    isThemeSlide: Boolean = false,
+    currentLang: String = "",
+    onLanguageChange: (String) -> Unit = {},
+    currentDarkMode: AppThemeDarkMode = AppThemeDarkMode.FollowSystem,
+    onDarkModeChange: (AppThemeDarkMode) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -281,37 +276,26 @@ fun OnboardingSlide(
         verticalArrangement = Arrangement.Center
     ) {
         // Illustration hero card — floating with warm shadow
-        Box(contentAlignment = Alignment.Center) {
-            // Outer glow halo
-            Box(
+        Surface(
+            modifier = Modifier
+                .shadow(
+                    elevation = 20.dp,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                    ambientColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f)
+                ),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            tonalElevation = 0.dp
+        ) {
+            Image(
+                painter = painterResource(id = data.imageRes),
+                contentDescription = data.title,
                 modifier = Modifier
-                    .size(248.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primaryFixed.copy(alpha = 0.15f),
-                        CircleShape
-                    )
+                    .size(220.dp)
+                    .padding(14.dp)
+                    .clip(MaterialTheme.shapes.large)
             )
-            Surface(
-                modifier = Modifier
-                    .shadow(
-                        elevation = 20.dp,
-                        shape = MaterialTheme.shapes.extraLarge,
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        ambientColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f)
-                    ),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                tonalElevation = 0.dp
-            ) {
-                Image(
-                    painter = painterResource(id = data.imageRes),
-                    contentDescription = data.title,
-                    modifier = Modifier
-                        .size(220.dp)
-                        .padding(14.dp)
-                        .clip(MaterialTheme.shapes.large)
-                )
-            }
         }
 
         Spacer(modifier = Modifier.height(Spacing.StackLg))
@@ -345,6 +329,57 @@ fun OnboardingSlide(
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    ),
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Theme toggle — only on theme slide
+        if (isThemeSlide) {
+            val themeOptions = listOf(
+                Triple(AppThemeDarkMode.FollowSystem, stringResource(R.string.onboarding_theme_system), Icons.Default.BrightnessAuto),
+                Triple(AppThemeDarkMode.Light, stringResource(R.string.onboarding_theme_light), Icons.Default.LightMode),
+                Triple(AppThemeDarkMode.Dark, stringResource(R.string.onboarding_theme_dark), Icons.Default.DarkMode)
+            )
+            Surface(
+                shape = AppShapes.Pill,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.padding(bottom = Spacing.Medium)
+            ) {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    themeOptions.forEach { (mode, label, icon) ->
+                        val isSelected = currentDarkMode == mode
+                        Surface(
+                            shape = AppShapes.Pill,
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                            onClick = { onDarkModeChange(mode) }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isSelected) Icons.Default.Check else icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = label,
@@ -405,37 +440,26 @@ fun NotificationStep(data: OnboardingPageData, isLoading: Boolean, onAllowClick:
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Illustration hero card with warm glow halo
-        Box(contentAlignment = Alignment.Center) {
-            // Bell icon glow halo — honey amber
-            Box(
-                modifier = Modifier
-                    .size(248.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primaryFixed.copy(alpha = 0.18f),
-                        CircleShape
-                    )
-            )
-            Surface(
-                modifier = Modifier.shadow(
-                    elevation = 20.dp,
-                    shape = MaterialTheme.shapes.extraLarge,
-                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-                    ambientColor = MaterialTheme.colorScheme.primaryFixed.copy(alpha = 0.15f)
-                ),
+        // Illustration hero card with clean floating shadow
+        Surface(
+            modifier = Modifier.shadow(
+                elevation = 20.dp,
                 shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                tonalElevation = 0.dp
-            ) {
-                Image(
-                    painter = painterResource(id = data.imageRes),
-                    contentDescription = data.title,
-                    modifier = Modifier
-                        .size(220.dp)
-                        .padding(14.dp)
-                        .clip(MaterialTheme.shapes.large)
-                )
-            }
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                ambientColor = MaterialTheme.colorScheme.primaryFixed.copy(alpha = 0.15f)
+            ),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            tonalElevation = 0.dp
+        ) {
+            Image(
+                painter = painterResource(id = data.imageRes),
+                contentDescription = data.title,
+                modifier = Modifier
+                    .size(220.dp)
+                    .padding(14.dp)
+                    .clip(MaterialTheme.shapes.large)
+            )
         }
 
         Spacer(modifier = Modifier.height(Spacing.StackLg))
