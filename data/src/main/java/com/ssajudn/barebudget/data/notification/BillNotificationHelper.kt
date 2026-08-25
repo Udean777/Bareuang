@@ -98,7 +98,7 @@ class BillNotificationHelper @Inject constructor(
         const val NOTIFICATION_ID = 4201
         private const val MAX_LINES = 3
 
-        // Warna aksen brand (mint green dari logo) untuk aksen notifikasi.
-        private const val ACCENT_COLOR = 0xFF50E392.toInt()
+        // Warna aksen Bareuang (honey) untuk notifikasi — selaras DESIGN.MD primary-container
+        private const val ACCENT_COLOR = 0xFF845400.toInt()
     }
 }

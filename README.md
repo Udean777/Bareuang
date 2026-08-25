@@ -1,17 +1,16 @@
 <div align="center">
-  <img src="art/app_logo.png" width="120" height="120" alt="BareBudget Logo" style="border-radius: 24px;" />
+  <img src="art/app_logo_new.png" width="120" height="120" alt="Bareuang Logo" style="border-radius: 32px;" />
   
-  # BareBudget
+  # BareBudget — Bareuang
+  **Your cozy money companion · Teman cozy buat uangmu**
   
-  **Aplikasi Pencatat Keuangan & Pelacak Survival Runway Tanpa Ribet**
+  *Atur pengeluaran bulanan, tahu sampai kapan uangmu tahan (Runway), kelola banyak dompet, dan wujudkan target tabungan — dengan beruang madu yang menemanimu.*
   
-  *Atur pengeluaran bulanan, ketahui batas bertahan hidup finansialmu (Runway / Death Day), kelola banyak dompet, dan wujudkan target tabungan.*
-
   ---
-
+  
   [![Kotlin](https://img.shields.io/badge/Kotlin-2.0+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-  [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
-  [![Material Design 3](https://img.shields.io/badge/UI-Material%20Design%203-7B1FA2?style=for-the-badge&logo=materialdesign&logoColor=white)](https://m3.material.io/)
+  [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Bareuang%20Bubbly-845400?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
+  [![Bareuang Design](https://img.shields.io/badge/UI-Bareuang%20Modern%20Bubbly-F4A216?style=for-the-badge)]()
   [![Room DB](https://img.shields.io/badge/Local%20Cache-Room%20SQLite-3DDC84?style=for-the-badge&logo=sqlite&logoColor=white)](https://developer.android.com/training/data-storage/room)
   [![100% Offline](https://img.shields.io/badge/Privasi-100%25%20Offline-34A853?style=for-the-badge&logo=android&logoColor=white)]
 
@@ -19,15 +18,15 @@
 
 ---
 
-## 📖 Tentang BareBudget
+## 📖 Tentang BareBudget — Bareuang
 
-**BareBudget** adalah aplikasi pencatat keuangan (*personal finance*) yang minimalis, gesit, dan modern. Aplikasi ini dirancang khusus untuk menjawab satu pertanyaan penting yang sering muncul di pertengahan bulan:
+**BareBudget (Bareuang)** adalah aplikasi pencatat keuangan yang **hangat, bubbly, dan minimalis**. Dibangun di sekitar persona *friendly bear companion* — beruang madu dengan tas honey pot "B" dan koin Rp — yang mengubah tracking dari beban jadi kegiatan menyenangkan.
 
-> *"Dengan pola jajan dan pengeluaran kayak sekarang, sisa uangku bakal cukup sampai tanggal berapa ya?"*
+> *"Dengan pola jajan kayak sekarang, sampai kapan uangku tahan?"* → Beruang akan menjawab dengan **Financial Runway** & Death Day.
 
-Antarmuka aplikasi dibangun **100% dengan Material Design 3 (M3)** menggunakan Jetpack Compose, menghadirkan tampilan yang bersih, adaptif, serta mendukung penuh tema dinamis (*Material You*).
+Antarmuka **100% Bareuang Design System** (*Modern Bubbly Minimalism* — `DESIGN.MD`): Jetpack Compose tanpa `MaterialKolor` dinamis, palet statis `surface #FDF9F3 / primary #845400 / primary-container #F4A216`, tipografi `Plus Jakarta Sans + Be Vietnam Pro`, shape `pill/squircle/rounded-xl`.
 
-BareBudget **100% offline dan privat**: tidak perlu akun, tidak ada server, tidak ada data yang pernah meninggalkan perangkatmu. Semua transaksi tersimpan lokal di database Room perangkat, dan kamu tetap bisa mengamankannya lewat fitur **Backup & Restore JSON** kapan saja.
+BareBudget **100% offline & privat**: tanpa backend Go, tanpa Firebase, tanpa izin `INTERNET`. Semua di Room lokal, ditambah **Backup & Restore JSON** & **Home Widget** beruang.
 
 ---
 
@@ -78,30 +77,28 @@ BareBudget **100% offline dan privat**: tidak perlu akun, tidak ada server, tida
 * Mendukung pembagian rata (*Equal Split*) lengkap dengan hitungan pajak (PB1 10%) dan *service charge* (5%).
 * **1-Click Share ke WhatsApp**: Format rincian patungan siap kirim langsung ke chat pribadi maupun grup.
 
-### 8. 🎨 Desain Ekspresif Material 3 & Filter Fleksibel
-* **Palet Dinamis MaterialKolor**: Tampilan warna modern dan hidup dengan kontras yang nyaman di mata.
-* **Bentuk Kartu Khas (Asymmetric & Squircle)**: Kartu *Financial Runway* asimetris yang elegan, kartu dompet bergaya kartu debit fisik, dan kartu item *Squircle* dengan garis tepi yang presisi (`crispBorder 0.8.dp`).
-* **Floating Pill Navigation Bar**: Menu navigasi bawah melayang berbentuk kapsul dengan animasi transisi yang luwes.
-* **Pencarian & Filter Cepat**:
-  - *Semua Transaksi*: Kolom pencarian instan + filter bottom sheet (Tipe Transaksi, Kategori, Dompet) dengan penyimpanan *draft*.
-  - *Tagihan*: Kolom pencarian + tombol filter status (`Semua`, `Belum Lunas`, `Lunas`).
-  - *Target Tabungan*: Kolom pencarian + tab filter status (`Semua`, `Aktif`, `Tercapai`).
+### 8. 🎨 Bareuang Design System & Filter Fleksibel
+* **Palet Statis Bareuang**: Tanpa `Material You` — semua warna dari `DESIGN.MD` (`background #FDF9F3`, `primary-container #F4A216` honey, `outline-variant #D8C3AD`). Card `surfaceContainerLowest #FFFFFF` di canvas cream, border `0.8dp outlineVariant 0.35`.
+* **Bentuk Pebble**: `rounded-sm 8 / DEFAULT 16 / md 24 / lg 32 / xl 48 / pill 9999` — semua kartu squircle/rounded-xl, tidak ada sudut tajam.
+* **Floating Pill Nav (74dp gemuk) + Transfer Menonjol**: Bar kapsul melayang + tombol Transfer tengah `64dp` honey pill mengapung `-14dp` dengan border 3D, auto-hide di layar Transfer (full-screen).
+* **Pencarian & Filter Cepat**: *Semua Transaksi* (search + bottom sheet tipe/kategori/dompet draft), *Tagihan* (`Semua/Belum Lunas/Lunas`), *Target* (`Semua/Aktif/Tercapai`).
 
 ### 9. 📦 Backup & Restore JSON Offline
 * Ekspor seluruh data transaksi, dompet, tagihan, dan target tabungan ke file `.json` sebagai cadangan lokal.
 * Pulihkan (*restore*) data kapan saja dengan cepat dan aman ke database lokal.
 
-### 10. 🚀 Splash Screen Animasi, Onboarding 3D & Panduan Interaktif
-* **Splash Screen Beranimasi**: Transisi *fade & spring scale* yang mulus dengan dukungan native *Android 12+ SplashScreen API*.
-* **Onboarding Berilustrasi 3D**: Alur perkenalan fitur aplikasi yang ramah dan interaktif dengan visual semi-3D.
-* **Panduan Interaktif 7 Langkah (Coach Marks)**: Memandu pengguna baru mengenal alur utama (*atur anggaran → siapkan dompet → catat transaksi → eksplor fitur*). Dilengkapi efek *spotlight*, tooltip penjelasan, indikator langkah, navigasi layar otomatis, serta dukungan bilingual. Bisa diulang kapan saja lewat menu Pengaturan.
+### 10. 🚀 Splash, Onboarding & Animasi Bear yang Fun
+* **Splash Bareuang (Compose + Native)**: Logo beruang honey pot baru di card putih `rounded-xl 48dp` + soft blob cream, `headline-xl 40/800` + tagline pill `secondaryContainer`. Native splash `ic_splash_logo` diberi padding safe-zone 62% agar tidak ter-crop.
+* **Onboarding Bubbly**: 3 slide + permission, ilustrasi di card putih `rounded-xl` shadow tertiary 0.10, dots pill honey `22×8`, language pill `surfaceContainerLow` + selected honey.
+* **8 Animasi Interaktif**: `BearPeek` (muncul di Goal selesai & Budget input), `ConfettiBurst` (42 partikel honey/green/brown saat goal/transfer), `RollingNumber` (count-up saldo), `Bear Wiggle` (>90% progress), `StaggeredList` (40ms per item), `SpeedDial fan-out` (arc + rotate), `Squish` (logo squash saat refresh), `Tab Pop` (pill 1.08x).
+* **Panduan 7 Langkah**: Spotlight coach marks tetap, bilingual, bisa replay di Settings.
 
 ### 11. 🔒 Clean Architecture & Privasi Maksimal
-* **100% Offline & Tanpa Server**: Tidak ada backend, tidak ada request jaringan, tidak ada telemetri — seluruh logika berjalan lokal di perangkat. Data keuanganmu mustahil bocor ke pihak mana pun.
-* **Multi-module Terisolasi Rapi**: `:domain` murni Kotlin (bebas dependensi Android/Room), `:data` Android library (Room, Backup JSON), `:presentation` antarmuka Compose & ViewModel (MaterialKolor, Compose Navigation, Hilt), serta `:app` sebagai composition root (`app → presentation → data → domain`).
-* **Mutasi Keuangan Atomik**: Perubahan saldo dompet, pembayaran/refund tagihan, dan deposit target tabungan dijalankan dalam transaksi Room (`withTransaction` + *row locking*) sehingga bebas dari race condition dan data korup.
-* **Manajemen State & UiEffect Bersih**: Komunikasi one-shot event menggunakan `Channel<UiEffect>` (mencegah event terkirim ulang saat layar berotasi) dan proteksi tombol saat operasi sedang berjalan untuk mencegah klik ganda.
-* **Backup & Restore sebagai "Sign Out"**: Reset data lokal menghapus seluruh tabel Room secara aman dan kembali ke onboarding; backup JSON adalah jalan pintas migrasi antar perangkat.
+* **100% Offline & Tanpa Server**: Go backend & outbox dihapus, tidak ada `INTERNET` permission. Semua via Room lokal (`AppDatabase` + `withTransaction` row locking).
+* **Multi-module Rapi**: `:domain` pure Kotlin (tanpa Android), `:data` Room/Backup/Notifications/Worker, `:presentation` Compose + Hilt Navigation tanpa `material-kolor`, `:app` composition root (`app → presentation → data → domain`).
+* **Bug Analytics Fixed**: Cashflow kini exclude `isRecurringParent` & transaksi future (`date > today`) — income recurring Senin 31 tidak lagi muncul dini.
+* **Slogan Natural**: `Finance that feels like a warm hug / Uang tenang, hati senang`, `Your cozy money companion / Teman cozy buat uangmu` — tidak kaku Google Translate.
+* **Widget Bear-Themed**: Home widget Glance `24dp rounded-xl` outer cream + inner white pebble, header avatar beruang 28dp + pill `SISA RUNWAY` honey, price honey `22sp`, bear paw pill tertiary, track 8dp rounded, secondary cards daily/tagihan/terpakai.
 
 ---
 
@@ -136,7 +133,7 @@ BareBudget/
 │       │   ├── goals/          # Savings Goals, Pockets, 1-Line Search & Smart Calculator
 │       │   ├── navigation/     # AppNavigation & TopLevelDestinations
 │       │   ├── onboarding/     # AuthScreen, 3D Illustrated Onboarding
-│       │   ├── settings/       # Appearance (MaterialKolor Expressive), JSON Backup/Restore, Profile
+│       │   ├── settings/       # Appearance (dark mode), JSON Backup/Restore, Profile
 │       │   ├── splash/         # Animated Branded Splash Screen
 │       │   ├── theme/          # AppShapes (AsymmetricHero, Squircle, Pill), crispBorder, Theme.kt
 │       │   ├── tour/           # TourScript, TourOverlay (spotlight coach marks), TourRegistry
@@ -148,7 +145,7 @@ BareBudget/
 │       └── BareBudgetApplication.kt # Hilt + HiltWorkerFactory (WorkManager)
 ```
 
-**Teknologi & Utilitas Modern:** Room `withTransaction`, Gson (backup JSON), Hilt, WorkManager + `androidx.hilt` (pengingat tagihan harian), Jetpack Compose Material 3 Expressive, `Channel<UiEffect>`.
+**Teknologi:** Room `withTransaction`, Gson, Hilt, WorkManager + `androidx.hilt`, Jetpack Compose (tanpa `material-kolor`), Glance widget, `Channel<UiEffect>`.
 
 ---
 
@@ -228,13 +225,14 @@ CI membaca kredensial dari environment variable — `keystore.properties` lokal 
 
 ---
 
-## 🎨 Sistem Desain Material 3
+## 🎨 Sistem Desain Bareuang
 
-BareBudget mengimplementasikan pedoman desain **Material Design 3 (M3)** secara menyeluruh:
-* **`M3 Dynamic Theming`**: Palet warna tonal adaptif (*Tonal Spot / Dynamic Colors*) yang selaras dengan tema Material You di Android 12+.
-* **`M3 Navigation Bar`**: Navigasi bawah standar Material 3 dengan indikator kapsul (*pill*) aktif dan transisi yang halus.
-* **`M3 Elevated & Outlined Cards`**: Pengelompokan informasi keuangan dengan hirarki elevasi permukaan yang rapi dan terstruktur.
-* **`M3 Expressive Typography & Shapes`**: Sudut lengkung (*shapes*) membulat yang ekspresif dan ergonomis saat dioperasikan dengan satu tangan.
+BareBudget meninggalkan Material You dan mengikuti penuh **`DESIGN.MD`** — *Modern Bubbly Minimalism*:
+* **Palet**: `surface #FDF9F3` cream, `primary #845400` bear brown, `primary-container #F4A216` honey, `secondary #396842` green, `tertiary #7A5648` brown. Surfaces `surfaceContainerLowest #FFFFFF` (card) → `Low #F7F3ED` → `High #EBE8E2`.
+* **Tipografi**: `Plus Jakarta Sans` (headline `40/800`, `32/700`, price `36/800 tabular`) + `Be Vietnam Pro` (body `18/500`, `16/400`, label `14/600 +0.05em`).
+* **Shape**: `sm 8 / DEFAULT 16 / md 24 / lg 32 / xl 48 / full pill`. Card `rounded-md/lg`, dialog `xl`, button `pill` + 2dp honey bottom border 3D.
+* **Elevation**: Tonal layering cream→white + soft ambient shadow 5-8% `tertiary #7A5648`, press sink.
+* **Logo**: Beruang di honey pot "B" + daun + koin Rp, dipakai di launcher (IconKitchen adaptive), splash (padded 62%), in-app (`ic_app_logo`/`ic_bear_head`), notifikasi (`ic_bill_reminder.png` monochrome), widget avatar, README.
 
 ---
 
