@@ -77,10 +77,12 @@ private class FakeDueBillDao2 : DueBillDao {
 private class FakeTxDao2 : TransactionDao {
     val txs = mutableListOf<LocalTransactionEntity>()
     override fun getAllTransactions(): List<LocalTransactionEntity> = txs.toList()
+    override fun getTransactionsPaged(limit: Int, offset: Int): List<LocalTransactionEntity> = txs.drop(offset).take(limit)
     override fun getAllTransactionsByOwner(ownerId: String): List<LocalTransactionEntity> = getAllTransactions()
     override fun observeTransactionsByOwner(ownerId: String): Flow<List<LocalTransactionEntity>> = flowOf(getAllTransactionsByOwner(ownerId))
     override fun observeAllTransactions(): Flow<List<LocalTransactionEntity>> = flowOf(txs.toList())
     override fun getTransactionsByCategory(category: String): List<LocalTransactionEntity> = txs.filter { it.category == category }
+    override fun getTransactionsByCategoryPaged(category: String, limit: Int, offset: Int): List<LocalTransactionEntity> = txs.filter { it.category == category }.drop(offset).take(limit)
     override fun getTransactionById(id: String): LocalTransactionEntity? = txs.find { it.id == id }
     override fun insertTransaction(transaction: LocalTransactionEntity) { txs.add(transaction) }
     override fun insertTransactions(transactions: List<LocalTransactionEntity>) { txs.addAll(transactions) }

@@ -1,5 +1,6 @@
 package com.ssajudn.barebudget.data.repository
 
+import android.util.Log
 import com.ssajudn.barebudget.domain.model.RecurringInterval
 import com.ssajudn.barebudget.domain.model.TransactionCategory
 import com.ssajudn.barebudget.domain.model.TransactionType
@@ -7,17 +8,17 @@ import com.ssajudn.barebudget.domain.model.TransactionType
 object DomainMappers {
     fun safeTransactionType(raw: String?): TransactionType =
         runCatching { TransactionType.valueOf(raw.orEmpty()) }
-            .onFailure { println("[DomainMappers] Unknown TransactionType: $raw, fallback to EXPENSE: ${it.message}") }
+            .onFailure { android.util.Log.w("DomainMappers", "Unknown TransactionType: $raw, fallback to EXPENSE: ${it.message}") }
             .getOrDefault(TransactionType.EXPENSE)
 
     fun safeCategory(raw: String?): TransactionCategory =
         runCatching { TransactionCategory.valueOf(raw.orEmpty()) }
-            .onFailure { println("[DomainMappers] Unknown TransactionCategory: $raw, fallback to OTHER: ${it.message}") }
+            .onFailure { android.util.Log.w("DomainMappers", "Unknown TransactionCategory: $raw, fallback to OTHER: ${it.message}") }
             .getOrDefault(TransactionCategory.OTHER)
 
     fun safeRecurringInterval(raw: String?): RecurringInterval =
         runCatching { RecurringInterval.valueOf(raw.orEmpty()) }
-            .onFailure { println("[DomainMappers] Unknown RecurringInterval: $raw, fallback to NONE: ${it.message}") }
+            .onFailure { android.util.Log.w("DomainMappers", "Unknown RecurringInterval: $raw, fallback to NONE: ${it.message}") }
             .getOrDefault(RecurringInterval.NONE)
 
     fun safeDueBillStatus(raw: String?): com.ssajudn.barebudget.domain.model.DueBillStatus =

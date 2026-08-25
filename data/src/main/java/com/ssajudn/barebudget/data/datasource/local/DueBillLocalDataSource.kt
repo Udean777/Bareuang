@@ -114,7 +114,7 @@ class DueBillLocalDataSource @Inject constructor(
                     }
                     db.dueBillDao().updateDueBillStatus(id, status.name, newPaidWalletId)
                 }
-                try { db.runInTransaction { block() } } catch (_: Exception) { block() }
+                db.runInTransaction { block() }
                 Result.success(true)
             } catch (e: Exception) {
                 Result.failure(ApiErrorParser.fromThrowable(e))

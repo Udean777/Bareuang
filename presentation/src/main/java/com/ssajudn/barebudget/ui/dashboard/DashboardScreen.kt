@@ -1,5 +1,8 @@
 package com.ssajudn.barebudget.ui.dashboard
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,29 +17,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.domain.model.DashboardSummary
+import com.ssajudn.barebudget.ui.components.ErrorState
 import com.ssajudn.barebudget.ui.components.FinancialRunwayCard
+import com.ssajudn.barebudget.ui.components.RollingNumber
 import com.ssajudn.barebudget.ui.components.TransactionItem
-import com.ssajudn.barebudget.ui.components.AppButton
 import com.ssajudn.barebudget.ui.components.AppIconButton
 import com.ssajudn.barebudget.ui.components.AppTextButton
 import com.ssajudn.barebudget.ui.components.pressScale
 import com.ssajudn.barebudget.ui.theme.*
-import com.ssajudn.barebudget.data.local.ThemePreferences
 import com.ssajudn.barebudget.domain.model.AppThemeDarkMode
 import com.ssajudn.barebudget.utils.CurrencyFormatter
-
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,19 +56,10 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    val lifecycleOwner = LocalLifecycleOwner.current
-
     // Auto-refresh dashboard data whenever returning back to this screen
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.loadDashboardData()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        viewModel.loadDashboardData()
+        onPauseOrDispose { }
     }
 
     Scaffold(
@@ -79,19 +67,19 @@ fun DashboardScreen(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        val squishX by animateFloatAsState(if (isRefreshing) 1.12f else 1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow), label = "squishX")
+                        val squishY by animateFloatAsState(if (isRefreshing) 0.88f else 1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow), label = "squishY")
                         Image(
                             painter = painterResource(id = R.drawable.ic_app_logo),
                             contentDescription = stringResource(R.string.app_name),
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(MaterialTheme.shapes.small)
+                            modifier = Modifier.size(38.dp).clip(MaterialTheme.shapes.small).graphicsLayer { scaleX = squishX; scaleY = squishY }
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Bare Budget",
+                                text = "Bareuang",
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.ExtraBold
                                 )
                             )
                             Text(
@@ -104,9 +92,7 @@ fun DashboardScreen(
                 },
                 actions = {
                     var showThemeDialog by remember { mutableStateOf(false) }
-                    val context = LocalContext.current
-                    val themePrefs = remember { ThemePreferences.getInstance(context) }
-                    val currentDarkMode by themePrefs.darkMode.collectAsStateWithLifecycle()
+                    val currentDarkMode by viewModel.darkMode.collectAsStateWithLifecycle()
 
                     val themeIcon = when (currentDarkMode) {
                         AppThemeDarkMode.Dark -> Icons.Default.DarkMode
@@ -147,7 +133,7 @@ fun DashboardScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clickable {
-                                                    themePrefs.setDarkMode(mode)
+                                                    viewModel.setDarkMode(mode)
                                                     showThemeDialog = false
                                                 },
                                             color = if (currentDarkMode == mode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
@@ -215,28 +201,13 @@ fun DashboardScreen(
                     )
                 }
                 is DashboardUiState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dashboard_load_error),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = state.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        AppButton(onClick = { viewModel.loadDashboardData() }) {
-                            Text(stringResource(R.string.common_retry))
-                        }
-                    }
+                    ErrorState(
+                        title = stringResource(R.string.dashboard_load_error),
+                        message = state.message,
+                        retryLabel = stringResource(R.string.common_retry),
+                        modifier = Modifier.align(Alignment.Center),
+                        onRetry = { viewModel.loadDashboardData() }
+                    )
                 }
                 is DashboardUiState.Success -> {
                     DashboardContent(
@@ -301,7 +272,7 @@ fun DashboardContent(
                     title = stringResource(R.string.dashboard_quick_wallet),
                     subtitle = stringResource(R.string.dashboard_quick_wallet_desc),
                     icon = Icons.Default.AccountBalanceWallet,
-                    bgColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    bgColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                     tintColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                     onClick = onWalletsClick
@@ -313,7 +284,7 @@ fun DashboardContent(
                         CurrencyFormatter.formatCompact(summary.unpaidDueBillsSum)
                     } else stringResource(R.string.bills_badge_paid),
                     icon = Icons.Default.ReceiptLong,
-                    bgColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    bgColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                     tintColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                     onClick = onDueBillsClick
@@ -323,7 +294,7 @@ fun DashboardContent(
                     title = stringResource(R.string.dashboard_quick_goals),
                     subtitle = stringResource(R.string.dashboard_quick_goals_desc),
                     icon = Icons.Default.Payments,
-                    bgColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    bgColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                     tintColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                     onClick = onGoalsClick
@@ -335,44 +306,42 @@ fun DashboardContent(
         item {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                shape = MaterialTheme.shapes.medium, // rounded-md = 24dp
+                color = MaterialTheme.colorScheme.surfaceContainerLowest, // white on cream canvas
+                shadowElevation = 2.dp,
+                border = androidx.compose.foundation.BorderStroke(
+                    0.8.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                )
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(18.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
                         Text(
                             text = stringResource(R.string.dashboard_total_spent),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = CurrencyFormatter.formatRupiah(summary.totalSpent),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
+                        RollingNumber(
+                            value = summary.totalSpent,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
                         )
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = stringResource(R.string.dashboard_daily_avg),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = CurrencyFormatter.formatRupiah(summary.averageDailySpend),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = MaterialTheme.colorScheme.error
+                        RollingNumber(
+                            value = summary.averageDailySpend,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
                         )
                     }
                 }
@@ -397,11 +366,15 @@ fun DashboardContent(
                 }
             }
 
-            items(summary.recurringTransactions) { tx ->
-                com.ssajudn.barebudget.ui.components.RecurringTransactionItem(
-                    transaction = tx,
-                    onClick = { tx.id?.let(onTransactionClick) }
-                )
+            summary.recurringTransactions.forEachIndexed { idx, tx ->
+                item {
+                    com.ssajudn.barebudget.ui.components.StaggeredFadeIn(idx) {
+                        com.ssajudn.barebudget.ui.components.RecurringTransactionItem(
+                            transaction = tx,
+                            onClick = { tx.id?.let(onTransactionClick) }
+                        )
+                    }
+                }
             }
         }
 
@@ -440,7 +413,7 @@ fun DashboardContent(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
                     Box(
                         modifier = Modifier
@@ -457,11 +430,15 @@ fun DashboardContent(
                 }
             }
         } else {
-            items(recent) { tx ->
-                TransactionItem(
-                    transaction = tx,
-                    onClick = { tx.id?.let(onTransactionClick) }
-                )
+            recent.forEachIndexed { idx, tx ->
+                item {
+                    com.ssajudn.barebudget.ui.components.StaggeredFadeIn(idx) {
+                        TransactionItem(
+                            transaction = tx,
+                            onClick = { tx.id?.let(onTransactionClick) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -546,56 +523,4 @@ fun QuickActionCard(
             }
         }
     }
-}
-
-@Composable
-fun SetBudgetDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (Long) -> Unit
-) {
-    var rawInput by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.dashboard_set_budget),
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column {
-                Text(
-                    text = stringResource(R.string.dashboard_budget_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = rawInput,
-                    onValueChange = { rawInput = it },
-                    label = { Text(stringResource(R.string.dashboard_budget_amount)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val amount = CurrencyFormatter.parseAmount(rawInput)
-                    if (amount > 0) {
-                        onConfirm(amount)
-                    }
-                }
-            ) {
-                Text(stringResource(R.string.common_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel))
-            }
-        }
-    )
 }

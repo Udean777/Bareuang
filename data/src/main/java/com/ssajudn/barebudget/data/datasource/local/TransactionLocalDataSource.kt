@@ -30,10 +30,13 @@ class TransactionLocalDataSource @Inject constructor(
     suspend fun getTransactions(category: String?, page: Int, limit: Int): Result<List<Transaction>> =
         withContext(Dispatchers.IO) {
             try {
+                val safePage = page.coerceAtLeast(1)
+                val safeLimit = limit.coerceAtLeast(0)
+                val offset = (safePage - 1) * safeLimit
                 val entities = if (category.isNullOrBlank()) {
-                    db.transactionDao().getAllTransactions()
+                    db.transactionDao().getTransactionsPaged(safeLimit, offset)
                 } else {
-                    db.transactionDao().getTransactionsByCategory(category)
+                    db.transactionDao().getTransactionsByCategoryPaged(category, safeLimit, offset)
                 }
                 Result.success(entities.map { it.toTransaction() })
             } catch (e: Exception) {
@@ -90,13 +93,7 @@ class TransactionLocalDataSource @Inject constructor(
                     nextOccurrenceDate = nextDate
                 )
 
-                try { db.withTransaction {
-                    if (!isRecurring) {
-                        balanceService.adjustForCreate(request)
-                    }
-                    val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
-                    db.transactionDao().insertTransaction(entity)
-                } } catch (_: Exception) {
+                db.withTransaction {
                     if (!isRecurring) {
                         balanceService.adjustForCreate(request)
                     }
@@ -111,11 +108,7 @@ class TransactionLocalDataSource @Inject constructor(
 
     suspend fun deleteTransaction(id: String): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            try { db.withTransaction {
-                val tx = db.transactionDao().getTransactionById(id)
-                if (tx != null) balanceService.revert(tx)
-                db.transactionDao().deleteTransaction(id)
-            } } catch (_: Exception) {
+            db.withTransaction {
                 val tx = db.transactionDao().getTransactionById(id)
                 if (tx != null) balanceService.revert(tx)
                 db.transactionDao().deleteTransaction(id)

@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,14 +36,17 @@ fun AppFormDialog(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
-    confirmButtonText: String = "Simpan",
-    dismissButtonText: String? = "Batal",
+    confirmButtonText: String = "",
+    dismissButtonText: String? = null,
     confirmButtonContainerColor: Color = MaterialTheme.colorScheme.primary,
     confirmButtonContentColor: Color = contentColorForContainer(confirmButtonContainerColor),
     isConfirmEnabled: Boolean = true,
     contentSpacing: androidx.compose.ui.unit.Dp = Spacing.Medium,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val effConfirm = if (confirmButtonText.isEmpty()) stringResource(com.ssajudn.barebudget.presentation.R.string.dialog_confirm_save) else confirmButtonText
+    val effDismiss = dismissButtonText ?: stringResource(com.ssajudn.barebudget.presentation.R.string.dialog_cancel)
+    val showDismiss = dismissButtonText != null || true
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(
@@ -102,12 +106,12 @@ fun AppFormDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    if (dismissButtonText != null) {
+                    if (showDismiss) {
                         AppTextButton(
                             onClick = onDismissRequest,
                             modifier = Modifier.padding(end = Spacing.Small)
                         ) {
-                            Text(dismissButtonText)
+                            Text(effDismiss)
                         }
                     }
                     AppButton(
@@ -118,7 +122,7 @@ fun AppFormDialog(
                             contentColor = confirmButtonContentColor,
                         )
                     ) {
-                        Text(confirmButtonText)
+                        Text(effConfirm)
                     }
                 }
             }
@@ -133,13 +137,17 @@ fun AppFormDialog(
 fun AppConfirmDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
-    title: String = "Hapus item ini?",
-    message: String = "Tindakan ini tidak bisa dibatalkan.",
-    confirmButtonText: String = "Hapus",
-    dismissButtonText: String = "Batal",
+    title: String? = null,
+    message: String? = null,
+    confirmButtonText: String? = null,
+    dismissButtonText: String? = null,
     icon: ImageVector = Icons.Default.DeleteOutline,
     isDestructive: Boolean = true,
 ) {
+    val effTitle = title ?: stringResource(com.ssajudn.barebudget.presentation.R.string.dialog_default_title)
+    val effMessage = message ?: stringResource(com.ssajudn.barebudget.presentation.R.string.dialog_default_message)
+    val effConfirm = confirmButtonText ?: stringResource(com.ssajudn.barebudget.presentation.R.string.dialog_confirm_delete)
+    val effDismiss = dismissButtonText ?: stringResource(com.ssajudn.barebudget.presentation.R.string.dialog_cancel)
     val containerColor = if (isDestructive) {
         MaterialTheme.colorScheme.error
     } else {
@@ -176,7 +184,7 @@ fun AppConfirmDialog(
                 )
 
                 Text(
-                    text = title,
+                    text = effTitle,
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
@@ -185,7 +193,7 @@ fun AppConfirmDialog(
                 Spacer(modifier = Modifier.height(Spacing.Medium))
 
                 Text(
-                    text = message,
+                    text = effMessage,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -201,7 +209,7 @@ fun AppConfirmDialog(
                         onClick = onDismissRequest,
                         modifier = Modifier.padding(end = Spacing.Small)
                     ) {
-                        Text(dismissButtonText)
+                        Text(effDismiss)
                     }
                     AppButton(
                         onClick = onConfirm,
@@ -210,7 +218,7 @@ fun AppConfirmDialog(
                             contentColor = contentColorForContainer(containerColor),
                         )
                     ) {
-                        Text(confirmButtonText)
+                        Text(effConfirm)
                     }
                 }
             }
@@ -234,5 +242,38 @@ private fun contentColorForContainer(container: Color): Color {
         scheme.tertiaryContainer -> scheme.onTertiaryContainer
         scheme.errorContainer -> scheme.onErrorContainer
         else -> scheme.onPrimary
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppDatePickerDialog(
+    initialDateMillis: Long? = null,
+    onDateSelected: (Long) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = androidx.compose.material3.rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis ?: System.currentTimeMillis()
+    )
+
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { onDateSelected(it) }
+                    onDismiss()
+                }
+            ) {
+                Text(stringResource(com.ssajudn.barebudget.presentation.R.string.common_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(com.ssajudn.barebudget.presentation.R.string.common_cancel))
+            }
+        }
+    ) {
+        androidx.compose.material3.DatePicker(state = datePickerState)
     }
 }

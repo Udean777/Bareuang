@@ -8,6 +8,8 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
@@ -22,12 +24,14 @@ import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -78,133 +82,134 @@ class BudgetWidget : GlanceAppWidget() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
+        // Bareuang widget — Modern Bubbly Minimalism (§5 rounded-xl, §6 tonal layering)
+        // Outer: white card (surfaceContainerLowest) on cream canvas, soft outline
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.surface)
-                .cornerRadius(22.dp)
+                .background(GlanceTheme.colors.background)
+                .cornerRadius(24.dp)
                 .clickable(actionStartActivity(mainIntent)),
             contentAlignment = Alignment.TopStart,
         ) {
-            Column(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.Top
+            // Inner white pebble card
+            Box(
+                modifier = GlanceModifier.fillMaxSize().padding(8.dp).background(GlanceTheme.colors.surface).cornerRadius(20.dp),
+                contentAlignment = Alignment.TopStart,
             ) {
-                // Header Row: App / Section label + Net Worth Badge
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = GlanceModifier.fillMaxSize().padding(14.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = "SISA RUNWAY",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
-                    )
-                    Spacer(modifier = GlanceModifier.defaultWeight())
-                    Text(
-                        text = "Saldo: ${mask(CurrencyFormatter.formatCompact(summary.netWorth), hideBalance)}",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        maxLines = 1,
-                    )
-                }
-
-                Spacer(modifier = GlanceModifier.height(3.dp))
-
-                // Primary Highlight: Remaining Budget
-                Text(
-                    text = mask(CurrencyFormatter.formatRupiah(summary.remainingBudget), hideBalance),
-                    style = TextStyle(
-                        color = GlanceTheme.colors.primary,
-                        fontSize = if (isWide) 22.sp else 19.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
-                    maxLines = 1,
-                )
-
-                Spacer(modifier = GlanceModifier.height(4.dp))
-
-                // Progress Indicator (Budget Usage)
-                RunwayBar(summary)
-
-                // Secondary Metrics & Status Details
-                if (isTall || isWide) {
-                    Spacer(modifier = GlanceModifier.height(4.dp))
-                    Row(
-                        modifier = GlanceModifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Daily Average Burn Rate
-                        Column(modifier = GlanceModifier.defaultWeight()) {
-                            Text(
-                                text = "Rata-rata/hari",
-                                style = TextStyle(
-                                    color = GlanceTheme.colors.onSurfaceVariant,
-                                    fontSize = 10.sp,
-                                ),
+                    // Header: bear avatar + pill badge + net worth — strong bear identity
+                    Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        // Bear avatar — honey pot B (32dp bubble, DESIGN.MD rounded-full)
+                        Box(
+                            modifier = GlanceModifier.background(GlanceTheme.colors.surfaceVariant).cornerRadius(50.dp).padding(2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                provider = ImageProvider(com.ssajudn.barebudget.R.drawable.ic_app_logo),
+                                contentDescription = "Bareuang",
+                                modifier = GlanceModifier.size(28.dp).cornerRadius(14.dp),
+                                contentScale = ContentScale.Fit
                             )
-                            Spacer(modifier = GlanceModifier.height(1.dp))
+                        }
+                        Spacer(modifier = GlanceModifier.width(8.dp))
+                        Box(
+                            modifier = GlanceModifier.background(GlanceTheme.colors.primaryContainer).cornerRadius(50.dp).padding(horizontal = 9.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = mask(CurrencyFormatter.formatCompact(summary.averageDailySpend), hideBalance),
-                                style = TextStyle(
-                                    color = GlanceTheme.colors.onSurface,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                ),
+                                text = "SISA RUNWAY",
+                                style = TextStyle(color = GlanceTheme.colors.onPrimaryContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                            )
+                        }
+                        Spacer(modifier = GlanceModifier.defaultWeight())
+                        // Net worth badge — secondary green + Rp coin hint
+                        Box(
+                            modifier = GlanceModifier.background(GlanceTheme.colors.secondaryContainer).cornerRadius(50.dp).padding(horizontal = 8.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "⬢ ${mask(CurrencyFormatter.formatCompact(summary.netWorth), hideBalance)}",
+                                style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 10.sp, fontWeight = FontWeight.Bold),
                                 maxLines = 1,
                             )
                         }
+                    }
 
-                        // Unpaid Bills Alert if any
-                        if (summary.unpaidDueBillsSum > 0) {
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "Tagihan Jatuh Tempo",
-                                    style = TextStyle(
-                                        color = GlanceTheme.colors.error,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Medium,
-                                    ),
-                                )
-                                Spacer(modifier = GlanceModifier.height(1.dp))
-                                Text(
-                                    text = mask(CurrencyFormatter.formatCompact(summary.unpaidDueBillsSum), hideBalance),
-                                    style = TextStyle(
-                                        color = GlanceTheme.colors.error,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    ),
-                                    maxLines = 1,
-                                )
+                    Spacer(modifier = GlanceModifier.height(8.dp))
+
+                    // Price display — honey primary, bear brown context
+                    Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = mask(CurrencyFormatter.formatRupiah(summary.remainingBudget), hideBalance),
+                            style = TextStyle(color = GlanceTheme.colors.primary, fontSize = if (isWide) 22.sp else 19.sp, fontWeight = FontWeight.Bold),
+                            maxLines = 1,
+                        )
+                        Spacer(modifier = GlanceModifier.defaultWeight())
+                        // Mini bear paw honey coin — tertiaryContainer leaf accent
+                        Box(
+                            modifier = GlanceModifier.background(GlanceTheme.colors.tertiaryContainer).cornerRadius(50.dp).padding(horizontal = 6.dp, vertical = 2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (summary.remainingBudget <= 0) "🐻‍❄️" else "🐻",
+                                style = TextStyle(fontSize = 13.sp),
+                            )
+                        }
+                    }
+                    Text(
+                        text = if (summary.remainingBudget <= 0) "Beruang khawatir — ayo rem dulu!" else "Beruang senang menemanimu ✨",
+                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                    )
+
+                    Spacer(modifier = GlanceModifier.height(6.dp))
+                    RunwayBar(summary)
+                    Spacer(modifier = GlanceModifier.height(2.dp))
+                    // Runway message preview (first line)
+                    Text(
+                        text = summary.runwayMessage.take(48),
+                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                        maxLines = 1,
+                    )
+
+                    if (isTall || isWide) {
+                        Spacer(modifier = GlanceModifier.height(8.dp))
+                        Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            // Daily burn — outlineVariant subtle card
+                            Box(
+                                modifier = GlanceModifier.defaultWeight().background(GlanceTheme.colors.surfaceVariant).cornerRadius(12.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Column(modifier = GlanceModifier.fillMaxWidth()) {
+                                    Text(text = "Harian", style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                                    Text(text = mask(CurrencyFormatter.formatCompact(summary.averageDailySpend), hideBalance), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                                }
                             }
-                        } else if (summary.monthlyBudget > 0) {
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "Terpakai",
-                                    style = TextStyle(
-                                        color = GlanceTheme.colors.onSurfaceVariant,
-                                        fontSize = 10.sp,
-                                    ),
-                                )
-                                Spacer(modifier = GlanceModifier.height(1.dp))
-                                val percent = ((summary.totalSpent.toFloat() / summary.monthlyBudget) * 100).toInt()
-                                Text(
-                                    text = "$percent%",
-                                    style = TextStyle(
-                                        color = GlanceTheme.colors.onSurface,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    ),
-                                    maxLines = 1,
-                                )
+                            Spacer(modifier = GlanceModifier.width(8.dp))
+                            if (summary.unpaidDueBillsSum > 0) {
+                                Box(
+                                    modifier = GlanceModifier.background(GlanceTheme.colors.errorContainer).cornerRadius(12.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(text = "Tagihan", style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                                        Text(text = mask(CurrencyFormatter.formatCompact(summary.unpaidDueBillsSum), hideBalance), style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                                    }
+                                }
+                            } else if (summary.monthlyBudget > 0) {
+                                Box(
+                                    modifier = GlanceModifier.background(GlanceTheme.colors.tertiaryContainer).cornerRadius(12.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(text = "Terpakai", style = TextStyle(color = GlanceTheme.colors.onTertiaryContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                                        val percent = ((summary.totalSpent.toFloat() / summary.monthlyBudget) * 100).toInt().coerceIn(0, 999)
+                                        Text(text = "$percent%", style = TextStyle(color = GlanceTheme.colors.onTertiaryContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                                    }
+                                }
                             }
                         }
                     }
@@ -219,9 +224,10 @@ class BudgetWidget : GlanceAppWidget() {
             (summary.totalSpent.toFloat() / summary.monthlyBudget).coerceIn(0f, 1f)
         } else 0f
         val overSpent = progress >= 1f || (summary.estimatedDeathDay in 1 until summary.daysPassed)
+        // Thick bubbly track 8dp, rounded pill — bear progress vibe (dot simulated via color)
         LinearProgressIndicator(
             progress = progress,
-            modifier = GlanceModifier.fillMaxWidth().height(5.dp),
+            modifier = GlanceModifier.fillMaxWidth().height(8.dp).cornerRadius(50.dp),
             color = if (overSpent) GlanceTheme.colors.error else GlanceTheme.colors.primary,
             backgroundColor = GlanceTheme.colors.surfaceVariant,
         )

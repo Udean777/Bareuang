@@ -36,13 +36,5 @@ class TourPreferences @Inject constructor(
         private const val PREF_NAME = "bare_budget_tour"
         private const val KEY_TOUR_COMPLETED = "tour_completed"
 
-        @Volatile
-        private var instance: TourPreferences? = null
-
-        /** Same pattern as ThemePreferences.getInstance: shared instance for Compose callers outside DI. */
-        fun getInstance(context: Context): TourPreferences =
-            instance ?: synchronized(this) {
-                instance ?: TourPreferences(context.applicationContext).also { instance = it }
-            }
     }
 }

@@ -27,15 +27,6 @@ import java.util.Calendar
 import java.util.Locale
 
 private class FakeBudgetRepo(var budget: Long = 0L) : BudgetRepository {
-    @Suppress("DEPRECATION")
-    override suspend fun getDashboardSummary(): Result<DashboardSummary> = Result.success(
-        DashboardSummary(
-            monthlyBudget = budget, totalSpent = 0, remainingBudget = budget,
-            daysPassed = 1, daysInMonth = 30, averageDailySpend = 0,
-            estimatedDeathDay = 30, runwayMessage = "", topCategories = emptyList(),
-            unpaidDueBillsSum = 0, netWorth = 0, recentTransactions = emptyList()
-        )
-    )
     override suspend fun setBudget(monthlyLimit: Long, monthYear: String) = Result.success(true)
     override suspend fun getMonthlyBudget(monthYear: String) = Result.success(budget)
     override fun getCategoryBudgets(monthYear: String): Flow<List<com.ssajudn.barebudget.domain.model.CategoryBudget>> = flowOf(emptyList())

@@ -1,7 +1,7 @@
 package com.ssajudn.barebudget.ui.wallets
 
-import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.common.asString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,11 +36,13 @@ import com.ssajudn.barebudget.ui.tour.tourAnchor
 import com.ssajudn.barebudget.ui.theme.AppShapes
 import com.ssajudn.barebudget.ui.theme.Spacing
 import com.ssajudn.barebudget.ui.theme.crispBorder
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.utils.CurrencyFormatter
 import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.bareuangOutlinedTextFieldColors
 import com.ssajudn.barebudget.ui.components.pressScale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,12 +52,13 @@ fun WalletsScreen(
     viewModel: WalletsViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val operation by viewModel.operation.collectAsState()
-    val isOperationLoading = operation is OperationState.Loading
+    val context = LocalContext.current
+    
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> {}
                 is UiEffect.PopBackStack -> {}
             }
@@ -372,7 +375,8 @@ fun WalletFormDialog(
             label = { Text(stringResource(R.string.wallets_name_label)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            colors = bareuangOutlinedTextFieldColors()
         )
 
         if (initialWallet == null) {
@@ -389,7 +393,8 @@ fun WalletFormDialog(
                 visualTransformation = CurrencyVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                colors = bareuangOutlinedTextFieldColors()
             )
         } else {
             Spacer(modifier = Modifier.height(Spacing.Small))

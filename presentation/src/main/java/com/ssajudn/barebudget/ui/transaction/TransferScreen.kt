@@ -31,6 +31,7 @@ import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
 import com.ssajudn.barebudget.utils.DateUtils
 import com.ssajudn.barebudget.ui.components.AppButton
 import com.ssajudn.barebudget.ui.components.AppIconButton
+import com.ssajudn.barebudget.ui.components.ConfettiBurst
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -69,8 +70,11 @@ fun TransferScreen(
 
     val isBalanceInsufficient = sourceWallet != null && uiState.parsedAmount > sourceWallet.balance
 
+    var showConfetti by remember { mutableStateOf(false) }
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
+            showConfetti = true
+            kotlinx.coroutines.delay(1400)
             onTransferSuccess?.invoke()
         }
     }
@@ -146,10 +150,11 @@ fun TransferScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (showConfetti) ConfettiBurst(trigger = true, modifier = Modifier.fillMaxSize())
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(18.dp)
@@ -165,7 +170,7 @@ fun TransferScreen(
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
                     ),
                 shape = AppShapes.Squircle,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -294,7 +299,7 @@ fun TransferScreen(
                 value = uiState.rawAmount,
                 onValueChange = { viewModel.onAmountChange(it) },
                 label = { Text(stringResource(R.string.tx_transfer_amount_rp)) },
-                placeholder = { Text("Rp 0") },
+                placeholder = { Text(stringResource(R.string.common_rp_zero)) },
                 visualTransformation = CurrencyVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -340,15 +345,18 @@ fun TransferScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+            val trError = uiState.validationError?.let {
+                when (it) {
+                    AddTransactionError.INSUFFICIENT_BALANCE -> stringResource(it.resId, CurrencyFormatter.formatRupiah(sourceWallet?.balance ?: 0L))
+                    else -> stringResource(it.resId)
+                }
+            } ?: uiState.errorMessage
+            if (trError != null) {
+                Text(text = trError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
         }
     }
 }

@@ -2,6 +2,7 @@ package com.ssajudn.barebudget.ui.transaction
 
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.common.asString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.domain.model.TransactionType
 import com.ssajudn.barebudget.ui.components.getCategoryIcon
 import com.ssajudn.barebudget.ui.components.AppConfirmDialog
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.ui.theme.AppShapes
@@ -40,12 +42,14 @@ fun TransactionDetailScreen(
     viewModel: TransactionDetailViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val operation by viewModel.operation.collectAsState()
+    val context = LocalContext.current
+    val operation by viewModel.operation.collectAsStateWithLifecycle()
     val isOperationLoading = operation is OperationState.Loading
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> {}
                 is UiEffect.PopBackStack -> {}
             }

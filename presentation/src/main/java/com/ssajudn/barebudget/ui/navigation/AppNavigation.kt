@@ -50,7 +50,6 @@ import com.ssajudn.barebudget.ui.budget.BudgetScreen
 import com.ssajudn.barebudget.ui.components.AppNavigationBar
 import com.ssajudn.barebudget.ui.components.NavigationBarItemData
 import com.ssajudn.barebudget.ui.dashboard.DashboardScreen
-import com.ssajudn.barebudget.ui.goals.GoalsScreen
 import com.ssajudn.barebudget.ui.onboarding.OnboardingScreen
 import com.ssajudn.barebudget.ui.settings.SettingsScreen
 import com.ssajudn.barebudget.ui.splash.SplashScreen
@@ -66,7 +65,6 @@ import com.ssajudn.barebudget.presentation.R
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Onboarding : Screen("onboarding")
-    object Auth : Screen("auth")
     object Dashboard : Screen("dashboard")
     object AddTransaction : Screen("add_transaction")
     object AllTransactions : Screen("all_transactions")
@@ -145,15 +143,14 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showNavigationBar = currentRoute in TopLevelRoutes
+    val showNavigationBar = currentRoute in TopLevelRoutes && currentRoute != Screen.Transfer.route
     val topLevelDestinations = rememberTopLevelDestinations()
 
     var requestAddBill by remember { mutableStateOf(false) }
     var requestAddGoal by remember { mutableStateOf(false) }
 
     // ---- Tour guide state (hoisted here so the overlay covers FAB + bottom bar too) ----
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val tourPrefs = remember { com.ssajudn.barebudget.data.local.TourPreferences.getInstance(context) }
+    val tourViewModel: com.ssajudn.barebudget.ui.tour.TourViewModel = androidx.hilt.navigation.compose.hiltViewModel()
     val tourRegistry = remember { com.ssajudn.barebudget.ui.tour.TourRegistry() }
     var tourIndex by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(-1) }
 
@@ -162,7 +159,7 @@ fun AppNavigation(
     // with no re-registration (static screen = tour silently invisible). Stale entries
     // are harmless — overlay only reads the anchor when currentRoute matches the step.
     androidx.compose.runtime.LaunchedEffect(currentRoute) {
-        if (tourIndex == -1 && currentRoute == Screen.Dashboard.route && !tourPrefs.isTourCompleted) {
+        if (tourIndex == -1 && currentRoute == Screen.Dashboard.route && !tourViewModel.isTourCompleted) {
             tourIndex = 0
         }
     }
@@ -179,7 +176,7 @@ fun AppNavigation(
     }
 
     fun endTour() {
-        tourPrefs.markTourCompleted()
+        tourViewModel.markTourCompleted()
         tourIndex = -1
         navController.navigate(Screen.Dashboard.route) {
             popUpTo(0) { inclusive = true }
@@ -345,16 +342,6 @@ fun AppNavigation(
                 )
             }
 
-            composable(Screen.Onboarding.route) {
-                OnboardingScreen(
-                    onFinishOnboarding = {
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.Onboarding.route) { inclusive = true }
-                        }
-                    }
-                )
-            }
-
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     onNavigateToAddManual = {
@@ -449,16 +436,24 @@ fun AppNavigation(
             }
 
             composable(Screen.DueBills.route) {
+                val autoOpenAddBill = requestAddBill
+                androidx.compose.runtime.LaunchedEffect(autoOpenAddBill) {
+                    if (autoOpenAddBill) requestAddBill = false
+                }
                 DueBillsScreen(
-                    onAddBillRequest = if (requestAddBill) {
-                        requestAddBill = false
-                        { }
-                    } else null
+                    onNavigateBack = null,
+                    autoOpenAddBill = autoOpenAddBill
                 )
             }
 
             composable(Screen.Transfer.route) {
                 com.ssajudn.barebudget.ui.transaction.TransferScreen(
+                    onNavigateBack = {
+                        navController.navigate(Screen.Dashboard.route) {
+                            popUpTo(Screen.Dashboard.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                     onTransferSuccess = {
                         navController.navigate(Screen.Dashboard.route) {
                             popUpTo(Screen.Dashboard.route) { inclusive = true }
@@ -475,11 +470,12 @@ fun AppNavigation(
 
 
             composable(Screen.Goals.route) {
+                val autoOpenAddGoal = requestAddGoal
+                androidx.compose.runtime.LaunchedEffect(autoOpenAddGoal) {
+                    if (autoOpenAddGoal) requestAddGoal = false
+                }
                 GoalsScreen(
-                    onAddGoalRequest = if (requestAddGoal) {
-                        requestAddGoal = false
-                        { }
-                    } else null
+                    autoOpenAddGoal = autoOpenAddGoal
                 )
             }
 

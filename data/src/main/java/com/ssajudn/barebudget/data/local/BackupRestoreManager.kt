@@ -5,6 +5,7 @@ import android.net.Uri
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.ssajudn.barebudget.data.local.room.*
+import androidx.room.withTransaction
 import com.ssajudn.barebudget.domain.error.AppException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -82,25 +83,27 @@ class BackupRestoreManager @Inject constructor(
 
             var totalRestored = 0
 
-            if (backup.wallets.isNotEmpty()) {
-                db.walletDao().insertWallets(backup.wallets)
-                totalRestored += backup.wallets.size
-            }
-            if (backup.transactions.isNotEmpty()) {
-                db.transactionDao().insertTransactions(backup.transactions)
-                totalRestored += backup.transactions.size
-            }
-            if (backup.dueBills.isNotEmpty()) {
-                db.dueBillDao().insertDueBills(backup.dueBills)
-                totalRestored += backup.dueBills.size
-            }
-            if (backup.budgets.isNotEmpty()) {
-                db.budgetDao().insertBudgets(backup.budgets)
-                totalRestored += backup.budgets.size
-            }
-            if (backup.goals.isNotEmpty()) {
-                db.goalDao().insertGoals(backup.goals)
-                totalRestored += backup.goals.size
+            db.withTransaction {
+                if (backup.wallets.isNotEmpty()) {
+                    db.walletDao().insertWallets(backup.wallets)
+                    totalRestored += backup.wallets.size
+                }
+                if (backup.transactions.isNotEmpty()) {
+                    db.transactionDao().insertTransactions(backup.transactions)
+                    totalRestored += backup.transactions.size
+                }
+                if (backup.dueBills.isNotEmpty()) {
+                    db.dueBillDao().insertDueBills(backup.dueBills)
+                    totalRestored += backup.dueBills.size
+                }
+                if (backup.budgets.isNotEmpty()) {
+                    db.budgetDao().insertBudgets(backup.budgets)
+                    totalRestored += backup.budgets.size
+                }
+                if (backup.goals.isNotEmpty()) {
+                    db.goalDao().insertGoals(backup.goals)
+                    totalRestored += backup.goals.size
+                }
             }
 
             Result.success(totalRestored)

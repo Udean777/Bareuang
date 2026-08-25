@@ -2,6 +2,7 @@ package com.ssajudn.barebudget.ui.goals
 
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.common.asString
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,8 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.domain.model.Goal
+import com.ssajudn.barebudget.ui.components.ErrorState
 import com.ssajudn.barebudget.ui.components.AppConfirmDialog
 import com.ssajudn.barebudget.ui.components.AppFormDialog
+import com.ssajudn.barebudget.ui.components.WalletDropdown
+import com.ssajudn.barebudget.ui.components.AmountTextField
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.ui.theme.*
@@ -48,24 +53,22 @@ enum class GoalFilter(val labelRes: Int) {
     COMPLETED(R.string.goals_filter_completed)
 }
 
-val presetGoalColors = listOf(
-    "#4E73DF", "#2ECC71", "#E74C3C", "#F39C12", "#9B59B6", "#1ABC9C"
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsScreen(
     onNavigateBack: (() -> Unit)? = null,
-    onAddGoalRequest: (() -> Unit)? = null,
+    autoOpenAddGoal: Boolean = false,
     viewModel: GoalsViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val operation by viewModel.operation.collectAsState()
+    val context = LocalContext.current
+    val operation by viewModel.operation.collectAsStateWithLifecycle()
     val isOperationLoading = operation is OperationState.Loading
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> {}
                 is UiEffect.PopBackStack -> {}
             }
@@ -74,30 +77,22 @@ fun GoalsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val wallets by viewModel.wallets.collectAsStateWithLifecycle()
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     // Auto-refresh data dompet & target tabungan setiap kali pengguna kembali ke layar ini
-    DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                viewModel.loadGoals()
-                viewModel.loadWallets()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        viewModel.loadGoals()
+        viewModel.loadWallets()
+        onPauseOrDispose { }
     }
 
-    var selectedFilter by remember { mutableStateOf(GoalFilter.ALL) }
+    val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editingGoal by remember { mutableStateOf<Goal?>(null) }
     var actionSheetGoal by remember { mutableStateOf<Goal?>(null) }
 
-    LaunchedEffect(onAddGoalRequest) {
-        if (onAddGoalRequest != null) {
+    LaunchedEffect(autoOpenAddGoal) {
+        if (autoOpenAddGoal) {
             editingGoal = null
             showAddDialog = true
         }
@@ -107,7 +102,7 @@ fun GoalsScreen(
     var initialIsWithdraw by remember { mutableStateOf(false) }
     var goalToDelete by remember { mutableStateOf<Goal?>(null) }
 
-    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -192,7 +187,7 @@ fun GoalsScreen(
                     GoalFilter.entries.forEachIndexed { index, filter ->
                         SegmentedButton(
                             selected = selectedFilter == filter,
-                            onClick = { selectedFilter = filter },
+                            onClick = { viewModel.onFilterChange(filter) },
                             shape = SegmentedButtonDefaults.itemShape(index = index, count = GoalFilter.entries.size)
                         ) {
                             Text(stringResource(filter.labelRes), style = MaterialTheme.typography.labelSmall.copy(fontWeight = if (selectedFilter == filter) FontWeight.Bold else FontWeight.Medium))
@@ -215,39 +210,17 @@ fun GoalsScreen(
                     }
 
                     is GoalsUiState.Error -> {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = stringResource(R.string.goals_load_error),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = state.message,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            AppButton(enabled = !isOperationLoading, onClick = { viewModel.loadGoals() }) {
-                                Text(stringResource(R.string.common_retry))
-                            }
-                        }
+                        ErrorState(
+                            title = stringResource(R.string.goals_load_error),
+                            message = state.message,
+                            retryLabel = stringResource(R.string.common_retry),
+                            modifier = Modifier.align(Alignment.Center),
+                            onRetry = { viewModel.loadGoals() }
+                        )
                     }
 
                     is GoalsUiState.Success -> {
-                        val filteredGoals = state.goals.filter { g ->
-                            val isDone = g.currentAmount >= g.targetAmount
-                            when (selectedFilter) {
-                                GoalFilter.ALL -> true
-                                GoalFilter.ACTIVE -> !isDone
-                                GoalFilter.COMPLETED -> isDone
-                            }
-                        }
+                        val filteredGoals = state.goals
 
                         if (filteredGoals.isEmpty()) {
                             Box(
@@ -333,11 +306,7 @@ fun GoalsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        val accentColor = try {
-                            Color(android.graphics.Color.parseColor(targetGoal.colorHex))
-                        } catch (e: Exception) {
-                            MaterialTheme.colorScheme.primary
-                        }
+                        val accentColor = targetGoal.colorHex.toComposeColorOr(MaterialTheme.colorScheme.primary)
 
                         Surface(
                             shape = CircleShape,
@@ -542,475 +511,5 @@ fun GoalsScreen(
                 goalToDelete = null
             }
         )
-    }
-}
-
-@Composable
-fun GoalCard(
-    goal: Goal,
-    onClick: () -> Unit,
-) {
-    val isCompleted = goal.currentAmount >= goal.targetAmount
-    val progressPercentInt = (goal.progressPercentage * 100).toInt()
-
-    val daysLeft = if (!goal.targetDate!!.isNullOrBlank()) DateUtils.getDaysUntilDue(goal.targetDate!!) else null
-    val isNearDeadline = daysLeft != null && daysLeft in 0..30 && goal.progressPercentage < 0.8f
-
-    val (badgeBgColor, badgeTextColor, badgeLabel) = when {
-        isCompleted -> Triple(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer, stringResource(R.string.goals_badge_completed))
-        isNearDeadline -> Triple(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer, stringResource(R.string.goals_badge_near_deadline))
-        else -> Triple(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer, stringResource(R.string.goals_badge_on_track))
-    }
-
-    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = goal.progressPercentage,
-        animationSpec = spring(
-            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy,
-            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-        ),
-        label = "goalProgress"
-    )
-
-    val cardAccentColor = try {
-        Color(android.graphics.Color.parseColor(goal.colorHex))
-    } catch (e: Exception) {
-        MaterialTheme.colorScheme.primary
-    }
-
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .crispBorder(
-                shape = AppShapes.Squircle,
-                color = cardAccentColor.copy(alpha = 0.35f)
-            )
-            .clickable(onClick = onClick),
-        shape = AppShapes.Squircle,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isCompleted) 1.dp else 3.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // Top Row: Accent Dot, Title, & Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(cardAccentColor)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = goal.name,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Surface(
-                    shape = AppShapes.Pill,
-                    color = badgeBgColor
-                ) {
-                    Text(
-                        text = badgeLabel,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
-                        color = badgeTextColor
-                    )
-                }
-            }
-
-            // Amounts Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.goals_collected),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = CurrencyFormatter.formatRupiah(goal.currentAmount),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = stringResource(R.string.goals_target_prefix, CurrencyFormatter.formatRupiah(goal.targetAmount)),
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (!goal.targetDate!!.isNullOrBlank()) {
-                        Text(
-                            text = stringResource(R.string.goals_until, DateUtils.formatDisplayDate(goal.targetDate!!)),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-            }
-
-            // Progress Bar
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                LinearProgressIndicator(
-                    progress = { animatedProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(MaterialTheme.shapes.extraSmall),
-                    color = cardAccentColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (isCompleted) {
-                        Text(
-                            text = stringResource(R.string.goals_completed_msg),
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.goals_remaining, CurrencyFormatter.formatRupiah(goal.remainingAmount)),
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Text(
-                        text = "$progressPercentInt%",
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            // Smart Calculator Banner
-            if (!isCompleted && daysLeft != null && daysLeft > 0) {
-                val monthsLeft = kotlin.math.max(1L, daysLeft / 30L)
-                val perMonth = goal.remainingAmount / monthsLeft
-                val perDay = goal.remainingAmount / daysLeft
-
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.goals_recommend, CurrencyFormatter.formatCompact(perMonth), CurrencyFormatter.formatCompact(perDay)),
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun GoalColorRow(
-    selectedColorHex: String,
-    onSelectColor: (String) -> Unit
-) {
-    Column {
-        Text(
-            text = stringResource(R.string.goals_accent),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            presetGoalColors.forEach { colorHex ->
-                val color = try { Color(android.graphics.Color.parseColor(colorHex)) } catch (e: Exception) { Color.Gray }
-                val isSelected = selectedColorHex.equals(colorHex, ignoreCase = true)
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .clickable { onSelectColor(colorHex) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun GoalFormDialog(
-    initialGoal: Goal? = null,
-    onDismiss: () -> Unit,
-    onConfirm: (name: String, targetAmount: Long, targetDate: String, colorHex: String, notes: String) -> Unit
-) {
-    var name by remember { mutableStateOf(initialGoal?.name ?: "") }
-    var rawAmount by remember { mutableStateOf(initialGoal?.targetAmount?.toString() ?: "") }
-    var parsedAmount by remember { mutableStateOf(initialGoal?.targetAmount ?: 0L) }
-    var targetDateIso by remember { mutableStateOf(initialGoal?.targetDate ?: "") }
-    var selectedColorHex by remember { mutableStateOf(initialGoal?.colorHex ?: presetGoalColors[0]) }
-    var notes by remember { mutableStateOf(initialGoal?.notes ?: "") }
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    val isFormValid = name.isNotBlank() && parsedAmount > 0
-
-    if (showDatePicker) {
-        AppDatePickerDialog(
-            initialDateMillis = if (targetDateIso.isNotBlank()) DateUtils.parseIsoToMillis(targetDateIso) else null,
-            onDateSelected = { millis ->
-                targetDateIso = DateUtils.formatMillisToIso(millis)
-                showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false }
-        )
-    }
-
-    AppFormDialog(
-        title = if (initialGoal != null) stringResource(R.string.goals_form_edit) else stringResource(R.string.goals_form_new),
-        icon = Icons.Default.Payments,
-        iconTint = MaterialTheme.colorScheme.primary,
-        confirmButtonText = if (initialGoal != null) stringResource(R.string.goals_save_changes) else stringResource(R.string.goals_create),
-        isConfirmEnabled = isFormValid,
-        onDismissRequest = onDismiss,
-        onConfirm = {
-            onConfirm(name, parsedAmount, targetDateIso, selectedColorHex, notes)
-        }
-    ) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text(stringResource(R.string.goals_name_label)) },
-            placeholder = { Text(stringResource(R.string.goals_name_hint)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = rawAmount,
-            onValueChange = { input ->
-                val digitsOnly = input.filter { it.isDigit() }.take(12)
-                rawAmount = digitsOnly
-                parsedAmount = digitsOnly.toLongOrNull() ?: 0L
-            },
-            label = { Text(stringResource(R.string.goals_amount_label)) },
-            placeholder = { Text("Rp 0") },
-            singleLine = true,
-            visualTransformation = CurrencyVisualTransformation(),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = if (targetDateIso.isNotBlank()) DateUtils.formatDisplayDate(targetDateIso) else "",
-            onValueChange = {},
-            label = { Text(stringResource(R.string.goals_date_label)) },
-            placeholder = { Text(stringResource(R.string.goals_date_hint)) },
-            readOnly = true,
-            trailingIcon = {
-                IconButton(onClick = { showDatePicker = true }) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = stringResource(R.string.goals_date_hint))
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showDatePicker = true }
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        GoalColorRow(
-            selectedColorHex = selectedColorHex,
-            onSelectColor = { selectedColorHex = it }
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text(stringResource(R.string.goals_notes_label)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DepositGoalDialog(
-    goal: Goal,
-    wallets: List<Wallet>,
-    initialWithdraw: Boolean = false,
-    onDismiss: () -> Unit,
-    onConfirm: (amount: Long, walletId: String) -> Unit
-) {
-    var rawAmount by remember { mutableStateOf("") }
-    var parsedAmount by remember { mutableStateOf(0L) }
-    var isWithdraw by remember { mutableStateOf(initialWithdraw) }
-    var selectedWallet by remember(wallets) { mutableStateOf(wallets.firstOrNull()) }
-    var walletDropdownExpanded by remember { mutableStateOf(false) }
-
-    val walletBalance = selectedWallet?.balance ?: 0L
-    val isAmountValid = parsedAmount > 0
-    val isBalanceValid = if (isWithdraw) parsedAmount <= goal.currentAmount else parsedAmount <= walletBalance
-    val isFormValid = isAmountValid && isBalanceValid && selectedWallet?.id != null
-
-    AppFormDialog(
-        title = if (isWithdraw) stringResource(R.string.goals_withdraw_dialog) else stringResource(R.string.goals_deposit_dialog),
-        icon = if (isWithdraw) Icons.Default.Payments else Icons.Default.Savings,
-        iconTint = if (isWithdraw) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        confirmButtonText = if (isWithdraw) stringResource(R.string.goals_withdraw_btn) else stringResource(R.string.goals_deposit_btn),
-        confirmButtonContainerColor = if (isWithdraw) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        isConfirmEnabled = isFormValid,
-        onDismissRequest = onDismiss,
-        onConfirm = {
-            selectedWallet?.id?.let { wId ->
-                val finalAmount = if (isWithdraw) -parsedAmount else parsedAmount
-                onConfirm(finalAmount, wId)
-            }
-        }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FilterChip(
-                selected = !isWithdraw,
-                onClick = { isWithdraw = false },
-                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                label = { Text(stringResource(R.string.goals_chip_deposit)) },
-                modifier = Modifier.weight(1f)
-            )
-            FilterChip(
-                selected = isWithdraw,
-                onClick = { isWithdraw = true },
-                leadingIcon = { Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp)) },
-                label = { Text(stringResource(R.string.goals_chip_withdraw)) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Wallet Selector Dropdown
-        Text(
-            text = if (isWithdraw) stringResource(R.string.goals_wallet_withdraw) else stringResource(R.string.goals_wallet_deposit),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        ExposedDropdownMenuBox(
-            expanded = walletDropdownExpanded,
-            onExpandedChange = { walletDropdownExpanded = !walletDropdownExpanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            val selectedText = selectedWallet?.let { "${it.name} (${CurrencyFormatter.formatRupiah(it.balance)})" } ?: stringResource(R.string.goals_wallet_choose)
-            OutlinedTextField(
-                value = selectedText,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.goals_wallet_label)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = walletDropdownExpanded) },
-                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-            )
-            ExposedDropdownMenu(
-                expanded = walletDropdownExpanded,
-                onDismissRequest = { walletDropdownExpanded = false }
-            ) {
-                wallets.forEach { wallet ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(wallet.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                Text(stringResource(R.string.goals_balance_prefix, CurrencyFormatter.formatRupiah(wallet.balance)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        },
-                        onClick = {
-                            selectedWallet = wallet
-                            walletDropdownExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = rawAmount,
-            onValueChange = { input ->
-                val digitsOnly = input.filter { it.isDigit() }.take(12)
-                rawAmount = digitsOnly
-                parsedAmount = digitsOnly.toLongOrNull() ?: 0L
-            },
-            label = { Text(stringResource(R.string.goals_amount_rp)) },
-            placeholder = { Text("Rp 0") },
-            visualTransformation = CurrencyVisualTransformation(),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-            singleLine = true,
-            isError = parsedAmount > 0 && !isBalanceValid,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (parsedAmount > 0 && !isBalanceValid) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (isWithdraw) stringResource(R.string.goals_error_exceed_goal, CurrencyFormatter.formatRupiah(goal.currentAmount))
-                       else stringResource(R.string.goals_error_exceed_wallet, CurrencyFormatter.formatRupiah(walletBalance)),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
     }
 }

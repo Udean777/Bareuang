@@ -26,11 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.BuildConfig
-import com.ssajudn.barebudget.data.local.ThemePreferences
-import com.ssajudn.barebudget.data.local.WidgetPreferences
 import com.ssajudn.barebudget.domain.AppConfig
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.common.asString
 import com.ssajudn.barebudget.ui.components.AppIconButton
 import com.ssajudn.barebudget.ui.components.AppTextButton
 
@@ -50,10 +49,7 @@ fun SettingsScreen(
     val operation by viewModel.operation.collectAsStateWithLifecycle()
     val isOperationLoading = operation is OperationState.Loading
 
-    val themePrefs = remember { ThemePreferences.getInstance(context) }
-    val tourPrefs = remember { com.ssajudn.barebudget.data.local.TourPreferences.getInstance(context) }
-    val colorMode by themePrefs.colorMode.collectAsStateWithLifecycle()
-    val darkMode by themePrefs.darkMode.collectAsStateWithLifecycle()
+    val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
     var showSignOutConfirmDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -79,6 +75,7 @@ fun SettingsScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> {}
                 is UiEffect.PopBackStack -> onSignOutSuccess()
             }
@@ -155,17 +152,13 @@ fun SettingsScreen(
                 )
             )
 
-            // 3. APPEARANCE
             AppearanceSettingsGroup(
-                colorMode = colorMode,
                 darkMode = darkMode,
-                onColorModeChange = themePrefs::setColorMode,
-                onDarkModeChange = themePrefs::setDarkMode,
+                onDarkModeChange = viewModel::setDarkMode,
             )
 
             // 3b. WIDGET
-            val widgetPrefs = remember { WidgetPreferences.getInstance(context) }
-            val widgetHideBalance by widgetPrefs.hideBalance.collectAsStateWithLifecycle()
+            val widgetHideBalance by viewModel.widgetHideBalance.collectAsStateWithLifecycle()
             com.ssajudn.barebudget.ui.components.Material3SettingsGroup(
                 title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_widget_title),
                 items = listOf(
@@ -173,11 +166,11 @@ fun SettingsScreen(
                         title = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_widget_hide_balance),
                         description = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_widget_hide_balance_desc),
                         icon = Icons.Default.VisibilityOff,
-                        onClick = { widgetPrefs.setHideBalance(!widgetHideBalance) },
+                        onClick = { viewModel.setHideBalance(!widgetHideBalance) },
                         trailingContent = {
                             Switch(
                                 checked = widgetHideBalance,
-                                onCheckedChange = { widgetPrefs.setHideBalance(it) }
+                                onCheckedChange = { viewModel.setHideBalance(it) }
                             )
                         }
                     )
@@ -305,7 +298,7 @@ fun SettingsScreen(
                         description = stringResource(com.ssajudn.barebudget.presentation.R.string.settings_replay_tour_desc),
                         icon = Icons.Default.Tour,
                         onClick = {
-                            tourPrefs.resetTour()
+                            viewModel.resetTour()
                             onReplayTour()
                         }
                     ),

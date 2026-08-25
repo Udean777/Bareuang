@@ -33,12 +33,5 @@ class WidgetPreferences @Inject constructor(
         private const val PREF_NAME = "bare_budget_widget"
         private const val KEY_HIDE_BALANCE = "hide_balance"
 
-        @Volatile
-        private var instance: WidgetPreferences? = null
-
-        fun getInstance(context: Context): WidgetPreferences =
-            instance ?: synchronized(this) {
-                instance ?: WidgetPreferences(context.applicationContext).also { instance = it }
-            }
     }
 }

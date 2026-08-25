@@ -2,6 +2,7 @@ package com.ssajudn.barebudget.ui.transaction
 
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
+import com.ssajudn.barebudget.ui.common.asString
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,18 +28,22 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ssajudn.barebudget.domain.model.TransactionCategory
 import com.ssajudn.barebudget.domain.model.TransactionType
 import com.ssajudn.barebudget.ui.components.AppDatePickerDialog
+import com.ssajudn.barebudget.ui.components.WalletDropdown
+import com.ssajudn.barebudget.ui.components.AmountTextField
 import com.ssajudn.barebudget.ui.components.getCategoryIcon
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.ui.theme.AppShapes
 import com.ssajudn.barebudget.ui.theme.categoryColors
 import com.ssajudn.barebudget.ui.theme.crispBorder
 import com.ssajudn.barebudget.utils.CurrencyFormatter
-import com.ssajudn.barebudget.utils.CurrencyVisualTransformation
+
 import com.ssajudn.barebudget.utils.DateUtils
 import com.ssajudn.barebudget.ui.components.AppButton
 import com.ssajudn.barebudget.ui.components.AppIconButton
 import com.ssajudn.barebudget.ui.components.AppTextButton
+import com.ssajudn.barebudget.ui.components.bareuangOutlinedTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -48,12 +53,14 @@ fun AddTransactionScreen(
     viewModel: AddTransactionViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val operation by viewModel.operation.collectAsState()
+    val context = LocalContext.current
+    val operation by viewModel.operation.collectAsStateWithLifecycle()
     val isOperationLoading = operation is OperationState.Loading
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> onNavigateToBudget()
                 is UiEffect.PopBackStack -> {}
             }
@@ -185,145 +192,32 @@ fun AddTransactionScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     // Source Wallet (Dari)
-                    var fromWalletExpanded by remember { mutableStateOf(false) }
-                    val selectedFromWalletName = uiState.wallets.find { it.id == uiState.selectedWalletId }?.name ?: stringResource(R.string.common_add)
-                    ExposedDropdownMenuBox(
-                        expanded = fromWalletExpanded,
-                        onExpandedChange = { fromWalletExpanded = !fromWalletExpanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = selectedFromWalletName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.tx_from_wallet)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = fromWalletExpanded) },
-                            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = fromWalletExpanded,
-                            onDismissRequest = { fromWalletExpanded = false }
-                        ) {
-                            uiState.wallets.forEach { wallet ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(wallet.name, fontWeight = FontWeight.SemiBold)
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                CurrencyFormatter.formatRupiah(wallet.balance),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        viewModel.onWalletChange(wallet.id!!)
-                                        fromWalletExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    WalletDropdown(
+                        wallets = uiState.wallets,
+                        selectedWalletId = uiState.selectedWalletId,
+                        label = stringResource(R.string.tx_from_wallet),
+                        emptyText = stringResource(R.string.common_add),
+                        modifier = Modifier.weight(1f),
+                        onSelected = { viewModel.onWalletChange(it.id!!) }
+                    )
 
                     // Destination Wallet (Ke)
-                    var toWalletExpanded by remember { mutableStateOf(false) }
-                    val selectedToWalletName = uiState.wallets.find { it.id == uiState.selectedToWalletId }?.let { "${it.name} (${CurrencyFormatter.formatRupiah(it.balance)})" } ?: stringResource(R.string.common_add)
-                    ExposedDropdownMenuBox(
-                        expanded = toWalletExpanded,
-                        onExpandedChange = { toWalletExpanded = !toWalletExpanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = selectedToWalletName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.tx_to_wallet)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = toWalletExpanded) },
-                            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = toWalletExpanded,
-                            onDismissRequest = { toWalletExpanded = false }
-                        ) {
-                            uiState.wallets.forEach { wallet ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(wallet.name, fontWeight = FontWeight.SemiBold)
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                CurrencyFormatter.formatRupiah(wallet.balance),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        viewModel.onToWalletChange(wallet.id!!)
-                                        toWalletExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    WalletDropdown(
+                        wallets = uiState.wallets,
+                        selectedWalletId = uiState.selectedToWalletId,
+                        label = stringResource(R.string.tx_to_wallet),
+                        emptyText = stringResource(R.string.common_add),
+                        modifier = Modifier.weight(1f),
+                        onSelected = { viewModel.onToWalletChange(it.id!!) }
+                    )
                 }
             } else {
-                var walletDropdownExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    expanded = walletDropdownExpanded,
-                    onExpandedChange = { walletDropdownExpanded = !walletDropdownExpanded },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val selectedWalletName = uiState.wallets.find { it.id == uiState.selectedWalletId }?.let { "${it.name} (${CurrencyFormatter.formatRupiah(it.balance)})" } ?: stringResource(R.string.tx_choose_wallet)
-                    OutlinedTextField(
-                        value = selectedWalletName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.tx_wallet_label)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = walletDropdownExpanded) },
-                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = walletDropdownExpanded,
-                        onDismissRequest = { walletDropdownExpanded = false }
-                    ) {
-                        uiState.wallets.forEach { wallet ->
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(wallet.name, fontWeight = FontWeight.SemiBold)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            CurrencyFormatter.formatRupiah(wallet.balance),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                },
-                                onClick = {
-                                    viewModel.onWalletChange(wallet.id!!)
-                                    walletDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
+                WalletDropdown(
+                    wallets = uiState.wallets,
+                    selectedWalletId = uiState.selectedWalletId,
+                    label = stringResource(R.string.tx_wallet_label),
+                    onSelected = { viewModel.onWalletChange(it.id!!) }
+                )
             }
 
             // 1. AMOUNT INPUT (Prominent M3 Display Card with Quick Presets)
@@ -356,12 +250,12 @@ fun AddTransactionScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
+                    AmountTextField(
                         value = uiState.rawAmount,
                         onValueChange = { viewModel.onAmountChange(it) },
                         placeholder = {
                             Text(
-                                "Rp 0",
+                                stringResource(R.string.common_rp_zero),
                                 style = MaterialTheme.typography.displayMedium.copy(
                                     fontWeight = FontWeight.Black,
                                     fontSize = 32.sp
@@ -373,9 +267,6 @@ fun AddTransactionScreen(
                             fontWeight = FontWeight.Black,
                             fontSize = 32.sp
                         ),
-                        singleLine = true,
-                        visualTransformation = CurrencyVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent
@@ -504,6 +395,7 @@ fun AddTransactionScreen(
                     placeholder = { Text(stringResource(R.string.tx_merchant_hint)) },
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium,
+                    colors = bareuangOutlinedTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -559,6 +451,7 @@ fun AddTransactionScreen(
                     onValueChange = { viewModel.onNotesChange(it) },
                     placeholder = { Text(stringResource(R.string.tx_notes_hint)) },
                     shape = MaterialTheme.shapes.medium,
+                    colors = bareuangOutlinedTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -700,12 +593,14 @@ fun AddTransactionScreen(
                 }
             }
 
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            val errorText = uiState.validationError?.let {
+                when (it) {
+                    AddTransactionError.INSUFFICIENT_BALANCE -> stringResource(it.resId, CurrencyFormatter.formatRupiah(uiState.wallets.find { w -> w.id == uiState.selectedWalletId }?.balance ?: 0L))
+                    else -> stringResource(it.resId)
+                }
+            } ?: uiState.errorMessage
+            if (errorText != null) {
+                Text(text = errorText, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
 
             Spacer(modifier = Modifier.height(20.dp))

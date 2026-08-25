@@ -14,19 +14,21 @@ import com.ssajudn.barebudget.data.local.ThemePreferences
 import com.ssajudn.barebudget.ui.navigation.AppNavigation
 import com.ssajudn.barebudget.domain.model.AppThemeDarkMode
 import com.ssajudn.barebudget.ui.theme.BareBudgetTheme
-import com.ssajudn.barebudget.ui.theme.ThemeColorMode
 import com.ssajudn.barebudget.ui.theme.ThemeDarkMode
 import com.ssajudn.barebudget.widget.BudgetWidgetWorker
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var themePrefs: ThemePreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themePrefs = ThemePreferences.getInstance(applicationContext)
-            val colorMode by themePrefs.colorMode.collectAsStateWithLifecycle()
             val darkMode by themePrefs.darkMode.collectAsStateWithLifecycle()
 
             val darkTheme = when (darkMode) {
@@ -35,11 +37,6 @@ class MainActivity : ComponentActivity() {
                 AppThemeDarkMode.Dark -> true
             }
 
-            // Status/navigation bar icon contrast lives here, in the Activity,
-            // because it needs the Window. Setting statusBarColor is deliberately
-            // avoided — it is deprecated and a no-op from API 35; the bars are
-            // transparent and Compose draws behind them, so only the icon
-            // appearance needs to follow the theme.
             val view = LocalView.current
             if (!view.isInEditMode) {
                 SideEffect {
@@ -51,7 +48,6 @@ class MainActivity : ComponentActivity() {
             }
 
             BareBudgetTheme(
-                colorMode = ThemeColorMode.valueOf(colorMode.name),
                 darkMode = ThemeDarkMode.valueOf(darkMode.name),
             ) {
                 AppNavigation()
@@ -61,7 +57,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh the home screen widget every time the app comes to the foreground.
         BudgetWidgetWorker.runNow(this)
     }
 }

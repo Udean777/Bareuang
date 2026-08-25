@@ -12,11 +12,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 val Shapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(28.dp),
-    extraLarge = RoundedCornerShape(36.dp)
+    extraSmall = RoundedCornerShape(8.dp),   // rounded-sm  — badges, tooltips
+    small      = RoundedCornerShape(16.dp),  // rounded-DEFAULT — inputs, dialog items
+    medium     = RoundedCornerShape(24.dp),  // rounded-md — regular cards, bottom sheets
+    large      = RoundedCornerShape(32.dp),  // rounded-lg — dashboard hero cards
+    extraLarge = RoundedCornerShape(48.dp)   // rounded-xl — modal dialogs, floating hero
 )
 
 object AppShapes {

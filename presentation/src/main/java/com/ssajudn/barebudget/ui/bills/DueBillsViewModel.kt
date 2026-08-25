@@ -25,13 +25,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.ssajudn.barebudget.domain.model.Wallet
 import com.ssajudn.barebudget.domain.model.RecurringInterval
+import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.common.UiText
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
 
 sealed interface DueBillsUiState {
     object Loading : DueBillsUiState
     data class Success(val bills: List<DueBill>) : DueBillsUiState
-    data class Error(val message: String) : DueBillsUiState
+    data class Error(val message: String, val uiText: UiText = UiText.Res(R.string.bills_load_error)) : DueBillsUiState
 }
 
 @HiltViewModel
@@ -74,7 +76,7 @@ class DueBillsViewModel @Inject constructor(
         }
         filtered
     }.map<List<DueBill>, DueBillsUiState> { DueBillsUiState.Success(it) }
-        .catch { e -> emit(DueBillsUiState.Error(e.message ?: "Failed to fetch due bills")) }
+        .catch { e -> emit(DueBillsUiState.Error(e.message ?: "Failed to fetch due bills", UiText.Res(R.string.bills_load_error))) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DueBillsUiState.Loading)
 
     init {
@@ -106,11 +108,11 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createDueBill(CreateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
             if (r.isSuccess) {
                 reminderScheduler.runNow()
                 _effect.send(UiEffect.PopBackStack)
-            } else _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal"))
+            } else _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
         }
     }
 
@@ -118,8 +120,8 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateDueBill(id, UpdateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error(r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal")) else reminderScheduler.runNow()
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic))) else reminderScheduler.runNow()
         }
     }
 
@@ -133,8 +135,8 @@ class DueBillsViewModel @Inject constructor(
                     val nextDueDate = DateUtils.calculateNextDueDate(bill.dueDate, bill.recurringInterval.name)
                     repository.createDueBill(CreateDueBillRequest(bill.providerName, providerIconUrl = bill.providerIconUrl, totalAmount = bill.totalAmount, dueDate = nextDueDate, isRecurring = true, recurringInterval = bill.recurringInterval, notes = bill.notes ?: ""))
                 }
-                _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error(result.exceptionOrNull()?.message ?: "Gagal bayar")
-                if (result.isFailure) _effect.send(UiEffect.ShowSnackbar(result.exceptionOrNull()?.message ?: "Gagal bayar")) else reminderScheduler.runNow()
+                _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_pay_failed), result.exceptionOrNull()?.message ?: "Gagal bayar")
+                if (result.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_pay_failed))) else reminderScheduler.runNow()
             }
         }
     }
@@ -144,7 +146,7 @@ class DueBillsViewModel @Inject constructor(
             val bid = bill.id
             if (bid != null) {
                 val r = repository.updateDueBillStatus(bid, DueBillStatus.UNPAID)
-                if (r.isFailure) _effect.send(UiEffect.ShowSnackbar(r.exceptionOrNull()?.message ?: "Gagal")) else reminderScheduler.runNow()
+                if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic))) else reminderScheduler.runNow()
             }
         }
     }

@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ssajudn.barebudget.ui.theme.IncomeAccent
+import com.ssajudn.barebudget.ui.theme.ExpenseAccent
 import com.ssajudn.barebudget.domain.model.CashflowDataPoint
 import com.ssajudn.barebudget.domain.model.NetWorthDataPoint
 import com.ssajudn.barebudget.presentation.R
@@ -57,8 +59,8 @@ fun CashflowBarChart(
         maxOf(maxIn, maxEx).coerceAtLeast(100_000L)
     }
 
-    val incomeColor = Color(0xFF2ECC71) // Green
-    val expenseColor = Color(0xFFE74C3C) // Red/Coral
+    val incomeColor = IncomeAccent
+    val expenseColor = ExpenseAccent
 
     Column(modifier = modifier.fillMaxWidth()) {
         // Legend & Selection Header

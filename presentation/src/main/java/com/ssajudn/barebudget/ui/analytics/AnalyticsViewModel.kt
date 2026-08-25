@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.ssajudn.barebudget.domain.model.CategorySummary
 import com.ssajudn.barebudget.domain.model.Transaction
 import com.ssajudn.barebudget.domain.repository.TransactionRepository
+import com.ssajudn.barebudget.domain.usecase.CalculateSavageStreakUseCase
 import com.ssajudn.barebudget.domain.usecase.GetCashflowAnalyticsUseCase
 import com.ssajudn.barebudget.domain.usecase.GetDashboardSummaryUseCase
 import com.ssajudn.barebudget.domain.usecase.GetNetWorthAnalyticsUseCase
 import com.ssajudn.barebudget.domain.error.AppException
+import com.ssajudn.barebudget.ui.common.UiText
+import com.ssajudn.barebudget.presentation.R
 import com.ssajudn.barebudget.domain.error.userMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +60,8 @@ class AnalyticsViewModel @Inject constructor(
     private val getDashboardSummary: GetDashboardSummaryUseCase,
     private val transactionRepository: TransactionRepository,
     private val getCashflow: GetCashflowAnalyticsUseCase,
-    private val getNetWorth: GetNetWorthAnalyticsUseCase
+    private val getNetWorth: GetNetWorthAnalyticsUseCase,
+    private val calculateSavageStreak: CalculateSavageStreakUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalyticsUiState>(AnalyticsUiState.Loading)
@@ -113,7 +117,6 @@ class AnalyticsViewModel @Inject constructor(
 
                 val topCat = breakdownItems.firstOrNull()
                 val streak = calculateSavageStreak(transactions)
-
                 val prevTab = (_uiState.value as? AnalyticsUiState.Success)?.selectedTab ?: AnalyticsTab.CASHFLOW
 
                 _uiState.value = AnalyticsUiState.Success(
@@ -140,34 +143,5 @@ class AnalyticsViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    /**
-     * Calculates Savage Streak: Number of consecutive days without F&B / Entertainment expenses.
-     */
-    private fun calculateSavageStreak(transactions: List<Transaction>): Int {
-        if (transactions.isEmpty()) return 3 // Default clean streak if fresh
-
-        val entertainmentOrFoodDates = transactions
-            .filter { it.category == TransactionCategory.FOOD || it.category == TransactionCategory.ENTERTAINMENT }
-            .mapNotNull { it.date.takeIf { d -> d.length >= 10 }?.substring(0, 10) }
-            .toSet()
-
-        // If no food/entertainment logged in past days, user has an active streak
-        var streak = 0
-        val calendar = java.util.Calendar.getInstance()
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-
-        for (i in 0 until 30) {
-            val dateStr = sdf.format(calendar.time)
-            if (!entertainmentOrFoodDates.contains(dateStr)) {
-                streak++
-            } else {
-                if (i > 0) break // Streak broken
-            }
-            calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
-        }
-
-        return streak.coerceAtLeast(1)
     }
 }

@@ -3,8 +3,11 @@ package com.ssajudn.barebudget.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssajudn.barebudget.data.local.BackupRestoreManager
+import com.ssajudn.barebudget.data.local.ThemePreferences
+import com.ssajudn.barebudget.data.local.TourPreferences
 import com.ssajudn.barebudget.data.local.UserSessionManager
 import com.ssajudn.barebudget.data.local.LocalDataResetter
+import com.ssajudn.barebudget.domain.model.AppThemeDarkMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import com.ssajudn.barebudget.presentation.R
+import com.ssajudn.barebudget.ui.common.UiText
 import com.ssajudn.barebudget.ui.common.OperationState
 import com.ssajudn.barebudget.ui.common.UiEffect
 import javax.inject.Inject
@@ -21,15 +26,30 @@ data class SettingsUiState(
     val isLoading: Boolean = false,
     val isSignedOut: Boolean = false,
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val errorText: UiText? = null,
+    val successText: UiText? = null
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val sessionManager: UserSessionManager,
     private val dataResetter: LocalDataResetter,
-    private val backupManager: BackupRestoreManager
+    private val backupManager: BackupRestoreManager,
+    private val themePrefs: ThemePreferences,
+    private val tourPrefs: TourPreferences,
+    private val widgetPrefs: com.ssajudn.barebudget.data.local.WidgetPreferences
 ) : ViewModel() {
+
+    val darkMode get() = themePrefs.darkMode
+    val widgetHideBalance get() = widgetPrefs.hideBalance
+
+    fun setDarkMode(mode: AppThemeDarkMode) = themePrefs.setDarkMode(mode)
+
+    fun setHideBalance(hidden: Boolean) = widgetPrefs.setHideBalance(hidden)
+
+    fun resetTour() = tourPrefs.resetTour()
+
     private val _operation = MutableStateFlow<OperationState>(OperationState.Idle)
     val operation: StateFlow<OperationState> = _operation.asStateFlow()
     private val _effect = Channel<UiEffect>(Channel.BUFFERED)
@@ -53,14 +73,17 @@ class SettingsViewModel @Inject constructor(
             val result = backupManager.exportBackupToUri(uri)
             _uiState.value = _uiState.value.copy(isLoading = false)
             if (result.isSuccess) {
-                _uiState.value = _uiState.value.copy(successMessage = "Backup berhasil diekspor ke file! Simpan file ini untuk restore kapan saja.")
+                val ui = UiText.Res(R.string.settings_backup_success_msg)
+                _uiState.value = _uiState.value.copy(successMessage = "Backup berhasil diekspor ke file! Simpan file ini untuk restore kapan saja.", successText = ui)
                 _operation.value = OperationState.Success()
-                _effect.send(UiEffect.ShowSnackbar("Backup diekspor"))
+                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.settings_backup_success_snack)))
             } else {
-                val msg = "Gagal mengekspor backup: ${result.exceptionOrNull()?.localizedMessage}"
-                _uiState.value = _uiState.value.copy(errorMessage = msg)
-                _operation.value = OperationState.Error(msg)
-                _effect.send(UiEffect.ShowSnackbar(msg))
+                val ex = result.exceptionOrNull()?.localizedMessage ?: ""
+                val ui = UiText.Res(R.string.settings_backup_failed, listOf(ex))
+                val msg = "Gagal mengekspor backup: $ex"
+                _uiState.value = _uiState.value.copy(errorMessage = msg, errorText = ui)
+                _operation.value = OperationState.Error(msg, ui)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
     }
@@ -73,14 +96,17 @@ class SettingsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = false)
             if (result.isSuccess) {
                 val count = result.getOrNull() ?: 0
-                _uiState.value = _uiState.value.copy(successMessage = "Berhasil memulihkan $count data dari file backup!")
+                val ui = UiText.Res(R.string.settings_restore_success_msg, listOf(count))
+                _uiState.value = _uiState.value.copy(successMessage = "Berhasil memulihkan $count data dari file backup!", successText = ui)
                 _operation.value = OperationState.Success()
-                _effect.send(UiEffect.ShowSnackbar("Restore berhasil"))
+                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.settings_restore_success_snack)))
             } else {
-                val msg = "Gagal memulihkan backup. Pastikan format file benar: ${result.exceptionOrNull()?.localizedMessage}"
-                _uiState.value = _uiState.value.copy(errorMessage = msg)
-                _operation.value = OperationState.Error(msg)
-                _effect.send(UiEffect.ShowSnackbar(msg))
+                val ex = result.exceptionOrNull()?.localizedMessage ?: ""
+                val ui = UiText.Res(R.string.settings_restore_failed, listOf(ex))
+                val msg = "Gagal memulihkan backup. Pastikan format file benar: $ex"
+                _uiState.value = _uiState.value.copy(errorMessage = msg, errorText = ui)
+                _operation.value = OperationState.Error(msg, ui)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
     }

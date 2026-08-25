@@ -89,13 +89,14 @@ fun TourOverlay(
             anchorRect.bottom + padPx
         )
 
+        val scrim = MaterialTheme.colorScheme.scrim
         Canvas(
             Modifier
                 .fillMaxSize()
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                 .pointerInput(Unit) { detectTapGestures { } }
         ) {
-            drawRect(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.72f))
+            drawRect(scrim.copy(alpha = 0.72f))
             drawRoundRect(
                 color = androidx.compose.ui.graphics.Color.Transparent,
                 topLeft = cutout.topLeft,
