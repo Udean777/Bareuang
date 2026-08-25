@@ -37,7 +37,9 @@ android {
         applicationId = "com.ssajudn.barebudget"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
+        // ponytail: CI injects VERSION_CODE (= github run number, always
+        // increasing); local builds fall back to 1.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
