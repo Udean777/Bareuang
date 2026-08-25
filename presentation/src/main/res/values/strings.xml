@@ -423,7 +423,9 @@
     <string name="settings_restore_success_snack">Restore successful</string>
     <string name="settings_restore_failed">Failed to restore backup. Please check file format: %1$s</string>
     <!-- Generic -->
-    <string name="error_generic">Failed</string>
+    <string name="error_generic">An error occurred</string>
+    <string name="error_network">Connection issue</string>
+    <string name="error_auth">Session expired</string>
     <string name="error_pay_failed">Payment failed</string>
     <string name="common_rp_zero">Rp 0</string>
     <!-- Budget errors -->
@@ -446,6 +448,18 @@
     <string name="split_message_per_person">Bill per Person: %1$s</string>
     <string name="split_message_auto">Calculated automatically with Bareuang</string>
     <string name="split_service_label">Service (%)</string>
+    <string name="split_person_me">Me</string>
+    <string name="bills_provider_custom">Other (Custom)</string>
+    <string name="widget_empty">Open Bareuang to load data</string>
+    <string name="widget_runway">REMAINING RUNWAY</string>
+    <string name="widget_bear_worried">Bear is worried — let\'s slow down!</string>
+    <string name="widget_bear_happy">Bear is happy to be with you ✨</string>
+    <string name="widget_daily">Daily</string>
+    <string name="widget_bills">Bills</string>
+    <string name="widget_used">Used</string>
+    <string name="fab_close">Close</string>
+    <string name="fab_menu">Action Menu</string>
+    <string name="onboarding_stay_on_track">Stay on track</string>
     <!-- AppDialogs defaults -->
     <string name="dialog_default_title">Delete this item?</string>
     <string name="dialog_default_message">This action cannot be undone.</string>

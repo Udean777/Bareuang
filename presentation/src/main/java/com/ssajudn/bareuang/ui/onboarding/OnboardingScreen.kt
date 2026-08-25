@@ -481,7 +481,7 @@ fun NotificationStep(data: OnboardingPageData, isLoading: Boolean, onAllowClick:
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 Text(
-                    text = "Stay on track",
+                    text = stringResource(com.ssajudn.bareuang.presentation.R.string.onboarding_stay_on_track),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )

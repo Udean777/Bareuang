@@ -95,12 +95,12 @@ class BudgetViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isLocked) {
             val ui = UiText.Res(BudgetError.LOCKED.resId)
-            _uiState.value = state.copy(errorMessage = "Budget bulan ini sudah terkunci. Hanya bisa diubah bulan depan.", error = ui)
+            _uiState.value = state.copy(errorMessage = null, error = ui)
             return
         }
         if (state.parsedAmount <= 0) {
             val ui = UiText.Res(BudgetError.INVALID_AMOUNT.resId)
-            _uiState.value = state.copy(errorMessage = "Please enter a valid budget amount", error = ui)
+            _uiState.value = state.copy(errorMessage = null, error = ui)
             return
         }
 
@@ -114,8 +114,8 @@ class BudgetViewModel @Inject constructor(
                     viewModelScope.launch { _effect.send(UiEffect.PopBackStack) }
                 }
                 .onFailure { error ->
-                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Failed to set budget"
                     val ui = (error as? AppException)?.toUiText() ?: UiText.Res(BudgetError.SET_FAILED.resId)
+                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
                     _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, error = ui)
                     _operation.value = OperationState.Error(msg, ui)
                     viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
@@ -129,9 +129,7 @@ class BudgetViewModel @Inject constructor(
             repository.setCategoryBudget(category, limit)
                 .onFailure { error ->
                     val ui = (error as? AppException)?.toUiText() ?: UiText.Res(BudgetError.CATEGORY_SET.resId)
-                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Gagal mengatur limit kategori"
                     _effect.send(UiEffect.ShowSnackbarRes(ui))
-                    _effect.send(UiEffect.ShowSnackbar(msg))
                 }
         }
     }
@@ -141,9 +139,7 @@ class BudgetViewModel @Inject constructor(
             repository.deleteCategoryBudget(category)
                 .onFailure { error ->
                     val ui = (error as? AppException)?.toUiText() ?: UiText.Res(BudgetError.CATEGORY_DELETE.resId)
-                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Gagal menghapus limit kategori"
                     _effect.send(UiEffect.ShowSnackbarRes(ui))
-                    _effect.send(UiEffect.ShowSnackbar(msg))
                 }
         }
     }

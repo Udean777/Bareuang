@@ -149,10 +149,7 @@ class AddTransactionViewModelTest {
 
         vm.saveTransaction()
 
-        assertEquals(
-            "Tolong masukkan jumlah nominal yang valid",
-            vm.uiState.value.errorMessage
-        )
+        assertEquals(AddTransactionError.INVALID_AMOUNT, vm.uiState.value.validationError)
         assertFalse(vm.uiState.value.isSuccess)
     }
 
@@ -165,10 +162,7 @@ class AddTransactionViewModelTest {
         vm.onAmountChange("10000")
         vm.saveTransaction()
 
-        assertEquals(
-            "Tolong pilih dompet terlebih dahulu",
-            vm.uiState.value.errorMessage
-        )
+        assertEquals(AddTransactionError.WALLET_REQUIRED, vm.uiState.value.validationError)
     }
 
     @Test
@@ -181,16 +175,14 @@ class AddTransactionViewModelTest {
 
         vm.onTransactionTypeChange(TransactionType.TRANSFER)
         vm.onAmountChange("10000")
-        // destination wallet not set (only one wallet, so selectedToWalletId == w1 == selectedWalletId)
         vm.onToWalletChange("w1")
         vm.saveTransaction()
 
-        // Either "missing destination" or "same source/destination" is acceptable
-        val msg = vm.uiState.value.errorMessage
+        val err = vm.uiState.value.validationError
         assertTrue(
-            "Expected transfer validation error, got: $msg",
-            msg == "Tolong pilih dompet tujuan transfer" ||
-                msg == "Dompet asal dan dompet tujuan tidak boleh sama"
+            "Expected transfer validation error, got: $err",
+            err == AddTransactionError.TO_WALLET_REQUIRED ||
+                err == AddTransactionError.SAME_WALLET
         )
     }
 
@@ -208,10 +200,7 @@ class AddTransactionViewModelTest {
         vm.onToWalletChange("w1")
         vm.saveTransaction()
 
-        assertEquals(
-            "Dompet asal dan dompet tujuan tidak boleh sama",
-            vm.uiState.value.errorMessage
-        )
+        assertEquals(AddTransactionError.SAME_WALLET, vm.uiState.value.validationError)
     }
 
     @Test
@@ -366,7 +355,7 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, captured.size)
-        assertEquals("Transfer Cash ke Bank", captured.first().merchant)
+        assertEquals("Cash \u2192 Bank", captured.first().merchant)
     }
 
     @Test
@@ -399,7 +388,7 @@ class AddTransactionViewModelTest {
         vm.saveTransaction()
         advanceUntilIdle()
 
-        assertEquals("Setup anggaran bulan ini terlebih dahulu", vm.uiState.value.errorMessage)
+        assertEquals(AddTransactionError.BUDGET_REQUIRED, vm.uiState.value.validationError)
         assertFalse(vm.uiState.value.isSuccess)
         coVerify(exactly = 0) { transactionRepository.createTransaction(any()) }
     }

@@ -118,7 +118,7 @@ fun DueBillFormDialog(
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = selectedProvider.name,
+                value = if (selectedProvider.isCustom) stringResource(R.string.bills_provider_custom) else selectedProvider.name,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(stringResource(R.string.bills_provider_label)) },
@@ -177,7 +177,7 @@ fun DueBillFormDialog(
                         },
                         text = {
                             Text(
-                                text = provider.name,
+                                text = if (provider.isCustom) androidx.compose.ui.res.stringResource(com.ssajudn.bareuang.presentation.R.string.bills_provider_custom) else provider.name,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = if (selectedProvider == provider) FontWeight.Bold else FontWeight.Normal
                             )

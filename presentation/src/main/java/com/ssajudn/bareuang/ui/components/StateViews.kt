@@ -25,18 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.theme.Spacing
-
-/**
- * Shared loading / empty / error views.
- *
- * These replace four different empty-state designs, four near-identical error
- * blocks and six bare centred spinners. Consistency here is a UX property, not
- * just a code-duplication one: a user should not have to re-learn what "nothing
- * here yet" looks like on each screen.
- */
-
-/** Centred progress indicator, for a first load with nothing to show yet. */
 @Composable
 fun LoadingState(
     modifier: Modifier = Modifier,
@@ -49,13 +40,7 @@ fun LoadingState(
     }
 }
 
-/**
- * Empty state: icon, title, explanation, and an optional call to action.
- *
- * [actionLabel] and [onAction] must be supplied together. Prefer giving an
- * action — an empty screen that only says "no data" leaves the user with no
- * obvious next step.
- */
+
 @Composable
 fun EmptyState(
     icon: ImageVector,
@@ -77,19 +62,13 @@ fun EmptyState(
     )
 }
 
-/**
- * Error state with a retry affordance.
- *
- * [onRetry] is required, not optional: an error the user cannot act on is a
- * dead end.
- */
 @Composable
 fun ErrorState(
     message: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Terjadi kesalahan",
-    retryLabel: String = "Coba lagi",
+    title: String = stringResource(R.string.state_error_title),
+    retryLabel: String = stringResource(R.string.state_retry),
     icon: ImageVector = Icons.Default.CloudOff,
 ) {
     StateLayout(

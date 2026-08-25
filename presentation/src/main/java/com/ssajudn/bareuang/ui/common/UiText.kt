@@ -28,7 +28,7 @@ fun String.toUiText(): UiText = UiText.Dyn(this)
 
 /** Maps AppException to UiText with i18n stringRes where possible */
 fun com.ssajudn.bareuang.domain.error.AppException.toUiText(): UiText = when(this){
-    is com.ssajudn.bareuang.domain.error.AppException.NetworkException -> UiText.Dyn(message ?: "Koneksi bermasalah")
-    is com.ssajudn.bareuang.domain.error.AppException.AuthException -> UiText.Dyn(message ?: "Sesi berakhir")
-    else -> UiText.Dyn(message ?: "Terjadi kesalahan")
+    is com.ssajudn.bareuang.domain.error.AppException.NetworkException -> if (message != null) UiText.Dyn(message!!) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_network)
+    is com.ssajudn.bareuang.domain.error.AppException.AuthException -> if (message != null) UiText.Dyn(message!!) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_auth)
+    else -> if (message != null) UiText.Dyn(message!!) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
 }

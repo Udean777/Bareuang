@@ -74,15 +74,14 @@ class SettingsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = false)
             if (result.isSuccess) {
                 val ui = UiText.Res(R.string.settings_backup_success_msg)
-                _uiState.value = _uiState.value.copy(successMessage = "Backup berhasil diekspor ke file! Simpan file ini untuk restore kapan saja.", successText = ui)
+                _uiState.value = _uiState.value.copy(successMessage = null, successText = ui)
                 _operation.value = OperationState.Success()
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.settings_backup_success_snack)))
             } else {
                 val ex = result.exceptionOrNull()?.localizedMessage ?: ""
                 val ui = UiText.Res(R.string.settings_backup_failed, listOf(ex))
-                val msg = "Gagal mengekspor backup: $ex"
-                _uiState.value = _uiState.value.copy(errorMessage = msg, errorText = ui)
-                _operation.value = OperationState.Error(msg, ui)
+                _uiState.value = _uiState.value.copy(errorMessage = null, errorText = ui)
+                _operation.value = OperationState.Error(ex, ui)
                 _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
@@ -97,24 +96,20 @@ class SettingsViewModel @Inject constructor(
             if (result.isSuccess) {
                 val count = result.getOrNull() ?: 0
                 val ui = UiText.Res(R.string.settings_restore_success_msg, listOf(count))
-                _uiState.value = _uiState.value.copy(successMessage = "Berhasil memulihkan $count data dari file backup!", successText = ui)
+                _uiState.value = _uiState.value.copy(successMessage = null, successText = ui)
                 _operation.value = OperationState.Success()
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.settings_restore_success_snack)))
             } else {
                 val ex = result.exceptionOrNull()?.localizedMessage ?: ""
                 val ui = UiText.Res(R.string.settings_restore_failed, listOf(ex))
-                val msg = "Gagal memulihkan backup. Pastikan format file benar: $ex"
-                _uiState.value = _uiState.value.copy(errorMessage = msg, errorText = ui)
-                _operation.value = OperationState.Error(msg, ui)
+                _uiState.value = _uiState.value.copy(errorMessage = null, errorText = ui)
+                _operation.value = OperationState.Error(ex, ui)
                 _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
     }
 
-    /**
-     * Full-offline app: "sign out" means wiping all local data and returning
-     * to onboarding so a fresh start can be made on this device.
-     */
+
     fun signOut() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)

@@ -512,7 +512,7 @@ fun DueBillsScreen(
         com.ssajudn.bareuang.ui.components.AppConfirmDialog(
             title = stringResource(R.string.bills_delete_title),
             message = stringResource(R.string.bills_delete_message, billToDelete.providerName, CurrencyFormatter.formatRupiah(billToDelete.totalAmount)),
-            confirmButtonText = "Hapus",
+            confirmButtonText = stringResource(com.ssajudn.bareuang.presentation.R.string.common_delete),
             onConfirm = {
                 if (billToDelete.id != null) {
                     viewModel.deleteBill(billToDelete.id!!)

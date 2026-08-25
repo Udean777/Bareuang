@@ -26,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.ssajudn.bareuang.presentation.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -122,7 +124,7 @@ fun AppSpeedDialFab(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = if (isExpanded) "Tutup" else "Menu Aksi",
+                contentDescription = if (isExpanded) stringResource(R.string.fab_close) else stringResource(R.string.fab_menu),
                 modifier = Modifier
                     .size(26.dp)
                     .rotate(rotation)

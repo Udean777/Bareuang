@@ -236,7 +236,7 @@ fun BudgetScreen(
                         enabled = !uiState.isLocked,
                         placeholder = {
                             Text(
-                                "Rp 0",
+                                stringResource(com.ssajudn.bareuang.presentation.R.string.common_rp_zero),
                                 style = MaterialTheme.typography.displayMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 32.sp

@@ -94,7 +94,7 @@ class AllTransactionsViewModel @Inject constructor(
             filteredExpenseTotal = expenseTotal,
             filteredIncomeTotal = incomeTotal,
         ) as AllTransactionsUiState
-    }.catch { e -> emit(AllTransactionsUiState.Error(e.message ?: "Failed to load transactions")) }
+    }.catch { e -> emit(AllTransactionsUiState.Error(e.message ?: "")) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AllTransactionsUiState.Loading)
 
     fun loadTransactions(isPullToRefresh: Boolean = false) {

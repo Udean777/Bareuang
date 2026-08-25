@@ -58,7 +58,7 @@ class BudgetWidget : GlanceAppWidget() {
                 if (summary == null) {
                     Text(
                         modifier = GlanceModifier.padding(14.dp),
-                        text = "Buka Bareuang untuk memuat data",
+                        text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_empty),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
                             fontSize = 13.sp,
@@ -121,7 +121,7 @@ class BudgetWidget : GlanceAppWidget() {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "SISA RUNWAY",
+                                text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_runway),
                                 style = TextStyle(color = GlanceTheme.colors.onPrimaryContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold),
                             )
                         }
@@ -161,7 +161,7 @@ class BudgetWidget : GlanceAppWidget() {
                         }
                     }
                     Text(
-                        text = if (summary.remainingBudget <= 0) "Beruang khawatir — ayo rem dulu!" else "Beruang senang menemanimu ✨",
+                        text = if (summary.remainingBudget <= 0) context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bear_worried) else context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bear_happy),
                         style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
                     )
 
@@ -184,7 +184,7 @@ class BudgetWidget : GlanceAppWidget() {
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Column(modifier = GlanceModifier.fillMaxWidth()) {
-                                    Text(text = "Harian", style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                                    Text(text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_daily), style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp, fontWeight = FontWeight.Bold))
                                     Text(text = mask(CurrencyFormatter.formatCompact(summary.averageDailySpend), hideBalance), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
                                 }
                             }
@@ -195,7 +195,7 @@ class BudgetWidget : GlanceAppWidget() {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text(text = "Tagihan", style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                                        Text(text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bills), style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
                                         Text(text = mask(CurrencyFormatter.formatCompact(summary.unpaidDueBillsSum), hideBalance), style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
                                     }
                                 }
@@ -205,7 +205,7 @@ class BudgetWidget : GlanceAppWidget() {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text(text = "Terpakai", style = TextStyle(color = GlanceTheme.colors.onTertiaryContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
+                                        Text(text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_used), style = TextStyle(color = GlanceTheme.colors.onTertiaryContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
                                         val percent = ((summary.totalSpent.toFloat() / summary.monthlyBudget) * 100).toInt().coerceIn(0, 999)
                                         Text(text = "$percent%", style = TextStyle(color = GlanceTheme.colors.onTertiaryContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
                                     }

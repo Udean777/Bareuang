@@ -40,16 +40,17 @@ fun SplitBillBottomSheet(
     var taxPercentage by remember { mutableStateOf("0") }
     var servicePercentage by remember { mutableStateOf("0") }
 
-    var personNames by remember {
+    val meLabel = stringResource(R.string.split_person_me)
+    var personNames by remember(meLabel) {
         mutableStateOf(
-            listOf("Saya (Me)", "Teman 1")
+            listOf(meLabel, context.getString(R.string.split_person_default, 1))
         )
     }
 
     LaunchedEffect(peopleCount) {
         val current = personNames.toMutableList()
         while (current.size < peopleCount) {
-            current.add("Teman ${current.size}")
+            current.add(context.getString(R.string.split_person_default, current.size + 1))
         }
         while (current.size > peopleCount && current.size > 1) {
             current.removeAt(current.size - 1)

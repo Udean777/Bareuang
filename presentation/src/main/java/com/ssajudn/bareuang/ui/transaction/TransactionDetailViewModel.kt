@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.common.UiText
+import com.ssajudn.bareuang.ui.common.toUiText
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
 import javax.inject.Inject
@@ -70,10 +71,10 @@ class TransactionDetailViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     val message = (error as? AppException)?.userMessage()
-                        ?: (error.localizedMessage ?: "Failed to load transaction")
+                        ?: (error.localizedMessage ?: "")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = message
+                        errorMessage = message.ifBlank { null }
                     )
                 }
         }
@@ -90,11 +91,11 @@ class TransactionDetailViewModel @Inject constructor(
                     viewModelScope.launch { _effect.send(UiEffect.PopBackStack) }
                 }
                 .onFailure { error ->
-                    val message = (error as? AppException)?.userMessage()
-                        ?: (error.localizedMessage ?: "Failed to delete transaction")
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = message)
-                    _operation.value = OperationState.Error(message)
-                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(message)) }
+                    val ui = (error as? AppException)?.toUiText() ?: UiText.Res(R.string.tx_detail_error_delete)
+                    val message = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = message.ifBlank { null })
+                    _operation.value = OperationState.Error(message, ui)
+                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 }
         }
     }
