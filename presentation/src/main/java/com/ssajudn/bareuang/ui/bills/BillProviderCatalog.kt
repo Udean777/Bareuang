@@ -28,6 +28,8 @@ object BillProviderCatalog {
         Provider("Lainnya (Custom)", null, isCustom = true)
     )
 
+    fun customLabel(context: Context): String = context.getString(R.string.bills_provider_custom)
+
     /** Encodes a drawable resource as a stable `res://entryName` URL. */
     fun toResUrl(context: Context, iconRes: Int): String {
         val entryName = runCatching { context.resources.getResourceEntryName(iconRes) }.getOrNull()

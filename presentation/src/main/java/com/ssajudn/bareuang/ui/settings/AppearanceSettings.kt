@@ -62,7 +62,7 @@ fun AppearanceSettingsGroup(
                             ),
                             label = {
                                 Text(
-                                    text = option.label,
+                                    text = stringResource(option.labelRes),
                                     textAlign = TextAlign.Center,
                                     maxLines = 1,
                                 )
@@ -75,10 +75,10 @@ fun AppearanceSettingsGroup(
     }
 }
 
-private data class DarkModeOption(val mode: AppThemeDarkMode, val label: String)
+private data class DarkModeOption(val mode: AppThemeDarkMode, val labelRes: Int)
 
 private val DarkModeOptions = listOf(
-    DarkModeOption(AppThemeDarkMode.FollowSystem, "Sistem"),
-    DarkModeOption(AppThemeDarkMode.Light, "Terang"),
-    DarkModeOption(AppThemeDarkMode.Dark, "Gelap"),
+    DarkModeOption(AppThemeDarkMode.FollowSystem, R.string.onboarding_theme_system),
+    DarkModeOption(AppThemeDarkMode.Light, R.string.onboarding_theme_light),
+    DarkModeOption(AppThemeDarkMode.Dark, R.string.onboarding_theme_dark),
 )

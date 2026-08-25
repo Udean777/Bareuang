@@ -50,12 +50,12 @@ Semua data **100% tersimpan lokal**, tanpa server, tanpa akun, tanpa izin intern
 
 <div align="center">
 
-| | | | |
-|:---:|:---:|:---:|:---:|
-| <img src="art/screenshots/screenshot_dashboard.png" width="180" alt="Dashboard"> | <img src="art/screenshots/screenshot_runway.png" width="180" alt="Runway"> | <img src="art/screenshots/screenshot_bills.png" width="180" alt="Bills"> | <img src="art/screenshots/screenshot_goals.png" width="180" alt="Goals"> |
-| *Dashboard* | *Financial Runway* | *Bill Reminder* | *Savings Goals* |
-| <img src="art/screenshots/screenshot_transfer.png" width="180" alt="Transfer"> | <img src="art/screenshots/screenshot_budget.png" width="180" alt="Budget"> | <img src="art/screenshots/screenshot_analytics.png" width="180" alt="Analytics"> | <img src="art/screenshots/screenshot_widget.png" width="180" alt="Widget"> |
-| *Transfer* | *Budget* | *Analytics* | *Home Widget* |
+| | | |
+|:---:|:---:|:---:|
+| <img src="art/screenshots/Dashboard.png" width="220" alt="Dashboard & Financial Runway"> | <img src="art/screenshots/Budget.png" width="220" alt="Monthly Budget"> | <img src="art/screenshots/Due-Bills.png" width="220" alt="Bills & Commitments"> |
+| **Dashboard & Financial Runway** | **Monthly Budget** | **Bills & Commitments** |
+| <img src="art/screenshots/Goals.png" width="220" alt="Savings Goals"> | <img src="art/screenshots/Transfer.png" width="220" alt="Wallet Transfer"> | <img src="art/screenshots/Analytics.png" width="220" alt="Financial Analytics"> |
+| **Savings Goals** | **Wallet Transfer** | **Financial Analytics** |
 
 </div>
 

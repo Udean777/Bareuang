@@ -47,7 +47,7 @@
     <string name="settings_danger_desc">Hapus sesi saat ini dan kembali ke onboarding</string>
     <string name="settings_reset_local">Reset Data Lokal</string>
     <string name="settings_sign_out">Keluar Akun</string>
-    <string name="settings_footer_tagline">Uang tenang, hati senang</string>
+    <string name="settings_footer_tagline">Keuangan Pribadi Tanpa Ribet</string>
     <string name="settings_dialog_reset_title">Reset Sesi Tamu?</string>
     <string name="settings_dialog_signout_title">Keluar Akun?</string>
     <string name="settings_dialog_reset_message">Yakin ingin keluar? Karena kamu berada dalam Mode Tamu, transaksi dan catatan lokalmu akan dihapus.</string>
@@ -114,11 +114,11 @@
     <string name="tour_step1_title">Runway Keuangan</string>
     <string name="tour_step1_desc">Kartu ini menunjukkan sisa anggaran dan estimasi kapan uangmu habis bulan ini.</string>
     <string name="tour_step2_title">Aksi Cepat</string>
-    <string name="tour_step2_desc">Akses cepat ke Dompet, Tagihan, dan Target Menabung.</string>
+    <string name="tour_step2_desc">Akses cepat ke Dompet, Tagihan, Target Menabung, dan Analitik.</string>
     <string name="tour_step3_title">Atur Anggaran Bulanan</string>
-    <string name="tour_step3_desc">Masukkan target pengeluaran bulanan di sini atau pilih preset cepat. Kamu juga bisa membagi batas anggaran per kategori agar laju pengeluaran tetap terkontrol.</string>
-    <string name="tour_step4_title">Kelola Dompet &amp; Saldo</string>
-    <string name="tour_step4_desc">Pantau total kekayaan bersihmu di sini. Kamu bisa menambah dompet bank/e-wallet baru, mengedit nama/warna, transfer antar dompet, atau menghapus dompet yang tidak terpakai.</string>
+    <string name="tour_step3_desc">Setup anggaran bulan berjalan di sini dulu — transaksi expense &amp; income terkunci sampai anggaran diset.</string>
+    <string name="tour_step4_title">Dompetku</string>
+    <string name="tour_step4_desc">Dompet \"Uang Tunai\" sudah tersedia otomatis. Semua transaksi wajib lewat dompet — buat dompet lain (BCA, GoPay, dll) di sini.</string>
     <string name="tour_step5_title">Catat Transaksi</string>
     <string name="tour_step5_desc">Tekan tombol + untuk mencatat expense atau income, lalu pilih dompet asal/tujuannya.</string>
     <string name="tour_step6_title">Tagihan Rutin</string>
@@ -234,7 +234,7 @@
     <string name="bills_wallet_balance">Saldo: <xliff:g id="amount">%1$s</xliff:g></string>
     <string name="bills_auto_deduct">Saldo dompet akan otomatis terpotong dan dicatat sebagai pengeluaran.</string>
     <!-- Dashboard -->
-    <string name="dashboard_subtitle">Teman cozy buat uangmu</string>
+    <string name="dashboard_subtitle">Pencatat Pengeluaran Tanpa Ribet</string>
     <string name="dashboard_theme_desc">Tema</string>
     <string name="dashboard_choose_theme">Pilih Tema Tampilan</string>
     <string name="dashboard_follow_system">Ikuti Sistem</string>
@@ -243,8 +243,6 @@
     <string name="dashboard_load_error">Gagal memuat data</string>
     <string name="dashboard_total_spent">Total Pengeluaran Bulan Ini</string>
     <string name="dashboard_daily_avg">Rata-rata Harian</string>
-    <string name="dashboard_recurring_schedule">Jadwal Rutin Terjadwal</string>
-    <string name="dashboard_recurring_next">Jadwal: %1$s</string>
     <string name="dashboard_recent">Transaksi Terbaru</string>
     <string name="dashboard_see_all">Lihat Semua</string>
     <string name="dashboard_no_tx">Belum ada transaksi tercatat. Catat pengeluaran pertamamu!</string>
@@ -269,40 +267,18 @@
     <string name="budget_locked_desc">Saat ini %1$s. Kamu hanya bisa mengubah budget 1x per bulan. Budget akan bisa diubah lagi bulan depan.</string>
     <string name="budget_input_label">Target Anggaran Bulanan</string>
     <string name="budget_presets_label">Preset Cepat</string>
-    <string name="budget_category_title">Anggaran per Kategori</string>
-    <string name="budget_category_subtitle">Bagi alokasi limit untuk setiap pos pengeluaran</string>
-    <string name="budget_category_add">Atur Limit Kategori</string>
-    <string name="budget_category_edit">Ubah Limit Kategori</string>
-    <string name="budget_category_empty">Belum ada anggaran kategori yang diatur.</string>
-    <string name="budget_category_allocated">Teralokasi %1$s dari %2$s</string>
-    <string name="budget_category_over_warning">Total alokasi kategori melebihi anggaran global bulanan!</string>
-    <string name="budget_category_select">Pilih Kategori</string>
-    <string name="budget_category_limit">Nominal Batas</string>
-    <string name="budget_category_delete">Hapus Limit Kategori</string>
-    <string name="budget_category_delete_confirm">Hapus batas anggaran untuk %1$s?</string>
-
-    <!-- Speed Dial FAB Labels -->
-    <string name="fab_menu_transaction">Transaksi</string>
-    <string name="fab_menu_bill">Tagihan</string>
-    <string name="fab_menu_goal">Target Tabungan</string>
-
     <!-- Appearance -->
     <string name="appearance_title">Tampilan</string>
     <string name="appearance_dark_mode">Mode Gelap</string>
     <string name="appearance_dynamic">Warna Dinamis</string>
     <string name="appearance_dynamic_desc">Mengikuti palet wallpaper (Material You)</string>
     <string name="appearance_dynamic_need">Memerlukan Android 12 ke atas</string>
-
-    <!-- Widget settings -->
-    <string name="settings_widget_title">Widget Layar Utama</string>
-    <string name="settings_widget_hide_balance">Sembunyikan saldo di widget</string>
-    <string name="settings_widget_hide_balance_desc">Tampilkan sensor titik alih-alih nominal angka</string>
+    <!-- Transactions -->
+    <string name="tx_add_title">Tambah Transaksi</string>
     <!-- Bill reminder settings -->
     <string name="settings_bill_reminder_title">Pengingat Tagihan</string>
     <string name="settings_bill_reminder_time">Jam pengingat harian</string>
     <string name="settings_bill_reminder_time_desc">Periksa dan notifikasikan tagihan jatuh tempo pada jam ini</string>
-    <!-- Transactions -->
-    <string name="tx_add_title">Tambah Transaksi</string>
     <string name="tx_expense">Pengeluaran</string>
     <string name="tx_income">Pemasukan</string>
     <string name="tx_transfer">Transfer</string>
@@ -319,22 +295,6 @@
     <string name="tx_date">Tanggal</string>
     <string name="tx_notes_label">Catatan (Opsional)</string>
     <string name="tx_notes_hint">Tambah keterangan…</string>
-    <string name="tx_recurring_label">Transaksi Rutin (Berulang)</string>
-    <string name="tx_recurring_desc">Otomatis catat transaksi ini setiap periode berulang</string>
-    <string name="tx_recurring_interval">Interval Pengulangan</string>
-    <string name="tx_recurring_weekly">Mingguan</string>
-    <string name="tx_recurring_monthly">Bulanan</string>
-    <string name="tx_recurring_yearly">Tahunan</string>
-    <string name="tx_recurring_on_day">Ulangi setiap hari</string>
-    <string name="tx_recurring_on_date">Setiap tanggal %1$d</string>
-    <string name="day_mon">Sen</string>
-    <string name="day_tue">Sel</string>
-    <string name="day_wed">Rab</string>
-    <string name="day_thu">Kam</string>
-    <string name="day_fri">Jum</string>
-    <string name="day_sat">Sab</string>
-    <string name="day_sun">Min</string>
-    <string name="tx_badge_recurring">Rutin</string>
     <string name="tx_all_title">Semua Transaksi</string>
     <string name="tx_search_hint">Cari transaksi…</string>
     <string name="tx_filter">Filter Transaksi</string>
@@ -406,8 +366,37 @@
     <string name="onboarding_theme_dark">Gelap</string>
     <string name="onboarding_slide4_title">Pilih Cara Memulai</string>
     <string name="onboarding_slide4_desc">Pilih untuk masuk dengan akun Google atau langsung coba dalam Mode Tamu.</string>
-    <!-- Splash -->
-    <string name="splash_brand">Bareuang</string>
-    <string name="splash_runway_tracker">TAHU UANGMU TAHAN SAMPAI KAPAN</string>
-    <string name="splash_bubbly_desc">Lembut. Simpel. Bikin betah.</string>
+    <string name="error_network">Koneksi bermasalah</string>
+    <string name="error_auth">Sesi berakhir</string>
+    <string name="error_generic">Terjadi kesalahan</string>
+    <string name="common_rp_zero">Rp 0</string>
+    <string name="budget_error_locked">Budget bulan ini sudah terkunci. Hanya bisa diubah bulan depan.</string>
+    <string name="budget_error_invalid">Masukkan nominal anggaran yang valid</string>
+    <string name="budget_error_set_failed">Gagal mengatur anggaran</string>
+    <string name="budget_error_category_set">Gagal mengatur limit kategori</string>
+    <string name="budget_error_category_delete">Gagal menghapus limit kategori</string>
+    <string name="wallets_load_error">Gagal memuat dompet</string>
+    <string name="tx_detail_error_load">Gagal memuat transaksi</string>
+    <string name="tx_detail_error_delete">Gagal menghapus transaksi</string>
+    <string name="tx_error_invalid_amount">Tolong masukkan jumlah nominal yang valid</string>
+    <string name="tx_error_wallet_required">Tolong pilih dompet terlebih dahulu</string>
+    <string name="tx_error_to_wallet_required">Tolong pilih dompet tujuan transfer</string>
+    <string name="tx_error_same_wallet">Dompet asal dan dompet tujuan tidak boleh sama</string>
+    <string name="tx_error_insufficient_balance">Saldo dompet tidak cukup (%1$s)</string>
+    <string name="tx_error_budget_required">Setup anggaran bulan ini terlebih dahulu</string>
+    <string name="tx_error_save_failed">Gagal menyimpan transaksi</string>
+    <string name="split_person_me">Saya</string>
+    <string name="bills_provider_custom">Lainnya (Custom)</string>
+    <string name="widget_empty">Buka Bareuang untuk memuat data</string>
+    <string name="widget_runway">SISA RUNWAY</string>
+    <string name="widget_bear_worried">Beruang khawatir — ayo rem dulu!</string>
+    <string name="widget_bear_happy">Beruang senang menemanimu ✨</string>
+    <string name="widget_daily">Harian</string>
+    <string name="widget_bills">Tagihan</string>
+    <string name="widget_used">Terpakai</string>
+    <string name="fab_close">Tutup</string>
+    <string name="fab_menu">Menu Aksi</string>
+    <string name="onboarding_stay_on_track">Tetap on track</string>
+    <string name="state_error_title">Terjadi kesalahan</string>
+    <string name="state_retry">Coba lagi</string>
 </resources>

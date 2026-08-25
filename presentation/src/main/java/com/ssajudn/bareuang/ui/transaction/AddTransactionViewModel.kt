@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
+import com.ssajudn.bareuang.ui.common.UiText
+import com.ssajudn.bareuang.ui.common.toUiText
 import javax.inject.Inject
 
 data class AddTransactionUiState(
@@ -45,14 +47,10 @@ data class AddTransactionUiState(
     val isBudgetMissing: Boolean = false,
     val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList()
 )
-private fun errorText(error: AddTransactionError, arg: String? = null): String = when (error) {
-    AddTransactionError.INVALID_AMOUNT -> "Tolong masukkan jumlah nominal yang valid"
-    AddTransactionError.WALLET_REQUIRED -> "Tolong pilih dompet terlebih dahulu"
-    AddTransactionError.TO_WALLET_REQUIRED -> "Tolong pilih dompet tujuan transfer"
-    AddTransactionError.SAME_WALLET -> "Dompet asal dan dompet tujuan tidak boleh sama"
-    AddTransactionError.INSUFFICIENT_BALANCE -> "Saldo dompet tidak cukup (${arg ?: ""})"
-    AddTransactionError.BUDGET_REQUIRED -> "Setup anggaran bulan ini terlebih dahulu"
-    AddTransactionError.SAVE_FAILED -> arg ?: "Failed to save transaction"
+private fun errorUiText(error: AddTransactionError, arg: String? = null): UiText = when (error) {
+    AddTransactionError.INSUFFICIENT_BALANCE -> UiText.Res(error.resId, listOf(arg ?: ""))
+    AddTransactionError.SAVE_FAILED -> if (arg != null) UiText.Dyn(arg) else UiText.Res(error.resId)
+    else -> UiText.Res(error.resId)
 }
 
 @HiltViewModel
@@ -240,38 +238,37 @@ class AddTransactionViewModel @Inject constructor(
         val state = _uiState.value
         if (state.parsedAmount <= 0) {
             val e = AddTransactionError.INVALID_AMOUNT
-            _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+            _uiState.value = state.copy(errorMessage = null, validationError = e)
             return
         }
         if (state.selectedWalletId == null) {
             val e = AddTransactionError.WALLET_REQUIRED
-            _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+            _uiState.value = state.copy(errorMessage = null, validationError = e)
             return
         }
 
         if (state.transactionType == TransactionType.TRANSFER) {
             if (state.selectedToWalletId == null) {
                 val e = AddTransactionError.TO_WALLET_REQUIRED
-                _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+                _uiState.value = state.copy(errorMessage = null, validationError = e)
                 return
             }
             if (state.selectedWalletId == state.selectedToWalletId) {
                 val e = AddTransactionError.SAME_WALLET
-                _uiState.value = state.copy(errorMessage = errorText(e), validationError = e)
+                _uiState.value = state.copy(errorMessage = null, validationError = e)
                 return
             }
         }
 
-        // Validasi saldo untuk expense & transfer
         if (state.transactionType == TransactionType.EXPENSE || state.transactionType == TransactionType.TRANSFER) {
             val sourceWallet = state.wallets.find { it.id == state.selectedWalletId }
             if (sourceWallet != null && sourceWallet.balance < state.parsedAmount) {
                 val e = AddTransactionError.INSUFFICIENT_BALANCE
                 val formatted = CurrencyFormatter.formatRupiah(sourceWallet.balance)
-                val msg = errorText(e, formatted)
-                _uiState.value = state.copy(errorMessage = msg, validationError = e)
-                _operation.value = OperationState.Error(msg)
-                viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
+                val ui = errorUiText(e, formatted)
+                _uiState.value = state.copy(errorMessage = null, validationError = e)
+                _operation.value = OperationState.Error("", ui)
+                viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 return
             }
         }
@@ -280,22 +277,21 @@ class AddTransactionViewModel @Inject constructor(
             _uiState.value = state.copy(isLoading = true, errorMessage = null, validationError = null)
             _operation.value = OperationState.Loading
 
-            // Gerbang budget: income/expense wajib punya budget bulan berjalan; transfer bebas
             if (state.transactionType != TransactionType.TRANSFER && !hasMonthlyBudget()) {
                 val e = AddTransactionError.BUDGET_REQUIRED
-                val msg = errorText(e)
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, validationError = e)
-                _operation.value = OperationState.Error(msg)
-                _effect.send(UiEffect.ShowSnackbar(msg))
+                val ui = errorUiText(e)
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null, validationError = e)
+                _operation.value = OperationState.Error("", ui)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
                 _effect.send(UiEffect.Navigate(com.ssajudn.bareuang.ui.navigation.Screen.Budget.route))
                 return@launch
             }
 
-            val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: "Dompet"
-            val targetWalletName = state.wallets.find { it.id == state.selectedToWalletId }?.name ?: "Dompet"
+            val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: ""
+            val targetWalletName = state.wallets.find { it.id == state.selectedToWalletId }?.name ?: ""
 
             val defaultMerchant = if (state.transactionType == TransactionType.TRANSFER) {
-                "Transfer $sourceWalletName ke $targetWalletName"
+                if (sourceWalletName.isNotBlank() && targetWalletName.isNotBlank()) "$sourceWalletName \u2192 $targetWalletName" else state.selectedCategory.displayName
             } else {
                 state.selectedCategory.displayName
             }
@@ -314,16 +310,15 @@ class AddTransactionViewModel @Inject constructor(
 
             transactionRepository.createTransaction(request)
                 .onSuccess {
-                    // Navigasi back ditangani screen via isSuccess — state yang
-                    // survive process death, tidak seperti one-shot effect.
                     _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
                     _operation.value = OperationState.Success()
                 }
                 .onFailure { error ->
-                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: errorText(AddTransactionError.SAVE_FAILED)
+                    val ui = (error as? AppException)?.toUiText() ?: errorUiText(AddTransactionError.SAVE_FAILED, error.localizedMessage)
+                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
                     _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, validationError = AddTransactionError.SAVE_FAILED)
-                    _operation.value = OperationState.Error(msg)
-                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar(msg)) }
+                    _operation.value = OperationState.Error(msg, ui)
+                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 }
         }
     }

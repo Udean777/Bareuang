@@ -57,7 +57,8 @@ class DashboardViewModel @Inject constructor(
                 .onFailure { error ->
                     _isRefreshing.value = false
                     if (_uiState.value !is DashboardUiState.Success) {
-                        _uiState.value = DashboardUiState.Error((error as? AppException)?.userMessage() ?: error.localizedMessage ?: "Failed to load dashboard data")
+                        val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
+                        _uiState.value = DashboardUiState.Error(msg)
                     }
                 }
         }

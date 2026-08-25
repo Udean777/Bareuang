@@ -23,10 +23,10 @@ import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.CashflowDataPoint
 import com.ssajudn.bareuang.domain.model.NetWorthDataPoint
 
-enum class AnalyticsTab(val title: String) {
-    CASHFLOW("Arus Kas"),
-    NET_WORTH("Kekayaan"),
-    CATEGORIES("Kategori")
+enum class AnalyticsTab(val resId: Int) {
+    CASHFLOW(R.string.analytics_tab_cashflow),
+    NET_WORTH(R.string.analytics_tab_networth),
+    CATEGORIES(R.string.analytics_tab_categories)
 }
 
 data class CategoryBreakdownItem(
@@ -137,9 +137,9 @@ class AnalyticsViewModel @Inject constructor(
                 _isRefreshing.value = false
                 if (_uiState.value !is AnalyticsUiState.Success) {
                     val ex = summaryResult.exceptionOrNull()
-                    _uiState.value = AnalyticsUiState.Error(
-                        (ex as? AppException)?.userMessage() ?: ex?.localizedMessage ?: "Failed to load analytics"
-                    )
+                    val fallback = (ex as? AppException)?.userMessage() ?: ex?.localizedMessage ?: ""
+                    val msg = if (fallback.isNotBlank()) fallback else "error"
+                    _uiState.value = AnalyticsUiState.Error(msg)
                 }
             }
         }
