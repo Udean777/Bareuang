@@ -22,5 +22,12 @@
 -dontwarn okio.**
 -dontwarn javax.annotation.**
 
+# WorkManager + Room — consumer rules are not enough with optimization=true / full R8
+-keep class androidx.work.impl.** { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep class * extends androidx.work.impl.WorkDatabase { *; }
+-keep class com.ssajudn.bareuang.data.local.room.** { *; }
+-keep class com.ssajudn.bareuang.BareuangApplication { *; }
+
 # ML Kit optional SDK internals not present at compile time.
 -dontwarn com.google.mlkit.common.sdkinternal.LibraryVersion
