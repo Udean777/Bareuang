@@ -15,7 +15,15 @@ import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.data.repository.DomainMappers
 
-@Entity(tableName = "local_transactions")
+@Entity(
+    tableName = "local_transactions",
+    indices = [
+        androidx.room.Index(value = ["date"]),
+        androidx.room.Index(value = ["amount"]),
+        androidx.room.Index(value = ["merchant"]),
+        androidx.room.Index(value = ["date", "amount", "merchant"])
+    ]
+)
 data class LocalTransactionEntity(
     @PrimaryKey val id: String,
     val amount: Long,

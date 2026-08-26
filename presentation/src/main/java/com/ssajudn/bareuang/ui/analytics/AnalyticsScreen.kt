@@ -550,10 +550,9 @@ fun AnalyticsContent(
                             }
                         }
                     }
-                    if (state.categories.isNotEmpty()) {
-                        items(state.categories) { item ->
-                            CategoryBreakdownRow(item = item)
-                        }
+                } else {
+                    items(state.categories) { item ->
+                        CategoryBreakdownRow(item = item)
                     }
                 }
             }

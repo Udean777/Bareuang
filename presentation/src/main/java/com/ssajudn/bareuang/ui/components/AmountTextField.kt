@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ssajudn.bareuang.presentation.R
+import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.utils.CurrencyVisualTransformation
 
 private const val MAX_AMOUNT_DIGITS = 12 // Limit up to hundreds of billions
@@ -35,7 +36,7 @@ fun AmountTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
-    placeholder: @Composable () -> Unit = { Text(stringResource(R.string.common_rp_zero)) },
+    placeholder: @Composable () -> Unit = { Text(CurrencyFormatter.formatCurrency(0L)) },
     isError: Boolean = false,
     enabled: Boolean = true,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,

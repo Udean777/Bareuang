@@ -4,6 +4,12 @@
     <string name="language_settings">Bahasa</string>
     <string name="language_english">English</string>
     <string name="language_indonesian">Bahasa Indonesia</string>
+    <!-- Currency -->
+    <string name="currency_settings">Mata Uang</string>
+    <string name="currency_idr">Rupiah (IDR - Rp)</string>
+    <string name="currency_usd">US Dollar (USD - $)</string>
+    <string name="onboarding_currency_title">Pilih Mata Uang</string>
+    <string name="onboarding_currency_desc">Pilih mata uang utama untuk mencatat pengeluaran dan anggaranmu. Kamu bisa mengubahnya kapan saja di Pengaturan.</string>
     <!-- Translation -->
     <!-- Navigation -->
     <string name="nav_home">Beranda</string>
@@ -399,4 +405,40 @@
     <string name="onboarding_stay_on_track">Tetap on track</string>
     <string name="state_error_title">Terjadi kesalahan</string>
     <string name="state_retry">Coba lagi</string>
+    <string name="fab_menu_scan">Scan Struk</string>
+    <string name="import_title">Impor Transaksi</string>
+    <string name="import_wallet_label">Dompet Tujuan</string>
+    <string name="import_pick_file">Pilih File CSV</string>
+    <string name="import_change_file">Ganti file (<xliff:g id="name">%1$s</xliff:g>)</string>
+    <string name="import_parsing">Memparsing CSV…</string>
+    <string name="import_rows_found"><xliff:g id="count">%1$d</xliff:g> baris ditemukan</string>
+    <string name="import_select_all">Pilih semua</string>
+    <string name="import_deselect_all">Batal pilih</string>
+    <string name="import_duplicate_skip">Duplikat — auto skip</string>
+    <string name="import_selected_count"><xliff:g id="count">%1$d</xliff:g> dipilih</string>
+    <string name="import_btn">Impor</string>
+    <string name="import_empty_csv">CSV kosong atau format tidak dikenali</string>
+    <string name="import_duplicate_snack"><xliff:g id="count">%1$d</xliff:g> duplikat terdeteksi (auto-skip)</string>
+    <string name="import_skipped_banner"><xliff:g id="count">%1$d</xliff:g> baris dilewati (format salah)</string>
+    <string name="import_wallet_empty_title">Belum ada dompet</string>
+    <string name="import_wallet_empty_desc">Buat dompet dulu untuk impor</string>
+    <string name="import_wallet_create">Buat Dompet</string>
+    <string name="import_file_too_large">File terlalu besar, maksimal 5MB</string>
+    <string name="import_chip_expense">Keluar</string>
+    <string name="import_chip_income">Masuk</string>
+    <string name="ocr_title">Scan Struk</string>
+    <string name="ocr_wallet_label">Dompet</string>
+    <string name="ocr_btn_camera">Kamera</string>
+    <string name="ocr_btn_gallery">Galeri</string>
+    <string name="ocr_processing">Memproses OCR…</string>
+    <string name="ocr_no_text">Tidak ada teks terdeteksi, coba foto lebih jelas</string>
+    <string name="ocr_btn_save">Simpan Transaksi</string>
+    <string name="ocr_save_success">Transaksi dari struk disimpan</string>
+    <string name="ocr_tips_title">Tips scan struk</string>
+    <string name="ocr_raw_label">Raw OCR</string>
+    <string name="ocr_rescan">Scan ulang</string>
+    <string name="settings_import_mutasi_title">Impor Transaksi CSV</string>
+    <string name="settings_import_mutasi_desc">Impor dari BCA, GoPay, OVO (offline)</string>
+    <string name="settings_ocr_title">Scan Struk Belanja</string>
+    <string name="settings_ocr_desc">Foto struk → OCR otomatis (offline)</string>
 </resources>

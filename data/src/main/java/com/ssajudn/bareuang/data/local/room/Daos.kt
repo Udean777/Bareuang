@@ -47,6 +47,9 @@ interface TransactionDao {
     @Query("DELETE FROM local_transactions WHERE id = :id")
     fun deleteTransaction(id: String)
 
+    @Query("SELECT * FROM local_transactions WHERE date IN (:dates)")
+    fun getByDates(dates: List<String>): List<LocalTransactionEntity>
+
     @Query("DELETE FROM local_transactions")
     fun clearAll()
 }

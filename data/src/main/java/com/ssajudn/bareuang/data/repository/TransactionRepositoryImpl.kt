@@ -19,6 +19,9 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction> =
         local.createTransaction(request)
 
+    override suspend fun bulkCreate(requests: List<CreateTransactionRequest>): Result<Int> =
+        local.bulkCreate(requests)
+
     override suspend fun deleteTransaction(id: String): Result<Boolean> =
         local.deleteTransaction(id)
 

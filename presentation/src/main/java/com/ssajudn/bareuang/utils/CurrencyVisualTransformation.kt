@@ -6,11 +6,12 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 
 /**
- * Bulletproof CurrencyVisualTransformation for Indonesian Rupiah.
+ * Bulletproof CurrencyVisualTransformation supporting multi-currency (IDR / USD).
  * Strictly adheres to Jetpack Compose ValidatingOffsetMapping contract.
  */
 class CurrencyVisualTransformation(
-    private val prefix: String = "Rp "
+    private val prefix: String = CurrencyFormatter.getActiveCurrency().prefix,
+    private val thousandSeparator: Char = CurrencyFormatter.getActiveCurrency().thousandSeparator
 ) : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
@@ -19,14 +20,14 @@ class CurrencyVisualTransformation(
             return TransformedText(text, OffsetMapping.Identity)
         }
 
-        val formattedNumber = formatWithDots(originalText)
+        val formattedNumber = formatWithSeparators(originalText, thousandSeparator)
         val formattedFull = prefix + formattedNumber
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
                 val clampedOffset = offset.coerceIn(0, originalText.length)
                 val rawSub = originalText.take(clampedOffset)
-                val formattedSub = formatWithDots(rawSub)
+                val formattedSub = formatWithSeparators(rawSub, thousandSeparator)
                 return (prefix.length + formattedSub.length).coerceIn(0, formattedFull.length)
             }
 
@@ -42,7 +43,7 @@ class CurrencyVisualTransformation(
         return TransformedText(AnnotatedString(formattedFull), offsetMapping)
     }
 
-    private fun formatWithDots(digits: String): String {
+    private fun formatWithSeparators(digits: String, separator: Char): String {
         if (digits.isEmpty()) return ""
         val length = digits.length
         val sb = StringBuilder()
@@ -50,7 +51,7 @@ class CurrencyVisualTransformation(
             sb.append(digits[i])
             val remaining = length - 1 - i
             if (remaining > 0 && remaining % 3 == 0) {
-                sb.append('.')
+                sb.append(separator)
             }
         }
         return sb.toString()

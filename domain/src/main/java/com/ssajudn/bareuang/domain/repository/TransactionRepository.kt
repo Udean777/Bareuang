@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionRepository {
     suspend fun getTransactions(category: String? = null, page: Int = 1, limit: Int = 50): Result<List<Transaction>>
     suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction>
+    suspend fun bulkCreate(requests: List<CreateTransactionRequest>): Result<Int>
     suspend fun deleteTransaction(id: String): Result<Boolean>
     fun observeTransactions(): Flow<List<Transaction>>
 }

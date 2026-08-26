@@ -73,4 +73,17 @@ class CurrencyFormatterTest {
         val out = CurrencyFormatter.formatCompact(500L)
         assertEquals("500", out)
     }
+
+    @Test
+    fun `formatCurrency formats USD correctly`() {
+        val out = CurrencyFormatter.formatCurrency(50_000L, com.ssajudn.bareuang.domain.model.AppCurrency.USD)
+        assertTrue("Expected '$' prefix, got: $out", out.startsWith("$"))
+        assertTrue("Expected comma separator, got: $out", out.contains("50,000"))
+    }
+
+    @Test
+    fun `formatCompact formats USD correctly`() {
+        val out = CurrencyFormatter.formatCompact(50_000L, com.ssajudn.bareuang.domain.model.AppCurrency.USD)
+        assertTrue("Expected 'K' suffix for USD thousands, got: $out", out.contains("K"))
+    }
 }

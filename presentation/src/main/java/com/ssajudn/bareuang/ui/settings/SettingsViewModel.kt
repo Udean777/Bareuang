@@ -38,13 +38,17 @@ class SettingsViewModel @Inject constructor(
     private val backupManager: BackupRestoreManager,
     private val themePrefs: ThemePreferences,
     private val tourPrefs: TourPreferences,
-    private val widgetPrefs: com.ssajudn.bareuang.data.local.WidgetPreferences
+    private val widgetPrefs: com.ssajudn.bareuang.data.local.WidgetPreferences,
+    private val currencyPrefs: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) : ViewModel() {
 
     val darkMode get() = themePrefs.darkMode
     val widgetHideBalance get() = widgetPrefs.hideBalance
+    val currency get() = currencyPrefs.currency
 
     fun setDarkMode(mode: AppThemeDarkMode) = themePrefs.setDarkMode(mode)
+
+    fun setCurrency(currency: com.ssajudn.bareuang.domain.model.AppCurrency) = currencyPrefs.setCurrency(currency)
 
     fun setHideBalance(hidden: Boolean) = widgetPrefs.setHideBalance(hidden)
 

@@ -60,11 +60,13 @@ fun OnboardingScreen(
     val coroutineScope = rememberCoroutineScope()
     var isStarting by remember { mutableStateOf(false) }
     val currentDarkMode by viewModel.darkMode.collectAsStateWithLifecycle()
+    val currentCurrency by viewModel.currency.collectAsStateWithLifecycle()
 
     val pages = listOf(
         OnboardingPageData(stringResource(R.string.onboarding_slide1_title), stringResource(R.string.onboarding_slide1_desc), R.drawable.img_onboarding_expense),
         OnboardingPageData(stringResource(R.string.onboarding_slide2_title), stringResource(R.string.onboarding_slide2_desc), R.drawable.img_onboarding_runway),
         OnboardingPageData(stringResource(R.string.onboarding_slide3_title), stringResource(R.string.onboarding_slide3_desc), R.drawable.img_onboarding_bills),
+        OnboardingPageData(stringResource(R.string.onboarding_currency_title), stringResource(R.string.onboarding_currency_desc), R.drawable.img_onboarding_currency),
         OnboardingPageData(stringResource(R.string.onboarding_theme_title), stringResource(R.string.onboarding_theme_desc), R.drawable.img_onboarding_theme),
         OnboardingPageData(stringResource(R.string.notif_perm_title), stringResource(R.string.notif_perm_desc), R.drawable.img_onboarding_notif)
     )
@@ -167,11 +169,16 @@ fun OnboardingScreen(
                     OnboardingSlide(
                         data = pages[pageIndex],
                         isFirstSlide = pageIndex == 0,
-                        isThemeSlide = pageIndex == 3,
+                        isCurrencySlide = pageIndex == 3,
+                        isThemeSlide = pageIndex == 4,
                         currentLang = currentLang,
                         onLanguageChange = { code ->
                             currentLang = code
                             LanguageManager.setLanguage(context, code)
+                        },
+                        currentCurrency = currentCurrency,
+                        onCurrencyChange = { curr ->
+                            viewModel.setCurrency(curr)
                         },
                         currentDarkMode = currentDarkMode,
                         onDarkModeChange = { mode ->
@@ -262,9 +269,12 @@ private fun animateDpAsset(isCurrent: Boolean) = animateDpAsState(
 fun OnboardingSlide(
     data: OnboardingPageData,
     isFirstSlide: Boolean = false,
+    isCurrencySlide: Boolean = false,
     isThemeSlide: Boolean = false,
     currentLang: String = "",
     onLanguageChange: (String) -> Unit = {},
+    currentCurrency: com.ssajudn.bareuang.domain.model.AppCurrency = com.ssajudn.bareuang.domain.model.AppCurrency.IDR,
+    onCurrencyChange: (com.ssajudn.bareuang.domain.model.AppCurrency) -> Unit = {},
     currentDarkMode: AppThemeDarkMode = AppThemeDarkMode.FollowSystem,
     onDarkModeChange: (AppThemeDarkMode) -> Unit = {}
 ) {
@@ -332,6 +342,51 @@ fun OnboardingSlide(
                                 )
                                 Text(
                                     text = label,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    ),
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Currency toggle — only on currency slide
+        if (isCurrencySlide) {
+            Surface(
+                shape = AppShapes.Pill,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.padding(bottom = Spacing.Medium)
+            ) {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    com.ssajudn.bareuang.domain.model.AppCurrency.entries.forEach { curr ->
+                        val isSelected = currentCurrency == curr
+                        Surface(
+                            shape = AppShapes.Pill,
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                            onClick = { onCurrencyChange(curr) }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                if (isSelected) Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = if (curr == com.ssajudn.bareuang.domain.model.AppCurrency.IDR) "Rupiah (Rp)" else "Dollar ($)",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                     ),
