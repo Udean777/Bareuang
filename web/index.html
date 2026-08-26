@@ -200,7 +200,7 @@
             </svg>
             GitHub</a
           >
-          <a class="btn btn-primary" href="#download" data-i18n="nav.download"
+          <a class="btn btn-primary js-download" href="https://github.com/Udean777/Bareuang/releases/latest/download/Bareuang-latest.apk" data-i18n="nav.download"
             >Download</a
           >
         </nav>
@@ -252,8 +252,8 @@
             </p>
             <div class="hero-ctas">
               <a
-                class="btn btn-primary"
-                href="#download"
+                class="btn btn-primary js-download"
+                href="https://github.com/Udean777/Bareuang/releases/latest/download/Bareuang-latest.apk"
                 data-i18n="hero.download"
                 ><svg
                   width="14"
@@ -779,7 +779,7 @@
         </div>
       </section>
 
-      <section id="cara-kerja" class="section" class="section--alt">
+      <section id="cara-kerja" class="section section--alt">
         <div class="container">
           <div class="section-head reveal">
             <div class="kicker" data-i18n="how.kicker">Cara kerja</div>
@@ -891,7 +891,7 @@
         </div>
       </section>
 
-      <section id="faq" class="section" class="section--cream">
+      <section id="faq" class="section section--cream">
         <div class="container">
           <div class="section-head reveal">
             <div class="kicker">FAQ</div>
@@ -1065,12 +1065,8 @@
             </div>
             <div class="cta-actions">
               <a
-                class="btn"
-                href="#"
-                onclick="
-                  alert('Link Play Store akan diisi setelah publish');
-                  return false;
-                "
+                class="btn js-download"
+                href="https://github.com/Udean777/Bareuang/releases/latest/download/Bareuang-latest.apk"
                 data-i18n="cta.play"
                 ><svg
                   width="14"
@@ -1170,6 +1166,7 @@
       </div>
     </footer>
 
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="js/main.js"></script>
   </body>
 </html>

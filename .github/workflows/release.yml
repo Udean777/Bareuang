@@ -46,6 +46,7 @@ jobs:
           CODE="${{ github.run_number }}"
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-v1.0-${CODE}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-latest.apk"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2

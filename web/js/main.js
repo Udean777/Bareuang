@@ -42,6 +42,40 @@ if ("IntersectionObserver" in window && reveals.length) {
   reveals.forEach((el) => el.classList.add("in"));
 }
 
+
+// Download — direct to GitHub Release latest, fallback toast
+const DL_URL = "https://github.com/Udean777/Bareuang/releases/latest/download/Bareuang-latest.apk";
+const toastEl = document.getElementById("toast");
+let toastTimer;
+function showToast(msg){
+  if(!toastEl) { alert(msg); return; }
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toastEl.classList.remove("show"), 3500);
+}
+const DL_API = "https://api.github.com/repos/Udean777/Bareuang/releases/latest";
+for(const a of document.querySelectorAll("a.js-download")){
+  a.setAttribute("href", DL_URL);
+  a.addEventListener("click", async (e)=>{
+    // Let browser handle direct download first; verify via API in background
+    // If API fails, show friendly toast but still allow navigation
+    e.preventDefault();
+    const lang = document.documentElement.lang === "en" ? "en" : "id";
+    const errMsg = lang==="en" ? "Download unavailable — please try again later or visit GitHub Releases." : "Download belum tersedia — coba lagi nanti atau cek di GitHub Releases.";
+    try{
+      const r = await fetch(DL_API, {headers:{Accept:"application/vnd.github+json"}});
+      if(!r.ok) throw new Error("no release");
+      const j = await r.json();
+      const hasAsset = (j.assets||[]).some(x=> x.name==="Bareuang-latest.apk");
+      if(!hasAsset) throw new Error("no asset");
+      window.location.href = DL_URL;
+    }catch{
+      showToast(errMsg);
+    }
+  });
+}
+
 // i18n — lightweight, no dependencies
 const dict = {
   id: {
@@ -55,7 +89,7 @@ const dict = {
       "Tahu sampai <em>kapan uangmu tahan</em>, tanpa spreadsheet dingin.",
     "hero.desc":
       'Bareuang menjawab satu pertanyaan penting: <strong>"dengan pola pengeluaranku sekarang, sampai kapan uangku tahan?"</strong> — lewat Financial Runway, multi-wallet, dan budget yang menjaga pengeluaran tetap waras.',
-    "hero.download": "Download di Play Store",
+    "hero.download": "Download",
     "hero.viewFeatures": "Lihat fitur",
     "hero.note": "Gratis · Tidak ada iklan · Data tetap di HP kamu",
     "hero.badge1": "No Internet permission",
@@ -132,7 +166,7 @@ const dict = {
       "Pengaturan → Hapus Data, atau hapus langsung via Settings Android → Apps → Bareuang → Clear Data, atau uninstall. Karena offline, data hilang permanen.",
     "cta.title": "Siap tahu kapan uangmu habis — sebelum benar-benar habis?",
     "cta.sub": "Download Bareuang. Cozy, offline, dan jujur soal angka.",
-    "cta.play": "Play Store — Coming Soon",
+    "cta.play": "Download",
     "footer.desc":
       "Teman cozy buat uangmu. 100% offline, tanpa akun, tanpa internet. Dibuat dengan ❤️ di Indonesia.",
     "footer.product": "Produk",
@@ -151,7 +185,7 @@ const dict = {
       "Know <em>how long your money lasts</em> — no cold spreadsheets.",
     "hero.desc":
       'Bareuang answers one key question: <strong>"with my current spending, how long will my money last?"</strong> — via Financial Runway, multi-wallet, and budgets that keep spending sane.',
-    "hero.download": "Download on Play Store",
+    "hero.download": "Download",
     "hero.viewFeatures": "View features",
     "hero.note": "Free · No ads · Data stays on your phone",
     "hero.badge1": "No Internet permission",
@@ -227,7 +261,7 @@ const dict = {
       "Settings → Clear Data, or Android Settings → Apps → Bareuang → Clear Data, or uninstall. Offline means permanently gone.",
     "cta.title": "Ready to know when your money runs out — before it does?",
     "cta.sub": "Download Bareuang. Cozy, offline, and honest about numbers.",
-    "cta.play": "Play Store — Coming Soon",
+    "cta.play": "Download",
     "footer.desc":
       "Your cozy money companion. 100% offline, no account, no internet. Made with ❤️ in Indonesia.",
     "footer.product": "Product",
