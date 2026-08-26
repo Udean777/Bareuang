@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bareuang — Teman cozy buat uangmu</title>
+    <meta
+      name="description"
+      content="Tahu sampai kapan uangmu tahan. Kelola banyak dompet, pantau tagihan, dan wujudkan target tabungan — 100% offline, tanpa akun, tanpa internet."
+    />
+    <meta name="author" content="Bareuang" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#3E2A00" />
+    <link rel="canonical" href="https://bareuang.app/" />
+    <link rel="alternate" hreflang="id" href="https://bareuang.app/" />
+    <link rel="alternate" hreflang="en" href="https://bareuang.app/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://bareuang.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Bareuang" />
+    <meta property="og:url" content="https://bareuang.app/" />
+    <meta property="og:title" content="Bareuang — Teman cozy buat uangmu" />
+    <meta
+      property="og:description"
+      content="Financial Runway, multi-wallet, budget per kategori, scan struk OCR on-device. 100% offline."
+    />
+    <meta
+      property="og:image"
+      content="https://bareuang.app/assets/play_store_512.png"
+    />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Bareuang logo" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bareuang — Teman cozy buat uangmu" />
+    <meta
+      name="twitter:description"
+      content="Tahu sampai kapan uangmu tahan — 100% offline, tanpa akun, tanpa internet."
+    />
+    <meta
+      name="twitter:image"
+      content="https://bareuang.app/assets/play_store_512.png"
+    />
+    <link rel="icon" href="assets/logo.png" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Bareuang",
+        "description": "Teman cozy buat uangmu — Financial Runway, multi-wallet, budget, scan struk OCR 100% offline.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Android",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Bareuang",
+          "url": "https://bareuang.app"
+        },
+        "url": "https://bareuang.app",
+        "image": "https://bareuang.app/assets/play_store_512.png",
+        "inLanguage": ["id", "en"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Apakah data saya dikirim ke server?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tidak. Bareuang 100% offline. Tidak minta izin INTERNET, tidak ada akun, tidak ada upload. Semua di Room DB lokal HP kamu."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Kenapa harus atur budget dulu sebelum catat transaksi?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Budget Gate — biar Financial Runway punya acuan yang akurat."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Apakah bisa impor mutasi BCA / GoPay / OVO?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Bisa via Import CSV dengan dedup otomatis."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Scan struk butuh internet?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tidak. OCR pakai ML Kit on-device."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Apakah Bareuang memberi saran investasi?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tidak. Hanya alat pencatatan & estimasi."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Bagaimana cara hapus semua data?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pengaturan → Hapus Data atau uninstall. Offline berarti permanen."
+            }
+          }
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Bareuang",
+        "url": "https://bareuang.app",
+        "logo": "https://bareuang.app/assets/logo.png",
+        "sameAs": ["https://github.com/Udean777/Bareuang"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://bareuang.app/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Privacy",
+            "item": "https://bareuang.app/privacy.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Terms",
+            "item": "https://bareuang.app/terms.html"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="#"
+          ><img
+            src="assets/logo.png"
+            alt="Bareuang logo"
+            width="36"
+            height="36"
+          /><span>Bareuang</span></a
+        >
+        <nav id="navLinks" class="nav-links" aria-label="Primary">
+          <a href="#fitur" data-i18n="nav.features">Fitur</a>
+          <a href="#cara-kerja" data-i18n="nav.how">Cara kerja</a>
+          <a href="#screenshot" data-i18n="nav.screenshots">Screenshot</a>
+          <a href="#faq" data-i18n="nav.faq">FAQ</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a
+            class="nav-github"
+            href="https://github.com/Udean777/Bareuang"
+            target="_blank"
+            rel="noopener"
+            ><svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.3 9.3 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2z"
+              />
+            </svg>
+            GitHub</a
+          >
+          <a class="btn btn-primary" href="#download" data-i18n="nav.download"
+            >Download</a
+          >
+        </nav>
+        <div class="nav-actions">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button data-lang="id" class="active" aria-pressed="true">
+              ID
+            </button>
+            <button data-lang="en" aria-pressed="false">EN</button>
+          </div>
+          <button class="hamburger" id="hamburger" aria-label="Menu">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M4 7h16" />
+              <path d="M4 12h16" />
+              <path d="M4 17h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <span class="eyebrow" data-i18n="hero.eyebrow"
+              ><i></i> 100% Offline · Tanpa akun · Tanpa internet</span
+            >
+            <h1 data-i18n="hero.title">
+              Tahu sampai <em>kapan uangmu tahan</em>, tanpa spreadsheet dingin.
+            </h1>
+            <p data-i18n="hero.desc">
+              Bareuang menjawab satu pertanyaan penting:
+              <strong
+                >"dengan pola pengeluaranku sekarang, sampai kapan uangku
+                tahan?"</strong
+              >
+              — lewat Financial Runway, multi-wallet, dan budget yang menjaga
+              pengeluaran tetap waras.
+            </p>
+            <div class="hero-ctas">
+              <a
+                class="btn btn-primary"
+                href="#download"
+                data-i18n="hero.download"
+                ><svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v13" />
+                  <path d="M7 11l5 5l5-5" />
+                  <path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
+                </svg>
+                Download di Play Store</a
+              >
+              <a
+                class="btn btn-ghost"
+                href="#fitur"
+                data-i18n="hero.viewFeatures"
+                >Lihat fitur
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M12 5l7 7l-7 7" /></svg
+              ></a>
+              <span class="note" data-i18n="hero.note"
+                ><svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
+                Gratis · Tidak ada iklan · Data tetap di HP kamu</span
+              >
+            </div>
+            <div class="badges-row">
+              <span class="badge" data-i18n="hero.badge1"
+                ><svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                No Internet permission</span
+              >
+              <span class="badge" data-i18n="hero.badge2"
+                ><svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M16 8l-8 4" />
+                  <path d="M21 16l-9 5l-9-5" />
+                  <path d="M3 8l9 5l9-5" />
+                  <path d="M12 13v8" />
+                </svg>
+                Backup .json offline</span
+              >
+              <span class="badge" data-i18n="hero.badge3"
+                ><svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"
+                  />
+                  <path d="M19 13l1 2l2 1l-2 1l-1 2l-1-2l-2-1l2-1z" />
+                  <path d="M6 14l1 1l1 1l-1 1l-1 1l-1-1l-1-1l1-1z" />
+                </svg>
+                Cozy, bukan kaku</span
+              >
+            </div>
+          </div>
+          <div class="phone-wrap">
+            <img
+              src="assets/screenshots/Dashboard.png"
+              alt="Bareuang dashboard runway preview"
+            />
+            <div class="phone-float">
+              <div class="phone-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="10" r="6" />
+                  <circle cx="8" cy="6" r="1.5" />
+                  <circle cx="16" cy="6" r="1.5" />
+                  <circle
+                    cx="9.2"
+                    cy="10"
+                    r="1"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <circle
+                    cx="14.8"
+                    cy="10"
+                    r="1"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <path d="M10 13c.8.8 2.2.8 3 0" />
+                </svg>
+              </div>
+              <div>
+                <strong data-i18n="hero.floatTitle"
+                  >Runway: 47 hari lagi</strong
+                >
+                <span data-i18n="hero.floatSub"
+                  >Burn rate Rp 68.400 / hari · Estimasi habis 12 Feb</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust reveal">
+        <div class="container">
+          <div class="trust-inner">
+            <div class="trust-badges">
+              <span class="badge"
+                ><svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                Budget Gate</span
+              >
+              <span class="badge"
+                ><svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                Import CSV BCA/e-wallet</span
+              >
+              <span class="badge"
+                ><svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                <span data-i18n="trust.ocr"
+                  >Scan struk OCR on-device</span
+                ></span
+              >
+              <span class="badge"
+                ><svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                IDR / USD</span
+              >
+              <span class="badge"
+                ><svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                Widget Home</span
+              >
+            </div>
+            <p data-i18n="trust.note">
+              Transaksi baru aktif setelah budget bulanan diatur — biar runway
+              selalu akurat.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="fitur" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <div class="kicker" data-i18n="features.kicker">Fitur cozy</div>
+            <h2 data-i18n="features.title">
+              Semua yang kamu butuh, tanpa yang bikin pusing
+            </h2>
+            <p data-i18n="features.sub">
+              Dirancang untuk pemakaian harian — cepat, lokal, dan tidak
+              menggurui.
+            </p>
+          </div>
+          <div class="grid-features">
+            <div class="card reveal">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 3v18h18" />
+                  <path d="M7 16V8" />
+                  <path d="M11 16V12" />
+                  <path d="M15 16V10" />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c1t">Financial Runway</h3>
+              <p data-i18n="features.c1d">
+                Hitung burn rate harian & prediksi kapan saldo habis (Estimated
+                Death Day). Tahu sejak awal kapan harus rem.
+              </p>
+            </div>
+            <div class="card reveal reveal-delay-1">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20 12L12 20 4 12V4h8z" />
+                  <circle
+                    cx="10"
+                    cy="8"
+                    r="1.5"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c2t">Monthly & Category Budget</h3>
+              <p data-i18n="features.c2d">
+                Kunci anggaran bulanan + limit per kategori (Food, Transport,
+                dll). Lewat limit? langsung kelihatan.
+              </p>
+            </div>
+            <div class="card reveal reveal-delay-2">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"
+                  />
+                  <circle
+                    cx="17"
+                    cy="12"
+                    r="1.5"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <path d="M14 12h2" />
+                </svg>
+              </div>
+              <h3>Multi-Wallet</h3>
+              <p data-i18n="features.c3d">
+                Tunai, BCA, GoPay, OVO — total net worth real-time dalam satu
+                layar.
+              </p>
+            </div>
+            <div class="card reveal">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M7 7h10" />
+                  <path d="M7 17h10" />
+                  <path d="M17 7l3 3l-3 3" />
+                  <path d="M7 17l-3-3l3-3" />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c4t">Transfer Antar Dompet</h3>
+              <p data-i18n="features.c4d">
+                Smart switch anti-duplikasi + 1-tap swap. Pindah uang antar
+                dompet tanpa double catat.
+              </p>
+            </div>
+            <div class="card reveal reveal-delay-1">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <path d="M14 2v6h6" />
+                  <path d="M12 18v-6" />
+                  <path d="M9 15l3 3l3-3" />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c5t">Import Mutasi CSV</h3>
+              <p data-i18n="features.c5d">
+                Impor BCA/e-wallet (delimiter , / ;, 8 format tanggal, dedup
+                otomatis). 5MB guard.
+              </p>
+            </div>
+            <div class="card reveal reveal-delay-2">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                  <rect x="7" y="7" width="10" height="10" rx="1" />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c6t">Scan Struk (OCR)</h3>
+              <p data-i18n="features.c6d">
+                Foto struk → ML Kit on-device. Preview kertas termal, edit
+                merchant/total/category, tanpa upload.
+              </p>
+            </div>
+            <div class="card reveal">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="6" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="2"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c7t">Savings Goals</h3>
+              <p data-i18n="features.c7d">
+                Target tabungan + kalkulator setoran/penarikan. Progress jelas,
+                motivasi jalan.
+              </p>
+            </div>
+            <div class="card reveal reveal-delay-1">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4" />
+                  <path d="M8 2v4" />
+                  <path d="M3 10h18" />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c8t">Bill Reminder</h3>
+              <p data-i18n="features.c8d">
+                Tagihan rutin, notifikasi H-3, auto-rollover & auto-refund jika
+                batal bayar.
+              </p>
+            </div>
+            <div class="card reveal reveal-delay-2">
+              <div class="card-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <h3 data-i18n="features.c9t">Split Bill</h3>
+              <p data-i18n="features.c9d">
+                Patungan makan/belanja (pajak & service) + share 1-klik ke
+                WhatsApp.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cara-kerja" class="section" class="section--alt">
+        <div class="container">
+          <div class="section-head reveal">
+            <div class="kicker" data-i18n="how.kicker">Cara kerja</div>
+            <h2 data-i18n="how.title">3 langkah, langsung jalan</h2>
+          </div>
+          <div class="steps">
+            <div class="step reveal">
+              <div class="step-num">01</div>
+              <h3 data-i18n="how.s1t">Atur Budget Bulanan</h3>
+              <p data-i18n="how.s1d">
+                Set limit bulanan + per kategori. Ini jadi acuan runway & guard
+                transaksi.
+              </p>
+            </div>
+            <div class="step reveal reveal-delay-1">
+              <div class="step-num">02</div>
+              <h3 data-i18n="how.s2t">Catat / Impor / Scan</h3>
+              <p data-i18n="how.s2d">
+                Input manual, impor CSV BCA/e-wallet, atau foto struk. Semua
+                dicek saldo & dedup.
+              </p>
+            </div>
+            <div class="step reveal reveal-delay-2">
+              <div class="step-num">03</div>
+              <h3 data-i18n="how.s3t">Pantau Runway</h3>
+              <p data-i18n="how.s3d">
+                Lihat berapa hari uangmu tahan, tren cashflow, dan distribusi
+                pengeluaran.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="screenshot" class="section">
+        <div class="container">
+          <div class="section-head reveal">
+            <div class="kicker" data-i18n="shots.kicker">Tampilan</div>
+            <h2 data-i18n="shots.title">Cozy di mata, jelas di angka</h2>
+            <p data-i18n="shots.sub">
+              Geser untuk lihat Dashboard, Budget, Bills, Goals, Transfer, dan
+              Analytics.
+            </p>
+          </div>
+          <div class="shots">
+            <figure class="reveal">
+              <img
+                src="assets/screenshots/Dashboard.png"
+                alt="Dashboard runway"
+              />
+              <figcaption>Dashboard & Runway</figcaption>
+            </figure>
+            <figure class="reveal reveal-delay-1">
+              <img
+                src="assets/screenshots/Budget.png"
+                loading="lazy"
+                decoding="async"
+                width="390"
+                height="844"
+                alt="Budget"
+              />
+              <figcaption>Monthly Budget</figcaption>
+            </figure>
+            <figure class="reveal reveal-delay-2">
+              <img
+                src="assets/screenshots/Due-Bills.png"
+                loading="lazy"
+                decoding="async"
+                width="390"
+                height="844"
+                alt="Bills"
+              />
+              <figcaption>Bills & Commitments</figcaption>
+            </figure>
+            <figure class="reveal">
+              <img
+                src="assets/screenshots/Goals.png"
+                loading="lazy"
+                decoding="async"
+                width="390"
+                height="844"
+                alt="Goals"
+              />
+              <figcaption>Savings Goals</figcaption>
+            </figure>
+            <figure class="reveal reveal-delay-1">
+              <img
+                src="assets/screenshots/Transfer.png"
+                loading="lazy"
+                decoding="async"
+                width="390"
+                height="844"
+                alt="Transfer"
+              />
+              <figcaption>Wallet Transfer</figcaption>
+            </figure>
+            <figure class="reveal reveal-delay-2">
+              <img
+                src="assets/screenshots/Analytics.png"
+                loading="lazy"
+                decoding="async"
+                width="390"
+                height="844"
+                alt="Analytics"
+              />
+              <figcaption>Financial Analytics</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" class="section" class="section--cream">
+        <div class="container">
+          <div class="section-head reveal">
+            <div class="kicker">FAQ</div>
+            <h2 data-i18n="faq.title">Yang sering ditanya</h2>
+          </div>
+          <div class="faq reveal">
+            <details open>
+              <summary>
+                <span data-i18n="faq.q1"
+                  >Apakah data saya dikirim ke server?</span
+                >
+                <span
+                  ><svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" /></svg
+                ></span>
+              </summary>
+              <p data-i18n="faq.a1">
+                Tidak. Bareuang 100% offline. Tidak minta izin INTERNET, tidak
+                ada akun, tidak ada upload. Semua di Room DB lokal HP kamu.
+                Backup pun file .json offline.
+              </p>
+            </details>
+            <details>
+              <summary>
+                <span data-i18n="faq.q2"
+                  >Kenapa harus atur budget dulu sebelum catat transaksi?</span
+                >
+                <span
+                  ><svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" /></svg
+                ></span>
+              </summary>
+              <p data-i18n="faq.a2">
+                Ini "Budget Gate" — biar Financial Runway punya acuan yang
+                akurat. Tanpa budget, estimasi hari bertahan tidak bisa dihitung
+                dengan benar.
+              </p>
+            </details>
+            <details>
+              <summary>
+                <span data-i18n="faq.q3"
+                  >Apakah bisa impor mutasi BCA / GoPay / OVO?</span
+                >
+                <span
+                  ><svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" /></svg
+                ></span>
+              </summary>
+              <p data-i18n="faq.a3">
+                Bisa via Import CSV. Mendukung delimiter koma/semicolon,
+                debit-kredit terpisah, 8 format tanggal, dan dedup otomatis
+                berdasarkan tanggal + nominal + merchant.
+              </p>
+            </details>
+            <details>
+              <summary>
+                <span data-i18n="faq.q4">Scan struk butuh internet?</span>
+                <span
+                  ><svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" /></svg
+                ></span>
+              </summary>
+              <p data-i18n="faq.a4">
+                Tidak. OCR pakai ML Kit on-device. Foto struk diproses lokal,
+                preview kertas termal, kamu bisa edit sebelum simpan.
+              </p>
+            </details>
+            <details>
+              <summary>
+                <span data-i18n="faq.q5"
+                  >Apakah Bareuang memberi saran investasi?</span
+                >
+                <span
+                  ><svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" /></svg
+                ></span>
+              </summary>
+              <p data-i18n="faq.a5">
+                Tidak. Bareuang hanya alat pencatatan & estimasi. Bukan
+                penasihat keuangan — lihat Disclaimer di Terms.
+              </p>
+            </details>
+            <details>
+              <summary>
+                <span data-i18n="faq.q6">Bagaimana cara hapus semua data?</span>
+                <span
+                  ><svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" /></svg
+                ></span>
+              </summary>
+              <p data-i18n="faq.a6">
+                Pengaturan → Hapus Data, atau hapus langsung via Settings
+                Android → Apps → Bareuang → Clear Data, atau uninstall. Karena
+                offline, data hilang permanen.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="section reveal">
+        <div class="container">
+          <div class="cta">
+            <div>
+              <h3 data-i18n="cta.title">
+                Siap tahu kapan uangmu habis — sebelum benar-benar habis?
+              </h3>
+              <p data-i18n="cta.sub">
+                Download Bareuang. Cozy, offline, dan jujur soal angka.
+              </p>
+            </div>
+            <div class="cta-actions">
+              <a
+                class="btn"
+                href="#"
+                onclick="
+                  alert('Link Play Store akan diisi setelah publish');
+                  return false;
+                "
+                data-i18n="cta.play"
+                ><svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v13" />
+                  <path d="M7 11l5 5l5-5" />
+                  <path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
+                </svg>
+                Play Store — Coming Soon</a
+              >
+              <a
+                class="btn btn-outline"
+                href="https://github.com/Udean777/Bareuang"
+                target="_blank"
+                rel="noopener"
+                ><svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.3 9.3 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2z"
+                  />
+                </svg>
+                GitHub</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <a class="brand" href="#"
+              ><img src="assets/logo.png" alt="" class="brand-logo-sm" /><span
+                >Bareuang</span
+              ></a
+            >
+            <p class="footer-meta footer-desc" data-i18n="footer.desc">
+              Teman cozy buat uangmu. 100% offline, tanpa akun, tanpa internet.
+              Dibuat dengan
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="#C73E2A"
+                stroke="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 21s-6.7-4.2-9-8.3A4.5 4.5 0 0 1 12 4a4.5 4.5 0 0 1 8.9 8.7C18.7 16.8 12 21 12 21z"
+                />
+              </svg>
+              di Indonesia.
+            </p>
+            <p class="footer-meta footer-contact" id="contact">
+              Kontak:
+              <a href="mailto:support@bareuang.app" class="contact-link"
+                >support@bareuang.app</a
+              >
+            </p>
+          </div>
+          <div>
+            <h4>Legal</h4>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+            <a href="privacy.html#cookies">Cookie Policy</a>
+            <a href="terms.html#disclaimer">Disclaimer</a>
+          </div>
+          <div>
+            <h4 data-i18n="footer.product">Produk</h4>
+            <a href="#fitur" data-i18n="footer.features">Fitur</a>
+            <a href="#screenshot" data-i18n="footer.screenshots">Screenshot</a>
+            <a href="#faq">FAQ</a>
+            <a href="https://github.com/Udean777/Bareuang"
+              >GitHub & License (MIT)</a
+            >
+          </div>
+        </div>
+        <div class="subfooter">
+          <span>© <span id="year"></span> Bareuang · MIT License</span>
+          <span data-i18n="footer.lang">Bahasa: Indonesia · English</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
