@@ -86,6 +86,7 @@ private class FakeTxDao2 : TransactionDao {
     override fun getTransactionById(id: String): LocalTransactionEntity? = txs.find { it.id == id }
     override fun insertTransaction(transaction: LocalTransactionEntity) { txs.add(transaction) }
     override fun insertTransactions(transactions: List<LocalTransactionEntity>) { txs.addAll(transactions) }
+    override fun getByDates(dates: List<String>): List<LocalTransactionEntity> = txs.filter { it.date in dates }
     override fun getRecurringTemplates(): List<LocalTransactionEntity> = txs.filter { it.isRecurringParent }
     override fun getRecurringTemplatesByOwner(ownerId: String): List<LocalTransactionEntity> = getRecurringTemplates()
     override fun updateNextOccurrence(id: String, nextDate: String) {

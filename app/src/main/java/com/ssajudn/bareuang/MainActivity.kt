@@ -10,11 +10,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ssajudn.bareuang.data.local.CurrencyPreferences
 import com.ssajudn.bareuang.data.local.ThemePreferences
 import com.ssajudn.bareuang.ui.navigation.AppNavigation
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import com.ssajudn.bareuang.ui.theme.BareuangTheme
 import com.ssajudn.bareuang.ui.theme.ThemeDarkMode
+import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.widget.BudgetWidgetWorker
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -25,10 +27,16 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var themePrefs: ThemePreferences
 
+    @Inject
+    lateinit var currencyPrefs: CurrencyPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CurrencyFormatter.setActiveCurrency(currencyPrefs.getCurrency())
         enableEdgeToEdge()
         setContent {
+            val currency by currencyPrefs.currency.collectAsStateWithLifecycle()
+            CurrencyFormatter.setActiveCurrency(currency)
             val darkMode by themePrefs.darkMode.collectAsStateWithLifecycle()
 
             val darkTheme = when (darkMode) {

@@ -106,6 +106,47 @@ class TransactionLocalDataSource @Inject constructor(
             }
         }
 
+    suspend fun bulkCreate(requests: List<CreateTransactionRequest>): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            var inserted = 0
+            db.withTransaction {
+                for (req in requests) {
+                    if (req.walletId.isNullOrBlank()) throw IllegalArgumentException("Dompet wajib dipilih")
+                    if (req.type == TransactionType.EXPENSE) {
+                        val w = db.walletDao().getWalletById(req.walletId!!) ?: throw IllegalArgumentException("Dompet tidak ditemukan")
+                        if (w.balance < req.amount) throw IllegalStateException("Saldo dompet tidak cukup")
+                    }
+                    val dateStr = req.date.ifBlank { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date()) }
+                    val isRecurring = req.recurringInterval != com.ssajudn.bareuang.domain.model.RecurringInterval.NONE
+                    val nextDate = if (isRecurring) com.ssajudn.bareuang.utils.DateUtils.calculateNextDueDate(dateStr, req.recurringInterval.name) else null
+                    val newTx = Transaction(
+                        id = UUID.randomUUID().toString(),
+                        amount = req.amount,
+                        type = req.type,
+                        category = req.category,
+                        merchant = req.merchant,
+                        date = dateStr,
+                        notes = req.notes,
+                        receiptUrl = req.receiptUrl,
+                        walletId = req.walletId,
+                        toWalletId = req.toWalletId,
+                        recurringInterval = req.recurringInterval,
+                        isRecurringParent = isRecurring,
+                        parentRecurringId = null,
+                        nextOccurrenceDate = nextDate
+                    )
+                    if (!isRecurring) balanceService.adjustForCreate(req)
+                    val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
+                    db.transactionDao().insertTransaction(entity)
+                    inserted++
+                }
+            }
+            Result.success(inserted)
+        } catch (e: Exception) {
+            Result.failure(ApiErrorParser.fromThrowable(e))
+        }
+    }
+
     suspend fun deleteTransaction(id: String): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
             db.withTransaction {

@@ -38,6 +38,8 @@ import com.ssajudn.bareuang.ui.components.AppTextButton
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onReplayTour: () -> Unit = {},
+    onNavigateToImport: () -> Unit = {},
+    onNavigateToOcr: () -> Unit = {},
     onSignOutSuccess: () -> Unit
 ) {
     val context = LocalContext.current
@@ -132,6 +134,18 @@ fun SettingsScreen(
             com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
                 title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_backup_title),
                 items = listOf(
+                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
+                        title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_import_mutasi_title),
+                        description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_import_mutasi_desc),
+                        icon = Icons.Default.UploadFile,
+                        onClick = onNavigateToImport
+                    ),
+                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
+                        title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_ocr_title),
+                        description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_ocr_desc),
+                        icon = Icons.Default.DocumentScanner,
+                        onClick = onNavigateToOcr
+                    ),
                     com.ssajudn.bareuang.ui.components.Material3SettingsItem(
                         title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_export_title),
                         description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_export_desc),
@@ -281,6 +295,69 @@ fun SettingsScreen(
                     },
                     confirmButton = {
                         AppTextButton(onClick = { showLanguageDialog = false }) {
+                            Text(stringResource(com.ssajudn.bareuang.presentation.R.string.common_close))
+                        }
+                    }
+                )
+            }
+
+            // 4b. CURRENCY SETTINGS
+            val activeCurrency by viewModel.currency.collectAsStateWithLifecycle()
+            var showCurrencyDialog by remember { mutableStateOf(false) }
+
+            com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
+                title = androidx.compose.ui.res.stringResource(com.ssajudn.bareuang.presentation.R.string.currency_settings),
+                items = listOf(
+                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
+                        title = androidx.compose.ui.res.stringResource(com.ssajudn.bareuang.presentation.R.string.currency_settings),
+                        description = if (activeCurrency == com.ssajudn.bareuang.domain.model.AppCurrency.IDR) {
+                            androidx.compose.ui.res.stringResource(com.ssajudn.bareuang.presentation.R.string.currency_idr)
+                        } else {
+                            androidx.compose.ui.res.stringResource(com.ssajudn.bareuang.presentation.R.string.currency_usd)
+                        },
+                        icon = Icons.Default.Paid,
+                        onClick = { showCurrencyDialog = true }
+                    )
+                )
+            )
+
+            if (showCurrencyDialog) {
+                AlertDialog(
+                    onDismissRequest = { showCurrencyDialog = false },
+                    title = {
+                        Text(text = androidx.compose.ui.res.stringResource(com.ssajudn.bareuang.presentation.R.string.currency_settings))
+                    },
+                    text = {
+                        Column {
+                            com.ssajudn.bareuang.domain.model.AppCurrency.entries.forEach { curr ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = (activeCurrency == curr),
+                                        onClick = {
+                                            viewModel.setCurrency(curr)
+                                            showCurrencyDialog = false
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (curr == com.ssajudn.bareuang.domain.model.AppCurrency.IDR) {
+                                            stringResource(com.ssajudn.bareuang.presentation.R.string.currency_idr)
+                                        } else {
+                                            stringResource(com.ssajudn.bareuang.presentation.R.string.currency_usd)
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        AppTextButton(onClick = { showCurrencyDialog = false }) {
                             Text(stringResource(com.ssajudn.bareuang.presentation.R.string.common_close))
                         }
                     }

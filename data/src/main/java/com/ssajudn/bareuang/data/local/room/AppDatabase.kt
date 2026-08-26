@@ -13,7 +13,7 @@ import androidx.room.RoomDatabase
         LocalWalletEntity::class,
         CachedTranslationEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -81,6 +81,15 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                 // Outbox sync was never shipped as a feature; drop the dead table.
                 db.execSQL("DROP TABLE IF EXISTS outbox")
+            }
+        }
+
+        val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_local_transactions_date` ON `local_transactions` (`date`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_local_transactions_amount` ON `local_transactions` (`amount`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_local_transactions_merchant` ON `local_transactions` (`merchant`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_local_transactions_date_amount_merchant` ON `local_transactions` (`date`, `amount`, `merchant`)")
             }
         }
     }

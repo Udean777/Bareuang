@@ -37,6 +37,7 @@ private class FakeBudgetRepo(var budget: Long = 0L) : BudgetRepository {
 private class FakeTxRepo(var txs: List<Transaction> = emptyList()) : TransactionRepository {
     override suspend fun getTransactions(category: String?, page: Int, limit: Int) = Result.success(txs)
     override suspend fun createTransaction(request: CreateTransactionRequest) = Result.success(txs.firstOrNull()!!)
+    override suspend fun bulkCreate(requests: List<CreateTransactionRequest>) = Result.success(requests.size)
     override suspend fun deleteTransaction(id: String) = Result.success(true)
     override fun observeTransactions(): Flow<List<Transaction>> = flowOf(txs)
 }

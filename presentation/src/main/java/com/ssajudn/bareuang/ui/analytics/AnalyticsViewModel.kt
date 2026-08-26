@@ -106,7 +106,7 @@ class AnalyticsViewModel @Inject constructor(
                 val topCategoriesRaw = summary.topCategories ?: emptyList()
 
                 val breakdownItems = topCategoriesRaw.map { catSummary ->
-                    val pct = if (totalSpent > 0) (catSummary.total.toFloat() / totalSpent.toFloat()) else 0f
+                    val pct = if (totalSpent > 0) ((catSummary.total.toFloat() / totalSpent.toFloat()).coerceIn(0f, 1f)) else 0f
                     CategoryBreakdownItem(
                         category = catSummary.category,
                         totalAmount = catSummary.total,

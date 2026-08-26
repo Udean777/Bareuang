@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Savings
@@ -79,6 +80,8 @@ sealed class Screen(val route: String) {
     object TransactionDetail : Screen("transaction_detail/{transactionId}") {
         fun createRoute(transactionId: String) = "transaction_detail/$transactionId"
     }
+    object ImportMutasi : Screen("import_mutasi")
+    object OcrScan : Screen("ocr_scan")
 }
 
 private val TopLevelRoutes = setOf(
@@ -252,8 +255,15 @@ fun AppNavigation(
 
                 val speedDialItems = listOf(
                     SpeedDialItem(
+                        label = stringResource(R.string.fab_menu_scan),
+                        icon = Icons.Filled.DocumentScanner,
+                        onClick = {
+                            navController.navigate(Screen.OcrScan.route)
+                        }
+                    ),
+                    SpeedDialItem(
                         label = stringResource(R.string.fab_menu_transaction),
-                        icon = Icons.Default.Receipt,
+                        icon = Icons.Filled.Add,
                         onClick = {
                             navController.navigate(Screen.AddTransaction.route)
                         }
@@ -401,6 +411,12 @@ fun AppNavigation(
                             popUpTo(0) { inclusive = true }
                         }
                     },
+                    onNavigateToImport = {
+                        navController.navigate(Screen.ImportMutasi.route)
+                    },
+                    onNavigateToOcr = {
+                        navController.navigate(Screen.OcrScan.route)
+                    },
                     onSignOutSuccess = {
                         navController.navigate(Screen.Onboarding.route) {
                             popUpTo(0) { inclusive = true }
@@ -468,6 +484,18 @@ fun AppNavigation(
                 )
             }
 
+
+            composable(Screen.ImportMutasi.route) {
+                com.ssajudn.bareuang.ui.imports.ImportMutasiScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.OcrScan.route) {
+                com.ssajudn.bareuang.ui.ocr.OcrScanScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
 
             composable(Screen.Goals.route) {
                 val autoOpenAddGoal = requestAddGoal

@@ -4,6 +4,12 @@
     <string name="language_settings">Bahasa</string>
     <string name="language_english">English</string>
     <string name="language_indonesian">Bahasa Indonesia</string>
+    <!-- Currency -->
+    <string name="currency_settings">Mata Uang</string>
+    <string name="currency_idr">Rupiah (IDR - Rp)</string>
+    <string name="currency_usd">US Dollar (USD - $)</string>
+    <string name="onboarding_currency_title">Pilih Mata Uang</string>
+    <string name="onboarding_currency_desc">Pilih mata uang utama untuk mencatat pengeluaran dan anggaranmu. Kamu bisa mengubahnya kapan saja di Pengaturan.</string>
     <!-- Translation -->
     <!-- Navigation -->
     <string name="nav_home">Beranda</string>

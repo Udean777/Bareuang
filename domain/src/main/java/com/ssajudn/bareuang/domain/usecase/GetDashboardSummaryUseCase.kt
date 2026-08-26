@@ -70,7 +70,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 }
             }
 
-            val catMap = currentMonthTx.groupBy { it.category }
+            val catMap = expensesTx.groupBy { it.category }
             val topCategories = catMap.map { (cat, list) ->
                 CategorySummary(
                     category = cat,
