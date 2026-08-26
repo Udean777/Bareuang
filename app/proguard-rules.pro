@@ -23,11 +23,22 @@
 -dontwarn javax.annotation.**
 
 # WorkManager + Room — consumer rules are not enough with optimization=true / full R8
+-keep class androidx.work.** { *; }
 -keep class androidx.work.impl.** { *; }
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep class * extends androidx.work.impl.WorkDatabase { *; }
 -keep class com.ssajudn.bareuang.data.local.room.** { *; }
 -keep class com.ssajudn.bareuang.BareuangApplication { *; }
+-keep class androidx.work.OverwritingInputMerger { *; }
+-keep class androidx.work.ArrayCreatingInputMerger { *; }
+
+# Glance widget — R8 strips AppWidgetReceiver and composable content in release
+-keep class com.ssajudn.bareuang.widget.** { *; }
+-keep class androidx.glance.** { *; }
+-keep class androidx.glance.appwidget.** { *; }
+-keep interface com.ssajudn.bareuang.widget.WidgetDataEntryPoint { *; }
+-keep class com.ssajudn.bareuang.domain.model.DashboardSummary { *; }
+-keep class com.ssajudn.bareuang.utils.CurrencyFormatter { *; }
 
 # ML Kit optional SDK internals not present at compile time.
 -dontwarn com.google.mlkit.common.sdkinternal.LibraryVersion
