@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.ssajudn.bareuang.presentation"
-    compileSdk = 37
+    compileSdk = 36
     defaultConfig {
         minSdk = 26
         buildConfigField("String", "VERSION_NAME", "\"1.0\"")
