@@ -18,7 +18,7 @@ rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.u
 android {
     namespace = "com.ssajudn.bareuang"
     compileSdk {
-        version = release(37)
+        version = release(36)
     }
 
     signingConfigs {
@@ -30,13 +30,17 @@ android {
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps["storePassword"] as String?
             keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps["keyAlias"] as String?
             keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps["keyPassword"] as String?
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
         }
     }
 
     defaultConfig {
         applicationId = "com.ssajudn.bareuang"
         minSdk = 26
-        targetSdk = 37
+        targetSdk = 36
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.0"
 
