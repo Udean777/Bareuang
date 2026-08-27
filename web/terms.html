@@ -11,10 +11,10 @@
     <meta name="author" content="Bareuang" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#3E2A00" />
-    <link rel="canonical" href="https://bareuang.app/terms.html" />
+    <link rel="canonical" href="https://bareuang.vercel.app/terms" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bareuang" />
-    <meta property="og:url" content="https://bareuang.app/terms.html" />
+    <meta property="og:url" content="https://bareuang.vercel.app/terms" />
     <meta property="og:title" content="Terms of Service — Bareuang" />
     <meta
       property="og:description"
@@ -22,40 +22,53 @@
     />
     <meta
       property="og:image"
-      content="https://bareuang.app/assets/play_store_512.png"
+      content="https://bareuang.vercel.app/assets/og-image.png"
     />
+    <meta
+      property="og:image:secure_url"
+      content="https://bareuang.vercel.app/assets/og-image.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Bareuang — Terms of Service" />
     <meta property="og:locale" content="id_ID" />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Terms of Service — Bareuang" />
     <meta
       name="twitter:description"
       content="Syarat & Ketentuan penggunaan Bareuang — termasuk disclaimer keuangan."
     />
-    <link rel="icon" href="assets/logo.png" type="image/png" />
-    <link rel="apple-touch-icon" href="assets/logo.png" />
+    <meta
+      name="twitter:image"
+      content="https://bareuang.vercel.app/assets/og-image.png"
+    />
+    <meta name="twitter:image:alt" content="Bareuang — Terms of Service" />
+    <link rel="icon" href="/assets/logo.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
     <header class="nav">
       <div class="container nav-inner">
-        <a class="brand" href="index.html"
-          ><img src="assets/logo.png" alt="" /><span>Bareuang</span></a
+        <a class="brand" href="/"
+          ><img src="/assets/logo.png" alt="" /><span>Bareuang</span></a
         >
         <nav class="nav-links" aria-label="Breadcrumb">
-          <a href="index.html">← Kembali ke Landing</a
-          ><a href="privacy.html">Privacy</a>
+          <a href="/">← Kembali ke Landing</a
+          ><a href="/privacy">Privacy</a>
         </nav>
       </div>
     </header>
 
     <main id="main" class="legal">
-      <a class="back" href="index.html">← Kembali</a>
+      <a class="back" href="/">← Kembali</a>
       <h1>Terms of Service</h1>
       <div class="meta">
         Terakhir diperbarui: 26 Agustus 2026 · Jika tidak setuju, jangan gunakan
@@ -221,7 +234,7 @@
         <p>
           Kami dapat memperbarui Syarat ini dan Aplikasi dari waktu ke waktu
           (fitur baru, perbaikan bug, penyesuaian hukum). Versi terbaru akan
-          dipublikasikan di <code>bareuang.app/terms.html</code> dengan tanggal
+          dipublikasikan di <code>bareuang.vercel.app/terms</code> dengan tanggal
           pembaruan. Penggunaan berkelanjutan setelah pembaruan berarti
           menyetujui Syarat terbaru.
         </p>
@@ -237,8 +250,8 @@
         <p>
           Pertanyaan terkait Syarat:
           <a href="mailto:support@bareuang.app">support@bareuang.app</a><br />
-          Situs: <a href="index.html">bareuang.app</a> ·
-          <a href="privacy.html">Privacy Policy</a> · GitHub:
+          Situs: <a href="/">bareuang.app</a> ·
+          <a href="/privacy">Privacy Policy</a> · GitHub:
           <a href="https://github.com/Udean777/Bareuang">Udean777/Bareuang</a>
         </p>
 
@@ -254,11 +267,12 @@
       <div class="container subfooter">
         <span>© <span id="year"></span> Bareuang</span
         ><span
-          ><a href="privacy.html">Privacy</a> ·
-          <a href="index.html">Landing</a></span
+          ><a href="/privacy">Privacy</a> ·
+          <a href="/">Landing</a></span
         >
       </div>
     </footer>
-    <script src="js/main.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/main.js"></script>
   </body>
 </html>
