@@ -102,7 +102,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
             )
             Result.success(summary)
         } catch (e: Exception) {
-            Result.failure(AppException.UnknownError(e.message, e))
+            Result.failure(AppException.UnknownError(cause = e))
         }
     }
 }

@@ -19,6 +19,7 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@androidx.annotation.Keep
 data class BareuangBackupData(
     val version: Int = 1,
     val appVersion: String = "1.0.0",
@@ -61,7 +62,8 @@ class BackupRestoreManager @Inject constructor(
             } ?: return@withContext Result.failure(AppException.DataException("Cannot open file for writing"))
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(if (e is AppException) e else AppException.DataException(e.message, e))
+            android.util.Log.e("Backup", "export failed", e)
+            Result.failure(if (e is AppException) e else AppException.DataException(cause = e))
         }
     }
 
@@ -108,7 +110,8 @@ class BackupRestoreManager @Inject constructor(
 
             Result.success(totalRestored)
         } catch (e: Exception) {
-            Result.failure(if (e is AppException) e else AppException.UnknownError(e.message, e))
+            android.util.Log.e("Backup", "import failed", e)
+            Result.failure(if (e is AppException) e else AppException.UnknownError(cause = e))
         }
     }
 }

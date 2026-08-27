@@ -136,10 +136,8 @@ class AnalyticsViewModel @Inject constructor(
             } else {
                 _isRefreshing.value = false
                 if (_uiState.value !is AnalyticsUiState.Success) {
-                    val ex = summaryResult.exceptionOrNull()
-                    val fallback = (ex as? AppException)?.userMessage() ?: ex?.localizedMessage ?: ""
-                    val msg = if (fallback.isNotBlank()) fallback else "error"
-                    _uiState.value = AnalyticsUiState.Error(msg)
+                    android.util.Log.e("Analytics", "load failed", summaryResult.exceptionOrNull())
+                    _uiState.value = AnalyticsUiState.Error("")
                 }
             }
         }

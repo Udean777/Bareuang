@@ -42,7 +42,7 @@ class WalletsViewModel @Inject constructor(
 
     val uiState: StateFlow<WalletsUiState> = repository.observeWallets()
         .map { wallets -> WalletsUiState(wallets = wallets, netWorth = wallets.sumOf { it.balance }) }
-        .catch { e -> emit(WalletsUiState(error = e.message ?: "Gagal memuat dompet", errorText = UiText.Res(R.string.wallets_load_error))) }
+        .catch { e -> android.util.Log.e("Wallets", "observe failed", e); emit(WalletsUiState(error = "", errorText = UiText.Res(R.string.wallets_load_error))) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WalletsUiState(isLoading = true))
 
     // Triggers initial remote refresh and default wallet provisioning; observed Flow remains source of truth
@@ -58,8 +58,9 @@ class WalletsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createWallet(CreateWalletRequest(name, startingBalance, colorHex, "account_balance_wallet"))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            val ui = UiText.Res(R.string.wallets_error_create)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
     }
 
@@ -67,15 +68,16 @@ class WalletsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateWallet(wallet.copy(name = name, colorHex = colorHex))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            val ui = UiText.Res(R.string.wallets_error_update)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
     }
 
     fun deleteWallet(id: String) {
         viewModelScope.launch {
             val r = repository.deleteWallet(id)
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.wallets_error_delete)))
         }
     }
 }

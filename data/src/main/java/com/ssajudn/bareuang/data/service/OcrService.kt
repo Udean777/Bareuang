@@ -17,13 +17,24 @@ class OcrService @Inject constructor(
     private val recognizer by lazy { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
 
     suspend fun recognizeFromUri(uri: Uri): Result<String> = runCatching {
-        val image = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            InputImage.fromFilePath(context, uri)
+        try {
+            val image = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                InputImage.fromFilePath(context, uri)
+            }
+            val result = recognizer.process(image).await()
+            // Reconstruct layout-aware text from blocks/lines using bounding boxes
+            val corrected = reconstructLayout(result)
+            if (corrected.isNotBlank() && corrected.lines().size >= 3) corrected else result.text
+        } catch (e: Exception) {
+            // ponytail: hide system NPE / GMS details from user, log raw for debugging
+            android.util.Log.e("OcrService", "recognize failed", e)
+            throw IllegalStateException(OCR_GENERIC_ERROR)
         }
-        val result = recognizer.process(image).await()
-        // Reconstruct layout-aware text from blocks/lines using bounding boxes
-        val corrected = reconstructLayout(result)
-        if (corrected.isNotBlank() && corrected.lines().size >= 3) corrected else result.text
+    }
+
+    companion object {
+        // Keep generic — never leak system exception to UI
+        const val OCR_GENERIC_ERROR = "Gagal memproses gambar. Coba lagi dengan foto yang lebih jelas."
     }
 
     private fun reconstructLayout(text: com.google.mlkit.vision.text.Text): String {

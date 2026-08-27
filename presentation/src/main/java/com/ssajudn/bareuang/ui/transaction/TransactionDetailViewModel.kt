@@ -70,11 +70,10 @@ class TransactionDetailViewModel @Inject constructor(
                     )
                 }
                 .onFailure { error ->
-                    val message = (error as? AppException)?.userMessage()
-                        ?: (error.localizedMessage ?: "")
+                    android.util.Log.e("TxDetail", "load failed", error)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = message.ifBlank { null }
+                        errorMessage = null
                     )
                 }
         }
@@ -91,10 +90,10 @@ class TransactionDetailViewModel @Inject constructor(
                     viewModelScope.launch { _effect.send(UiEffect.PopBackStack) }
                 }
                 .onFailure { error ->
-                    val ui = (error as? AppException)?.toUiText() ?: UiText.Res(R.string.tx_detail_error_delete)
-                    val message = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = message.ifBlank { null })
-                    _operation.value = OperationState.Error(message, ui)
+                    android.util.Log.e("TxDetail", "delete failed", error)
+                    val ui = UiText.Res(R.string.error_generic)
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
+                    _operation.value = OperationState.Error("", ui)
                     viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 }
         }

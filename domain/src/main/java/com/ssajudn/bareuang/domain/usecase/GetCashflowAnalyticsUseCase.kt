@@ -36,7 +36,7 @@ class GetCashflowAnalyticsUseCase @Inject constructor(
             }
             Result.success(points)
         } catch (e: Exception) {
-            Result.failure(AppException.UnknownError(e.message, e))
+            Result.failure(AppException.UnknownError(cause = e))
         }
     }
 }

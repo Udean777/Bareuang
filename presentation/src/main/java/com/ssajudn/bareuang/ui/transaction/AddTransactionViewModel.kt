@@ -49,7 +49,6 @@ data class AddTransactionUiState(
 )
 private fun errorUiText(error: AddTransactionError, arg: String? = null): UiText = when (error) {
     AddTransactionError.INSUFFICIENT_BALANCE -> UiText.Res(error.resId, listOf(arg ?: ""))
-    AddTransactionError.SAVE_FAILED -> if (arg != null) UiText.Dyn(arg) else UiText.Res(error.resId)
     else -> UiText.Res(error.resId)
 }
 
@@ -314,10 +313,10 @@ class AddTransactionViewModel @Inject constructor(
                     _operation.value = OperationState.Success()
                 }
                 .onFailure { error ->
-                    val ui = (error as? AppException)?.toUiText() ?: errorUiText(AddTransactionError.SAVE_FAILED, error.localizedMessage)
-                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, validationError = AddTransactionError.SAVE_FAILED)
-                    _operation.value = OperationState.Error(msg, ui)
+                    android.util.Log.e("AddTx", "save failed", error)
+                    val ui = (error as? AppException)?.toUiText() ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "", validationError = AddTransactionError.SAVE_FAILED)
+                    _operation.value = OperationState.Error("", ui)
                     viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 }
         }

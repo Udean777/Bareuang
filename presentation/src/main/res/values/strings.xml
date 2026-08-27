@@ -319,6 +319,7 @@
     <string name="ocr_btn_gallery">Gallery</string>
     <string name="ocr_processing">Processing OCR…</string>
     <string name="ocr_no_text">No text detected, try a clearer photo</string>
+    <string name="ocr_error_generic">Failed to process image. Try again with a clearer photo.</string>
     <string name="ocr_btn_save">Save Transaction</string>
     <string name="ocr_save_success">Receipt transaction saved</string>
     <string name="ocr_tips_title">Tips for scanning</string>
@@ -479,9 +480,30 @@
     <string name="budget_error_category_delete">Failed to delete category limit</string>
     <!-- Wallet -->
     <string name="wallets_load_error">Failed to load wallets</string>
+    <string name="wallets_error_create">Failed to create wallet</string>
+    <string name="wallets_error_update">Failed to update wallet</string>
+    <string name="wallets_error_delete">Failed to delete wallet</string>
     <!-- Tx detail -->
     <string name="tx_detail_error_load">Failed to load transaction</string>
     <string name="tx_detail_error_delete">Failed to delete transaction</string>
+    <!-- Goals granular -->
+    <string name="goals_error_create">Failed to create goal</string>
+    <string name="goals_error_update">Failed to update goal</string>
+    <string name="goals_error_deposit">Failed to process goal transaction</string>
+    <string name="goals_error_delete">Failed to delete goal</string>
+    <!-- Bills granular -->
+    <string name="bills_error_create">Failed to create bill</string>
+    <string name="bills_error_update">Failed to update bill</string>
+    <string name="bills_error_delete">Failed to delete bill</string>
+    <!-- Import granular -->
+    <string name="import_error_read">Failed to read file</string>
+    <string name="import_error_save">Failed to import transactions</string>
+    <!-- OCR granular -->
+    <string name="ocr_error_save">Failed to save receipt transaction</string>
+    <string name="ocr_error_file">Failed to open image file</string>
+    <!-- Settings granular -->
+    <string name="settings_error_backup">Failed to export backup</string>
+    <string name="settings_error_restore">Failed to restore backup</string>
     <!-- Split bill extras -->
     <string name="split_default_merchant">Split</string>
     <string name="split_person_default">Friend %1$d</string>
