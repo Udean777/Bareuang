@@ -16,6 +16,7 @@ import com.ssajudn.bareuang.data.local.ImportPreferences
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
+import com.ssajudn.bareuang.ui.common.toUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -103,9 +104,10 @@ class ImportMutasiViewModel @Inject constructor(
                 val size = pfd?.statSize ?: -1L
                 pfd?.close()
                 if (size > 5 * 1024 * 1024) {
-                    _uiState.value = _uiState.value.copy(isParsing = false, error = UiText.Dyn("File terlalu besar (>5MB)"))
-                    _operation.value = OperationState.Error("File terlalu besar")
-                    _effect.send(UiEffect.ShowSnackbar("File terlalu besar, maksimal 5MB"))
+                    val ui = UiText.Res(com.ssajudn.bareuang.presentation.R.string.import_file_too_large)
+                    _uiState.value = _uiState.value.copy(isParsing = false, error = ui)
+                    _operation.value = OperationState.Error("", ui)
+                    _effect.send(UiEffect.ShowSnackbarRes(ui))
                     return@launch
                 }
                 val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.readText() ?: ""
@@ -119,9 +121,10 @@ class ImportMutasiViewModel @Inject constructor(
                 val (rawDrafts, skipped) = csvParser.parseWithStats(text)
                 android.util.Log.d("Import", "parsed ${rawDrafts.size} drafts, skipped $skipped")
                 if (rawDrafts.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(isParsing = false, fileName = fileName, skippedRows = skipped)
-                    _operation.value = OperationState.Error("CSV kosong / format tidak dikenali")
-                    _effect.send(UiEffect.ShowSnackbar("CSV kosong atau format tidak dikenali"))
+                    val ui = UiText.Res(com.ssajudn.bareuang.presentation.R.string.import_empty_csv)
+                    _uiState.value = _uiState.value.copy(isParsing = false, fileName = fileName, skippedRows = skipped, error = ui)
+                    _operation.value = OperationState.Error("", ui)
+                    _effect.send(UiEffect.ShowSnackbarRes(ui))
                     return@launch
                 }
                 val result = parseMutasiCsvUseCase.markDuplicates(rawDrafts, skipped)
@@ -134,13 +137,14 @@ class ImportMutasiViewModel @Inject constructor(
                 _operation.value = OperationState.Idle
                 if (result.skippedRows > 0) android.util.Log.w("Import", "skipped ${result.skippedRows} rows")
                 if (result.duplicateCount > 0) {
-                    _effect.send(UiEffect.ShowSnackbar("${result.duplicateCount} duplikat terdeteksi (auto-skip)"))
+                    _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.import_duplicate_snack, listOf(result.duplicateCount))))
                 }
             } catch (e: Exception) {
                 android.util.Log.e("Import", "onFilePicked failed", e)
-                _uiState.value = _uiState.value.copy(isParsing = false, error = UiText.Dyn(e.message ?: "Gagal baca file"))
-                _operation.value = OperationState.Error(e.message ?: "Gagal")
-                _effect.send(UiEffect.ShowSnackbar(e.message ?: "Gagal baca file"))
+                val ui = UiText.Res(com.ssajudn.bareuang.presentation.R.string.import_error_read)
+                _uiState.value = _uiState.value.copy(isParsing = false, error = ui)
+                _operation.value = OperationState.Error("", ui)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
     }
@@ -148,7 +152,7 @@ class ImportMutasiViewModel @Inject constructor(
     fun importSelected(onSuccess: (Int) -> Unit) {
         val walletId = _uiState.value.selectedWalletId
         if (walletId.isNullOrBlank()) {
-            viewModelScope.launch { _effect.send(UiEffect.ShowSnackbar("Pilih dompet dulu")) }
+            viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_wallet_required))) }
             return
         }
         viewModelScope.launch {
@@ -164,9 +168,10 @@ class ImportMutasiViewModel @Inject constructor(
                 onSuccess(count)
             }.onFailure { e ->
                 android.util.Log.e("Import", "import failed", e)
+                val ui = UiText.Res(com.ssajudn.bareuang.presentation.R.string.import_error_save)
                 _uiState.value = _uiState.value.copy(isImporting = false)
-                _operation.value = OperationState.Error(e.message ?: "Gagal import")
-                _effect.send(UiEffect.ShowSnackbar(e.message ?: "Gagal import"))
+                _operation.value = OperationState.Error("", ui)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
     }

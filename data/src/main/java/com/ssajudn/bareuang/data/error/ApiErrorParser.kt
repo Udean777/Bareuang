@@ -10,13 +10,13 @@ import java.io.IOException
 object ApiErrorParser {
 
     fun fromThrowable(e: Throwable): AppException = when (e) {
-        is IOException -> AppException.NetworkException(e.message ?: "Gagal mengakses penyimpanan lokal", e)
+        is IOException -> AppException.NetworkException(cause = e)
         is AppException -> e
-        else -> AppException.UnknownError(e.message ?: "Terjadi kesalahan", e)
+        else -> AppException.UnknownError(cause = e)
     }
 
     fun message(e: Throwable): String = when (e) {
         is AppException -> e.message ?: "Terjadi kesalahan"
-        else -> e.localizedMessage ?: "Terjadi kesalahan"
+        else -> "Terjadi kesalahan"
     }
 }

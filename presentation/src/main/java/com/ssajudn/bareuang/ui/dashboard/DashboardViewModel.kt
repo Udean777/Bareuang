@@ -55,9 +55,10 @@ class DashboardViewModel @Inject constructor(
                     _isRefreshing.value = false
                 }
                 .onFailure { error ->
+                    android.util.Log.e("Dashboard", "load failed", error)
                     _isRefreshing.value = false
                     if (_uiState.value !is DashboardUiState.Success) {
-                        val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
+                        val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: error.message ?: ""
                         _uiState.value = DashboardUiState.Error(msg)
                     }
                 }

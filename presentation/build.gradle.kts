@@ -17,7 +17,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures { compose = true; buildConfig = true }
-    testOptions { unitTests.all { it.jvmArgs("-Dnet.bytebuddy.experimental=true") } }
+    testOptions {
+        unitTests.all { it.jvmArgs("-Dnet.bytebuddy.experimental=true") }
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 kotlin {

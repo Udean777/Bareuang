@@ -76,7 +76,7 @@ class DueBillsViewModel @Inject constructor(
         }
         filtered
     }.map<List<DueBill>, DueBillsUiState> { DueBillsUiState.Success(it) }
-        .catch { e -> emit(DueBillsUiState.Error(e.message ?: "Failed to fetch due bills", UiText.Res(R.string.bills_load_error))) }
+        .catch { e -> android.util.Log.e("Bills", "observe failed", e); emit(DueBillsUiState.Error("", UiText.Res(R.string.bills_load_error))) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DueBillsUiState.Loading)
 
     init {
@@ -108,11 +108,12 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createDueBill(CreateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
+            val ui = UiText.Res(R.string.bills_error_create)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isSuccess) {
                 reminderScheduler.runNow()
                 _effect.send(UiEffect.PopBackStack)
-            } else _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            } else _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
     }
 
@@ -120,8 +121,9 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateDueBill(id, UpdateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic))) else reminderScheduler.runNow()
+            val ui = UiText.Res(R.string.bills_error_update)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui)) else reminderScheduler.runNow()
         }
     }
 
@@ -135,8 +137,8 @@ class DueBillsViewModel @Inject constructor(
                     val nextDueDate = DateUtils.calculateNextDueDate(bill.dueDate, bill.recurringInterval.name)
                     repository.createDueBill(CreateDueBillRequest(bill.providerName, providerIconUrl = bill.providerIconUrl, totalAmount = bill.totalAmount, dueDate = nextDueDate, isRecurring = true, recurringInterval = bill.recurringInterval, notes = bill.notes ?: ""))
                 }
-                _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_pay_failed), result.exceptionOrNull()?.message ?: "Gagal bayar")
-                if (result.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_pay_failed))) else reminderScheduler.runNow()
+                _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error("", UiText.Res(R.string.bills_error_insufficient))
+                if (result.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.bills_error_insufficient))) else reminderScheduler.runNow()
             }
         }
     }
@@ -146,7 +148,7 @@ class DueBillsViewModel @Inject constructor(
             val bid = bill.id
             if (bid != null) {
                 val r = repository.updateDueBillStatus(bid, DueBillStatus.UNPAID)
-                if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic))) else reminderScheduler.runNow()
+                if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.bills_error_update))) else reminderScheduler.runNow()
             }
         }
     }
@@ -158,8 +160,8 @@ class DueBillsViewModel @Inject constructor(
 
     fun deleteBill(id: String) {
         viewModelScope.launch {
-            repository.deleteDueBill(id)
-            reminderScheduler.runNow()
+            val r = repository.deleteDueBill(id)
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.bills_error_delete))) else reminderScheduler.runNow()
         }
     }
 }

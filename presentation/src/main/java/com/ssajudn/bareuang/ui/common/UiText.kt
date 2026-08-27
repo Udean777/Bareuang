@@ -26,9 +26,11 @@ fun UiText.resolveFallback(fallback: String = ""): String = when(this){
 
 fun String.toUiText(): UiText = UiText.Dyn(this)
 
-/** Maps AppException to UiText with i18n stringRes where possible */
+/** Maps AppException to UiText with i18n stringRes — never leak raw system message, per-feature granular */
 fun com.ssajudn.bareuang.domain.error.AppException.toUiText(): UiText = when(this){
-    is com.ssajudn.bareuang.domain.error.AppException.NetworkException -> if (message != null) UiText.Dyn(message!!) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_network)
-    is com.ssajudn.bareuang.domain.error.AppException.AuthException -> if (message != null) UiText.Dyn(message!!) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_auth)
-    else -> if (message != null) UiText.Dyn(message!!) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+    is com.ssajudn.bareuang.domain.error.AppException.NetworkException -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_network)
+    is com.ssajudn.bareuang.domain.error.AppException.AuthException -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_auth)
+    is com.ssajudn.bareuang.domain.error.AppException.DataException -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+    is com.ssajudn.bareuang.domain.error.AppException.SyncException -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+    is com.ssajudn.bareuang.domain.error.AppException.UnknownError -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
 }

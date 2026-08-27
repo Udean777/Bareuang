@@ -94,7 +94,7 @@ class AllTransactionsViewModel @Inject constructor(
             filteredExpenseTotal = expenseTotal,
             filteredIncomeTotal = incomeTotal,
         ) as AllTransactionsUiState
-    }.catch { e -> emit(AllTransactionsUiState.Error(e.message ?: "")) }
+    }.catch { e -> android.util.Log.e("AllTx", "observe failed", e); emit(AllTransactionsUiState.Error("")) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AllTransactionsUiState.Loading)
 
     fun loadTransactions(isPullToRefresh: Boolean = false) {

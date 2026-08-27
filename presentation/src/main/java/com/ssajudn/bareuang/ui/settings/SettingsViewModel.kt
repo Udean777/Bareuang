@@ -82,10 +82,10 @@ class SettingsViewModel @Inject constructor(
                 _operation.value = OperationState.Success()
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.settings_backup_success_snack)))
             } else {
-                val ex = result.exceptionOrNull()?.localizedMessage ?: ""
-                val ui = UiText.Res(R.string.settings_backup_failed, listOf(ex))
+                android.util.Log.e("Settings", "export failed", result.exceptionOrNull())
+                val ui = UiText.Res(R.string.settings_error_backup)
                 _uiState.value = _uiState.value.copy(errorMessage = null, errorText = ui)
-                _operation.value = OperationState.Error(ex, ui)
+                _operation.value = OperationState.Error("", ui)
                 _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }
@@ -104,10 +104,10 @@ class SettingsViewModel @Inject constructor(
                 _operation.value = OperationState.Success()
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.settings_restore_success_snack)))
             } else {
-                val ex = result.exceptionOrNull()?.localizedMessage ?: ""
-                val ui = UiText.Res(R.string.settings_restore_failed, listOf(ex))
+                android.util.Log.e("Settings", "import failed", result.exceptionOrNull())
+                val ui = UiText.Res(R.string.settings_error_restore)
                 _uiState.value = _uiState.value.copy(errorMessage = null, errorText = ui)
-                _operation.value = OperationState.Error(ex, ui)
+                _operation.value = OperationState.Error("", ui)
                 _effect.send(UiEffect.ShowSnackbarRes(ui))
             }
         }

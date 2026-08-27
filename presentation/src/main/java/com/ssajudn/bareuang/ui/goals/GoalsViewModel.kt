@@ -73,7 +73,7 @@ class GoalsViewModel @Inject constructor(
             }
         }
         GoalsUiState.Success(filtered) as GoalsUiState
-    }.catch { e -> emit(GoalsUiState.Error(e.message ?: "Failed to load savings goals", UiText.Res(R.string.goals_load_error))) }
+    }.catch { e -> android.util.Log.e("Goals", "observe failed", e); emit(GoalsUiState.Error("", UiText.Res(R.string.goals_load_error))) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GoalsUiState.Loading)
 
     val wallets: StateFlow<List<Wallet>> =
@@ -108,8 +108,9 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createGoal(CreateGoalRequest(name, targetAmount, targetDate, colorHex, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            val ui = UiText.Res(R.string.goals_error_create)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+            if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
     }
 
@@ -117,8 +118,9 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateGoal(id, UpdateGoalRequest(name, targetAmount, targetDate, colorHex, notes))
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            val ui = UiText.Res(R.string.goals_error_update)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
     }
 
@@ -126,15 +128,16 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.depositToGoal(id, amount, walletId)
-            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error.from(UiText.Res(R.string.error_generic), r.exceptionOrNull()?.message ?: "Gagal")
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            val ui = UiText.Res(R.string.goals_error_deposit)
+            _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
     }
 
     fun deleteGoal(id: String) {
         viewModelScope.launch {
             val r = repository.deleteGoal(id)
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.error_generic)))
+            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.goals_error_delete)))
         }
     }
 }

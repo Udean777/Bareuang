@@ -66,7 +66,7 @@ fun OcrScanScreen(
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) cameraUri?.let { viewModel.processImage(it) }
     }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let { viewModel.processImage(it) }
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -126,7 +126,7 @@ fun OcrScanScreen(
                     onValueChange = {}, readOnly = true,
                     label = { Text("Dompet") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                    modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 )
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     uiState.wallets.forEach { w ->
@@ -139,7 +139,16 @@ fun OcrScanScreen(
                 Button(onClick = ::launchCamera, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.CameraAlt, null); Spacer(Modifier.width(8.dp)); Text("Kamera")
                 }
-                OutlinedButton(onClick = { galleryLauncher.launch(arrayOf("image/*")) }, modifier = Modifier.weight(1f)) {
+                OutlinedButton(
+                    onClick = {
+                        galleryLauncher.launch(
+                            androidx.activity.result.PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text("Galeri")
                 }
             }
@@ -207,7 +216,7 @@ fun OcrScanScreen(
                         onValueChange = {}, readOnly = true,
                         label = { Text("Kategori") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(catExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(expanded = catExpanded, onDismissRequest = { catExpanded = false }) {
                         TransactionCategory.entries.forEach { cat ->

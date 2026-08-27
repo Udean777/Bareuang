@@ -114,10 +114,10 @@ class BudgetViewModel @Inject constructor(
                     viewModelScope.launch { _effect.send(UiEffect.PopBackStack) }
                 }
                 .onFailure { error ->
+                    android.util.Log.e("Budget", "setBudget failed", error)
                     val ui = (error as? AppException)?.toUiText() ?: UiText.Res(BudgetError.SET_FAILED.resId)
-                    val msg = (error as? AppException)?.userMessage() ?: error.localizedMessage ?: ""
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, error = ui)
-                    _operation.value = OperationState.Error(msg, ui)
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "", error = ui)
+                    _operation.value = OperationState.Error("", ui)
                     viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 }
         }

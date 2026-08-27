@@ -311,7 +311,7 @@ fun DueBillsScreen(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = Icons.Default.ReceiptLong,
+                                    imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.size(24.dp)
