@@ -20,6 +20,10 @@ android {
         arg("room.schemaLocation", "$projectDir/schemas")
     }
     buildFeatures { buildConfig = true }
+    testOptions {
+        unitTests.all { it.jvmArgs("-Dnet.bytebuddy.experimental=true") }
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 kotlin { jvmToolchain(21) }

@@ -315,8 +315,8 @@ class AddTransactionViewModel @Inject constructor(
                 .onFailure { error ->
                     android.util.Log.e("AddTx", "save failed", error)
                     val ui = (error as? AppException)?.toUiText() ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "", validationError = AddTransactionError.SAVE_FAILED)
-                    _operation.value = OperationState.Error("", ui)
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = error.message ?: "", validationError = AddTransactionError.SAVE_FAILED)
+                    _operation.value = OperationState.Error(error.message ?: "", ui)
                     viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
                 }
         }
