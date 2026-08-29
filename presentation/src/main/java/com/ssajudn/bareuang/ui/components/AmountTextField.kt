@@ -12,6 +12,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.remember
 import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.utils.CurrencyVisualTransformation
@@ -42,6 +43,8 @@ fun AmountTextField(
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     colors: androidx.compose.material3.TextFieldColors = bareuangOutlinedTextFieldColors(),
 ) {
+    val currency = CurrencyFormatter.getActiveCurrency()
+    val visualTransformation = remember(currency) { CurrencyVisualTransformation(currency.prefix, currency.thousandSeparator) }
     OutlinedTextField(
         value = value,
         onValueChange = { input ->
@@ -51,7 +54,7 @@ fun AmountTextField(
         placeholder = placeholder,
         singleLine = true,
         enabled = enabled,
-        visualTransformation = CurrencyVisualTransformation(),
+        visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = textStyle,
         isError = isError,

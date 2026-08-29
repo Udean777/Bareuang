@@ -10,6 +10,7 @@ import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
+import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
 import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
@@ -45,7 +46,8 @@ class OcrScanViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
     private val ocrService: OcrService,
-    private val hasMonthlyBudget: HasMonthlyBudgetUseCase
+    private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
+    private val checkDailyBudget: CheckDailyBudgetUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OcrUiState())
@@ -117,6 +119,12 @@ class OcrScanViewModel @Inject constructor(
         viewModelScope.launch {
             if (!hasMonthlyBudget()) {
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_budget_required)))
+                return@launch
+            }
+            val dailyCheck = checkDailyBudget(s.parsedAmount, s.date, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency())
+            if (dailyCheck.isFailure) {
+                val msg = dailyCheck.exceptionOrNull()?.message ?: ""
+                _effect.send(UiEffect.ShowSnackbarRes(if (msg.isNotBlank()) UiText.Dyn(msg) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_daily_exceeded)))
                 return@launch
             }
             val wallet = walletRepository.getWallets().getOrNull()?.find { it.id == s.selectedWalletId }

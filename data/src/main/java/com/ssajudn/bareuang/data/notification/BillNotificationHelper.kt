@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.ssajudn.bareuang.data.R
 import com.ssajudn.bareuang.domain.usecase.BillReminder
 import com.ssajudn.bareuang.domain.usecase.BillReminderUrgency
+import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,7 +21,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class BillNotificationHelper @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) {
 
     fun ensureChannel() {
@@ -83,8 +85,8 @@ class BillNotificationHelper @Inject constructor(
         }.isSuccess
     }
 
-    private fun formatAmount(amount: Long): String = "Rp" + amount.toString()
-        .reversed().chunked(3).joinToString(".").reversed()
+    private fun formatAmount(amount: Long): String =
+        DomainCurrencyFormatter.format(amount, currencyPreferences.getCurrency())
 
     private fun dueLabel(reminder: BillReminder): String = when (reminder.urgency) {
         BillReminderUrgency.OVERDUE -> context.getString(R.string.bill_reminder_overdue_by, -reminder.daysLeft)

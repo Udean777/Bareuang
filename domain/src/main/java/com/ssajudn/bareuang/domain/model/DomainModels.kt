@@ -106,8 +106,16 @@ data class DashboardSummary(
     val unpaidDueBillsSum: Long,
     val netWorth: Long = 0L,
     val recentTransactions: List<Transaction>?,
-    val recurringTransactions: List<Transaction> = emptyList()
-)
+    val recurringTransactions: List<Transaction> = emptyList(),
+    // ponytail: daily budget derived from remainingBudget/remainingDays, no DB field
+    val dailyAllowance: Long = 0L,
+    val todaySpent: Long = 0L,
+    val remainingToday: Long = 0L,
+    val remainingDays: Int = 0
+) {
+    val isDailyExceeded: Boolean get() = monthlyBudget > 0 && remainingToday < 0
+    val dailyProgress: Float get() = if (dailyAllowance > 0) (todaySpent.toFloat() / dailyAllowance).coerceIn(0f, 1f) else 0f
+}
 
 data class Goal(
     val id: String? = null,

@@ -38,7 +38,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.ssajudn.bareuang.MainActivity
 import com.ssajudn.bareuang.domain.model.DashboardSummary
-import com.ssajudn.bareuang.utils.CurrencyFormatter
+import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import dagger.hilt.android.EntryPointAccessors
 
 class BudgetWidget : GlanceAppWidget() {
@@ -52,6 +52,7 @@ class BudgetWidget : GlanceAppWidget() {
         )
         val summary = entryPoint.getDashboardSummary().invoke().getOrNull()
         val hideBalance = entryPoint.widgetPreferences().hideBalance.value
+        val currency = entryPoint.currencyPreferences().getCurrency()
 
         provideContent {
             GlanceTheme {
@@ -65,14 +66,14 @@ class BudgetWidget : GlanceAppWidget() {
                         ),
                     )
                 } else {
-                    Content(summary, hideBalance)
+                    Content(summary, hideBalance, currency)
                 }
             }
         }
     }
 
     @Composable
-    private fun Content(summary: DashboardSummary, hideBalance: Boolean) {
+    private fun Content(summary: DashboardSummary, hideBalance: Boolean, currency: com.ssajudn.bareuang.domain.model.AppCurrency) {
         val size = LocalSize.current
         val isWide = size.width >= 220.dp
         val isTall = size.height >= 120.dp
@@ -132,7 +133,7 @@ class BudgetWidget : GlanceAppWidget() {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "⬢ ${mask(CurrencyFormatter.formatCompact(summary.netWorth), hideBalance)}",
+                                text = "⬢ ${mask(DomainCurrencyFormatter.formatCompact(summary.netWorth, currency), hideBalance, currency)}",
                                 style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 10.sp, fontWeight = FontWeight.Bold),
                                 maxLines = 1,
                             )
@@ -144,7 +145,7 @@ class BudgetWidget : GlanceAppWidget() {
                     // Price display — honey primary, bear brown context
                     Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = mask(CurrencyFormatter.formatRupiah(summary.remainingBudget), hideBalance),
+                            text = mask(DomainCurrencyFormatter.format(summary.remainingBudget, currency), hideBalance, currency),
                             style = TextStyle(color = GlanceTheme.colors.primary, fontSize = if (isWide) 22.sp else 19.sp, fontWeight = FontWeight.Bold),
                             maxLines = 1,
                         )
@@ -185,7 +186,7 @@ class BudgetWidget : GlanceAppWidget() {
                             ) {
                                 Column(modifier = GlanceModifier.fillMaxWidth()) {
                                     Text(text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_daily), style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 9.sp, fontWeight = FontWeight.Bold))
-                                    Text(text = mask(CurrencyFormatter.formatCompact(summary.averageDailySpend), hideBalance), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                                    Text(text = mask(DomainCurrencyFormatter.formatCompact(summary.averageDailySpend, currency), hideBalance, currency), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
                                 }
                             }
                             Spacer(modifier = GlanceModifier.width(8.dp))
@@ -196,7 +197,7 @@ class BudgetWidget : GlanceAppWidget() {
                                 ) {
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(text = context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bills), style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 9.sp, fontWeight = FontWeight.Bold))
-                                        Text(text = mask(CurrencyFormatter.formatCompact(summary.unpaidDueBillsSum), hideBalance), style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                                        Text(text = mask(DomainCurrencyFormatter.formatCompact(summary.unpaidDueBillsSum, currency), hideBalance, currency), style = TextStyle(color = GlanceTheme.colors.onErrorContainer, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
                                     }
                                 }
                             } else if (summary.monthlyBudget > 0) {
@@ -233,8 +234,8 @@ class BudgetWidget : GlanceAppWidget() {
         )
     }
 
-    private fun mask(formatted: String, hidden: Boolean): String =
-        if (hidden) "Rp \u2022\u2022\u2022\u2022\u2022\u2022" else formatted
+    private fun mask(formatted: String, hidden: Boolean, currency: com.ssajudn.bareuang.domain.model.AppCurrency = com.ssajudn.bareuang.domain.model.AppCurrency.IDR): String =
+        if (hidden) "${currency.prefix}\u2022\u2022\u2022\u2022\u2022\u2022" else formatted
 }
 
 class BudgetWidgetReceiver : GlanceAppWidgetReceiver() {

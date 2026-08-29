@@ -15,4 +15,5 @@ import dagger.hilt.components.SingletonComponent
 interface WidgetDataEntryPoint {
     fun getDashboardSummary(): GetDashboardSummaryUseCase
     fun widgetPreferences(): WidgetPreferences
+    fun currencyPreferences(): com.ssajudn.bareuang.data.local.CurrencyPreferences
 }

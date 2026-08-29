@@ -1,23 +1,8 @@
 package com.ssajudn.bareuang.utils
 
 import com.ssajudn.bareuang.domain.model.AppCurrency
-import java.text.NumberFormat
-import java.util.Locale
 
 object CurrencyFormatter {
-
-    private val indonesianLocale = Locale("id", "ID")
-    private val usLocale = Locale.US
-
-    private val rupiahFormat = NumberFormat.getCurrencyInstance(indonesianLocale).apply {
-        maximumFractionDigits = 0
-        minimumFractionDigits = 0
-    }
-
-    private val dollarFormat = NumberFormat.getCurrencyInstance(usLocale).apply {
-        maximumFractionDigits = 0
-        minimumFractionDigits = 0
-    }
 
     @Volatile
     private var activeCurrency: AppCurrency = AppCurrency.IDR
@@ -34,21 +19,10 @@ object CurrencyFormatter {
      * Format number to Currency string:
      * e.g. IDR 50000 -> "Rp 50.000"
      * e.g. USD 50000 -> "$ 50,000"
+     * Delegates to domain formatter (single source of truth)
      */
-    fun formatCurrency(amount: Long, currency: AppCurrency = activeCurrency): String {
-        return when (currency) {
-            AppCurrency.IDR -> {
-                rupiahFormat.format(amount)
-                    .replace("Rp", "Rp ")
-                    .trim()
-            }
-            AppCurrency.USD -> {
-                dollarFormat.format(amount)
-                    .replace("$", "$ ")
-                    .trim()
-            }
-        }
-    }
+    fun formatCurrency(amount: Long, currency: AppCurrency = activeCurrency): String =
+        com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter.format(amount, currency)
 
     /**
      * Format number to active currency (kept for backwards compatibility).
@@ -70,24 +44,6 @@ object CurrencyFormatter {
      * For IDR: 1.500.000 -> "1.5 jt", 50.000 -> "50 rb"
      * For USD: 1.500.000 -> "1.5 M", 50.000 -> "50 K"
      */
-    fun formatCompact(amount: Long, currency: AppCurrency = activeCurrency): String {
-        return when (currency) {
-            AppCurrency.IDR -> {
-                when {
-                    amount >= 1_000_000_000 -> String.format(indonesianLocale, "%.1f M", amount / 1_000_000_000.0)
-                    amount >= 1_000_000 -> String.format(indonesianLocale, "%.1f jt", amount / 1_000_000.0)
-                    amount >= 1_000 -> String.format(indonesianLocale, "%.0f rb", amount / 1_000.0)
-                    else -> amount.toString()
-                }
-            }
-            AppCurrency.USD -> {
-                when {
-                    amount >= 1_000_000_000 -> String.format(usLocale, "%.1f B", amount / 1_000_000_000.0)
-                    amount >= 1_000_000 -> String.format(usLocale, "%.1f M", amount / 1_000_000.0)
-                    amount >= 1_000 -> String.format(usLocale, "%.0f K", amount / 1_000.0)
-                    else -> amount.toString()
-                }
-            }
-        }
-    }
+    fun formatCompact(amount: Long, currency: AppCurrency = activeCurrency): String =
+        com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter.formatCompact(amount, currency)
 }

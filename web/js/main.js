@@ -43,8 +43,9 @@ if ("IntersectionObserver" in window && reveals.length) {
 }
 
 
-// Download — direct to GitHub Release latest, fallback toast
-const DL_URL = "https://github.com/Udean777/Bareuang/releases/latest/download/Bareuang-latest.apk";
+// Download — via same-origin /api/download proxy (fix stuck 100% & rate-limit)
+const DL_URL = "/api/download";
+const GH_FALLBACK = "https://github.com/Udean777/Bareuang/releases/latest";
 const toastEl = document.getElementById("toast");
 let toastTimer;
 function showToast(msg){
@@ -54,25 +55,20 @@ function showToast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> toastEl.classList.remove("show"), 3500);
 }
-const DL_API = "https://api.github.com/repos/Udean777/Bareuang/releases/latest";
 for(const a of document.querySelectorAll("a.js-download")){
   a.setAttribute("href", DL_URL);
-  a.addEventListener("click", async (e)=>{
-    // Let browser handle direct download first; verify via API in background
-    // If API fails, show friendly toast but still allow navigation
-    e.preventDefault();
-    const lang = document.documentElement.lang === "en" ? "en" : "id";
-    const errMsg = lang==="en" ? "Download unavailable — please try again later or visit GitHub Releases." : "Download belum tersedia — coba lagi nanti atau cek di GitHub Releases.";
-    try{
-      const r = await fetch(DL_API, {headers:{Accept:"application/vnd.github+json"}});
-      if(!r.ok) throw new Error("no release");
-      const j = await r.json();
-      const hasAsset = (j.assets||[]).some(x=> x.name==="Bareuang-latest.apk");
-      if(!hasAsset) throw new Error("no asset");
-      window.location.href = DL_URL;
-    }catch{
-      showToast(errMsg);
-    }
+  a.setAttribute("download", "Bareuang-latest.apk");
+  // ponytail: biarkan native <a download> handle, tanpa preventDefault/await → keep user gesture
+  a.addEventListener("click", ()=>{
+    // fire-and-forget HEAD check — tidak block download, hanya toast jika 404
+    fetch(DL_URL, {method:"HEAD"}).then(r=>{
+      if(!r.ok) {
+        const lang = document.documentElement.lang === "en" ? "en" : "id";
+        showToast(lang==="en" ? "Download unavailable — try GitHub Releases." : "Download belum tersedia — coba di GitHub Releases.");
+        // fallback buka releases page
+        setTimeout(()=> window.open(GH_FALLBACK, "_blank", "noopener"), 800);
+      }
+    }).catch(()=>{});
   });
 }
 

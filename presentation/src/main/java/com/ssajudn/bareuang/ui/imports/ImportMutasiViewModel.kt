@@ -158,7 +158,7 @@ class ImportMutasiViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isImporting = true)
             _operation.value = OperationState.Loading
-            val res = bulkCreate(_uiState.value.drafts, walletId)
+            val res = bulkCreate(_uiState.value.drafts, walletId, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency())
             res.onSuccess { count ->
                 importPrefs.increment(count)
                 android.util.Log.d("Import", "import success $count, total ${importPrefs.importCount.value}")

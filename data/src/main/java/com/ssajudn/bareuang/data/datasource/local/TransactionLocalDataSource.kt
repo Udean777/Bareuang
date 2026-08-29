@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -24,7 +25,8 @@ import javax.inject.Singleton
 class TransactionLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager
+    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager,
+    private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) {
 
     suspend fun getTransactions(category: String?, page: Int, limit: Int): Result<List<Transaction>> =
@@ -59,13 +61,15 @@ class TransactionLocalDataSource @Inject constructor(
                     val w = db.walletDao().getWalletById(request.walletId!!)
                         ?: return@withContext Result.failure(IllegalArgumentException("Dompet tidak ditemukan"))
                     if (w.balance < request.amount) {
-                        return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup. Saldo: ${w.balance}, dibutuhkan: ${request.amount}"))
+                        val cur = currencyPreferences.getCurrency()
+                        return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(w.balance, cur)}, dibutuhkan: ${DomainCurrencyFormatter.format(request.amount, cur)}"))
                     }
                 } else if (request.type == TransactionType.TRANSFER) {
                     val w = db.walletDao().getWalletById(request.walletId!!)
                         ?: return@withContext Result.failure(IllegalArgumentException("Dompet asal tidak ditemukan"))
                     if (w.balance < request.amount) {
-                        return@withContext Result.failure(IllegalStateException("Saldo dompet asal tidak cukup"))
+                        val cur = currencyPreferences.getCurrency()
+                        return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(w.balance, cur)}, dibutuhkan: ${DomainCurrencyFormatter.format(request.amount, cur)}"))
                     }
                 }
                 val dateStr = request.date.ifBlank {
@@ -114,7 +118,10 @@ class TransactionLocalDataSource @Inject constructor(
                     if (req.walletId.isNullOrBlank()) throw IllegalArgumentException("Dompet wajib dipilih")
                     if (req.type == TransactionType.EXPENSE) {
                         val w = db.walletDao().getWalletById(req.walletId!!) ?: throw IllegalArgumentException("Dompet tidak ditemukan")
-                        if (w.balance < req.amount) throw IllegalStateException("Saldo dompet tidak cukup")
+                        if (w.balance < req.amount) {
+                            val cur = currencyPreferences.getCurrency()
+                            throw IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(w.balance, cur)}, dibutuhkan: ${DomainCurrencyFormatter.format(req.amount, cur)}")
+                        }
                     }
                     val dateStr = req.date.ifBlank { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date()) }
                     val isRecurring = req.recurringInterval != com.ssajudn.bareuang.domain.model.RecurringInterval.NONE

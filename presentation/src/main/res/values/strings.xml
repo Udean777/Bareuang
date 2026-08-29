@@ -457,7 +457,12 @@
     <string name="tx_error_same_wallet">Source and destination wallet must not be the same</string>
     <string name="tx_error_insufficient_balance">Insufficient wallet balance (%1$s)</string>
     <string name="tx_error_budget_required">Please set this month\'s budget first</string>
+    <string name="tx_error_daily_exceeded">Daily budget exceeded. Try again tomorrow.</string>
     <string name="tx_error_save_failed">Failed to save transaction</string>
+    <!-- Daily budget -->
+    <string name="dashboard_daily_title">Daily Budget</string>
+    <string name="dashboard_daily_remaining">Remaining today: %1$s</string>
+    <string name="dashboard_daily_used">Used %1$s / %2$s</string>
     <string name="bills_error_insufficient">Insufficient balance to pay this bill</string>
     <!-- Settings backup/restore -->
     <string name="settings_backup_success_msg">Backup successfully exported to file! Keep this file to restore anytime.</string>

@@ -9,6 +9,7 @@ import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
+import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
 import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
 import com.ssajudn.bareuang.utils.DateUtils
 import com.ssajudn.bareuang.domain.error.AppException
@@ -57,7 +58,8 @@ class AddTransactionViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
-    private val hasMonthlyBudget: HasMonthlyBudgetUseCase
+    private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
+    private val checkDailyBudget: CheckDailyBudgetUseCase
 ) : ViewModel() {
     private val _operation = kotlinx.coroutines.flow.MutableStateFlow<OperationState>(OperationState.Idle)
     val operation: kotlinx.coroutines.flow.StateFlow<OperationState> = _operation.asStateFlow()
@@ -284,6 +286,20 @@ class AddTransactionViewModel @Inject constructor(
                 _effect.send(UiEffect.ShowSnackbarRes(ui))
                 _effect.send(UiEffect.Navigate(com.ssajudn.bareuang.ui.navigation.Screen.Budget.route))
                 return@launch
+            }
+
+            // ponytail: daily budget blokir — hanya EXPENSE dan tanggal hari ini
+            if (state.transactionType == TransactionType.EXPENSE) {
+                val dailyCheck = checkDailyBudget(state.parsedAmount, state.date, CurrencyFormatter.getActiveCurrency())
+                if (dailyCheck.isFailure) {
+                    val msg = dailyCheck.exceptionOrNull()?.message ?: ""
+                    val e = AddTransactionError.DAILY_BUDGET_EXCEEDED
+                    val ui = UiText.Dyn(msg.ifBlank { "Jatah harian habis. Coba lagi besok." })
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg, validationError = e)
+                    _operation.value = OperationState.Error(msg, ui)
+                    _effect.send(UiEffect.ShowSnackbarRes(ui))
+                    return@launch
+                }
             }
 
             val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: ""
