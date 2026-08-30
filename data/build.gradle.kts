@@ -9,8 +9,16 @@ android {
     compileSdk = 36
     defaultConfig { minSdk = 26 }
     buildTypes {
-        debug { buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\""); buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"") }
-        release { buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\""); buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"") }
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "PARSE_RECEIPT_URL", "\"http://10.0.2.2:3000/api/parse-receipt\"")
+            buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"")
+        }
+        release {
+            buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\"")
+            buildConfigField("String", "PARSE_RECEIPT_URL", "\"https://bareuang.vercel.app/api/parse-receipt\"")
+            buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -41,7 +49,8 @@ dependencies {
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
-    implementation(libs.google.mlkit.text.recognition)
+    implementation(libs.okhttp)
+    implementation(libs.google.gson)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
