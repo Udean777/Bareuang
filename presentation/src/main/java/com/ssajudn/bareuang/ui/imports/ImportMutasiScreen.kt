@@ -167,6 +167,25 @@ fun ImportMutasiScreen(
             }
         }
     }
+
+    // Soft daily-budget nudge: confirm before importing drafts over today's allowance.
+    if (uiState.pendingDailyOverride) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDailyOverrideImport() },
+            title = { Text("Jatah harian terlampaui") },
+            text = { Text("Beberapa transaksi melebihi jatah harian hari ini. Tetap impor?") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmDailyOverrideImport { onNavigateBack() } }) {
+                    Text("Tetap impor")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissDailyOverrideImport() }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

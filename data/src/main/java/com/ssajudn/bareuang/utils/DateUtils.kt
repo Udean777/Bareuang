@@ -30,6 +30,8 @@ object DateUtils {
     private fun parseLocalDate(isoDate: String): LocalDate =
         LocalDate.parse(isoDate.substring(0, 10))
 
+    fun parseLocalDateOrNull(isoDate: String): LocalDate? = runCatching { parseLocalDate(isoDate) }.getOrNull()
+
     /**
      * Format "2026-08-19" or ISO timestamp to "19 Agu 2026".
      * Returns the raw input unchanged when unparseable (display-only concern).

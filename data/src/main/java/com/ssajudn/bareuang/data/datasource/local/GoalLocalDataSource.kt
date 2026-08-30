@@ -38,22 +38,38 @@ class GoalLocalDataSource @Inject constructor(
     }
 
     suspend fun createGoal(request: CreateGoalRequest): Result<Goal> = withContext(Dispatchers.IO) {
-        val localGoal = Goal(
-            id = UUID.randomUUID().toString(),
-            name = request.name,
-            targetAmount = request.targetAmount,
-            currentAmount = 0L,
-            targetDate = request.targetDate,
-            colorHex = request.colorHex,
-            notes = request.notes
-        )
-        db.goalDao().insertGoal(LocalGoalEntity.fromGoal(localGoal, isSynced = false).copy(ownerId = sessionManager.userId))
-        Result.success(localGoal)
+        try {
+            if (request.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama target tidak boleh kosong"))
+            if (request.targetAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Target tabungan harus lebih dari 0"))
+            val localGoal = Goal(
+                id = UUID.randomUUID().toString(),
+                name = request.name.trim(),
+                targetAmount = request.targetAmount,
+                currentAmount = 0L,
+                targetDate = request.targetDate,
+                colorHex = request.colorHex,
+                notes = request.notes
+            )
+            db.goalDao().insertGoal(LocalGoalEntity.fromGoal(localGoal, isSynced = false).copy(ownerId = sessionManager.userId))
+            Result.success(localGoal)
+        } catch (e: Exception) {
+            return@withContext Result.failure(ApiErrorParser.fromThrowable(e))
+        }
     }
 
     suspend fun depositToGoal(id: String, amount: Long, walletId: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
+                if (amount == 0L) return@withContext Result.failure(IllegalArgumentException("Jumlah setor/tarik harus lebih dari 0"))
+                if (walletId.isBlank()) return@withContext Result.failure(IllegalArgumentException("Dompet wajib dipilih"))
+                val goal = db.goalDao().getGoalById(id) ?: return@withContext Result.failure(IllegalArgumentException("Target tidak ditemukan"))
+                if (amount < 0 && goal.currentAmount + amount < 0) {
+                    return@withContext Result.failure(IllegalStateException("Saldo tabungan tidak cukup untuk penarikan"))
+                }
+                if (amount > 0) {
+                    val w = db.walletDao().getWalletById(walletId) ?: return@withContext Result.failure(IllegalArgumentException("Dompet tidak ditemukan"))
+                    if (w.balance < amount) return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup"))
+                }
                 val block: () -> Unit = {
                     db.goalDao().depositToGoal(id, amount)
                     val isDeposit = amount > 0
@@ -87,9 +103,11 @@ class GoalLocalDataSource @Inject constructor(
     suspend fun updateGoal(id: String, request: UpdateGoalRequest): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
+                if (request.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama target tidak boleh kosong"))
+                if (request.targetAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Target tabungan harus lebih dari 0"))
                 db.goalDao().updateGoal(
                     id = id,
-                    name = request.name,
+                    name = request.name.trim(),
                     targetAmount = request.targetAmount,
                     targetDate = request.targetDate.ifBlank { null },
                     colorHex = request.colorHex,

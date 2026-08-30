@@ -78,8 +78,6 @@ fun DepositGoalDialog(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
         // Wallet Selector Dropdown
         Text(
             text = if (isWithdraw) stringResource(R.string.goals_wallet_withdraw) else stringResource(R.string.goals_wallet_deposit),
@@ -94,8 +92,6 @@ fun DepositGoalDialog(
             emptyText = stringResource(R.string.goals_wallet_choose),
             onSelected = { selectedWallet = it }
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         AmountTextField(
             value = rawAmount,

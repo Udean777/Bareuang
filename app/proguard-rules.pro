@@ -34,9 +34,11 @@
 
 # WorkManager + Room + Hilt Workers — consumer rules are not enough with optimization=true / full R8
 -keep class androidx.work.** { *; }
--keep class androidx.work.impl.** { *; }
--keep class * extends androidx.room.RoomDatabase { *; }
--keep class * extends androidx.work.impl.WorkDatabase { *; }
+-keep class androidx.work.impl.** { <init>(...); *; }
+-keep class androidx.work.impl.WorkDatabase_Impl { <init>(...); *; }
+-keep class androidx.work.impl.WorkDatabase { <init>(...); *; }
+-keep class * extends androidx.room.RoomDatabase { <init>(...); *; }
+-keep class * extends androidx.work.impl.WorkDatabase { <init>(...); *; }
 -keep class com.ssajudn.bareuang.data.local.room.** { *; }
 -keep class com.ssajudn.bareuang.BareuangApplication { *; }
 -keep class androidx.work.OverwritingInputMerger { *; }

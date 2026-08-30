@@ -9,6 +9,7 @@ import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
+import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
 import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
 import com.ssajudn.bareuang.utils.DateUtils
 import com.ssajudn.bareuang.domain.error.AppException
@@ -45,7 +46,11 @@ data class AddTransactionUiState(
     val validationError: AddTransactionError? = null,
     val isSuccess: Boolean = false,
     val isBudgetMissing: Boolean = false,
-    val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList()
+    val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList(),
+    // Soft daily-budget nudge: when today's allowance is exceeded we prompt the
+    // user instead of silently blocking, letting them choose to save anyway.
+    val pendingDailyOverride: Boolean = false,
+    val pendingDailyMessage: String? = null
 )
 private fun errorUiText(error: AddTransactionError, arg: String? = null): UiText = when (error) {
     AddTransactionError.INSUFFICIENT_BALANCE -> UiText.Res(error.resId, listOf(arg ?: ""))
@@ -57,7 +62,8 @@ class AddTransactionViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
-    private val hasMonthlyBudget: HasMonthlyBudgetUseCase
+    private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
+    private val checkDailyBudget: CheckDailyBudgetUseCase
 ) : ViewModel() {
     private val _operation = kotlinx.coroutines.flow.MutableStateFlow<OperationState>(OperationState.Idle)
     val operation: kotlinx.coroutines.flow.StateFlow<OperationState> = _operation.asStateFlow()
@@ -210,7 +216,7 @@ class AddTransactionViewModel @Inject constructor(
     }
 
     fun onMerchantChange(merchant: String) {
-        _uiState.value = _uiState.value.copy(merchant = merchant)
+        _uiState.value = _uiState.value.copy(merchant = merchant.take(100))
     }
 
     fun onCategoryChange(category: TransactionCategory) {
@@ -222,7 +228,7 @@ class AddTransactionViewModel @Inject constructor(
     }
 
     fun onNotesChange(notes: String) {
-        _uiState.value = _uiState.value.copy(notes = notes)
+        _uiState.value = _uiState.value.copy(notes = notes.take(500))
     }
 
     fun onRecurringChange(isRecurring: Boolean) {
@@ -286,39 +292,80 @@ class AddTransactionViewModel @Inject constructor(
                 return@launch
             }
 
-            val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: ""
-            val targetWalletName = state.wallets.find { it.id == state.selectedToWalletId }?.name ?: ""
-
-            val defaultMerchant = if (state.transactionType == TransactionType.TRANSFER) {
-                if (sourceWalletName.isNotBlank() && targetWalletName.isNotBlank()) "$sourceWalletName \u2192 $targetWalletName" else state.selectedCategory.displayName
-            } else {
-                state.selectedCategory.displayName
+            if (state.transactionType == TransactionType.EXPENSE) {
+                val dailyCheck = checkDailyBudget(state.parsedAmount, state.date, CurrencyFormatter.getActiveCurrency())
+                if (dailyCheck.isFailure) {
+                    val msg = dailyCheck.exceptionOrNull()?.message ?: ""
+                    // Soft nudge: prompt the user for confirmation instead of blocking outright.
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = msg,
+                        pendingDailyOverride = true,
+                        pendingDailyMessage = msg.ifBlank { null }
+                    )
+                    return@launch
+                }
             }
 
-            val request = CreateTransactionRequest(
-                amount = state.parsedAmount,
-                type = state.transactionType,
-                walletId = state.selectedWalletId,
-                toWalletId = if (state.transactionType == TransactionType.TRANSFER) state.selectedToWalletId else null,
-                category = state.selectedCategory,
-                merchant = state.merchant.ifBlank { defaultMerchant },
-                date = state.date,
-                notes = state.notes,
-                recurringInterval = if (state.isRecurring) state.recurringInterval else com.ssajudn.bareuang.domain.model.RecurringInterval.NONE
-            )
-
-            transactionRepository.createTransaction(request)
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
-                    _operation.value = OperationState.Success()
-                }
-                .onFailure { error ->
-                    android.util.Log.e("AddTx", "save failed", error)
-                    val ui = (error as? AppException)?.toUiText() ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = error.message ?: "", validationError = AddTransactionError.SAVE_FAILED)
-                    _operation.value = OperationState.Error(error.message ?: "", ui)
-                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
-                }
+            performCreate()
         }
+    }
+
+    /** Proceed after the user accepts a daily-budget override prompt. */
+    fun confirmDailyOverride() {
+        _uiState.value = _uiState.value.copy(pendingDailyOverride = false, pendingDailyMessage = null)
+        viewModelScope.launch { performCreate() }
+    }
+
+    /** Cancel a daily-budget override prompt. */
+    fun dismissDailyOverride() {
+        _uiState.value = _uiState.value.copy(
+            pendingDailyOverride = false,
+            pendingDailyMessage = null,
+            isLoading = false,
+            errorMessage = null,
+            validationError = null
+        )
+        _operation.value = OperationState.Idle
+    }
+
+    private suspend fun performCreate() {
+        val state = _uiState.value
+        _uiState.value = state.copy(isLoading = true)
+        _operation.value = OperationState.Loading
+
+        val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: ""
+        val targetWalletName = state.wallets.find { it.id == state.selectedToWalletId }?.name ?: ""
+
+        val defaultMerchant = if (state.transactionType == TransactionType.TRANSFER) {
+            if (sourceWalletName.isNotBlank() && targetWalletName.isNotBlank()) "$sourceWalletName \u2192 $targetWalletName" else state.selectedCategory.displayName
+        } else {
+            state.selectedCategory.displayName
+        }
+
+        val request = CreateTransactionRequest(
+            amount = state.parsedAmount,
+            type = state.transactionType,
+            walletId = state.selectedWalletId,
+            toWalletId = if (state.transactionType == TransactionType.TRANSFER) state.selectedToWalletId else null,
+            category = state.selectedCategory,
+            merchant = state.merchant.ifBlank { defaultMerchant },
+            date = state.date,
+            notes = state.notes,
+            recurringInterval = if (state.isRecurring) state.recurringInterval else com.ssajudn.bareuang.domain.model.RecurringInterval.NONE
+        )
+
+        transactionRepository.createTransaction(request)
+            .onSuccess {
+                _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
+                _operation.value = OperationState.Success()
+            }
+            .onFailure { error ->
+                android.util.Log.e("AddTx", "save failed", error)
+                val ui = (error as? AppException)?.toUiText() ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = error.message ?: "", validationError = AddTransactionError.SAVE_FAILED)
+                _operation.value = OperationState.Error(error.message ?: "", ui)
+                viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
+            }
     }
 }

@@ -1,0 +1,10 @@
+# Vercel
+.vercel
+
+# Env — keep secrets out of git (see .env.example)
+.env
+.env.local
+.env.*.local
+
+# Deps
+node_modules/

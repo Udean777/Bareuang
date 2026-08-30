@@ -193,10 +193,10 @@ fun DueBillFormDialog(
 
         // Custom Provider Input
         if (selectedProvider.isCustom) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             OutlinedTextField(
                 value = customProviderName,
-                onValueChange = { customProviderName = it },
+                onValueChange = { customProviderName = it.take(100) },
                 label = { Text(stringResource(R.string.bills_name_label)) },
                 placeholder = { Text(stringResource(R.string.bills_name_hint)) },
                 singleLine = true,
@@ -204,7 +204,7 @@ fun DueBillFormDialog(
                 colors = bareuangOutlinedTextFieldColors()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             OutlinedButton(
                 onClick = { launcher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth()
@@ -214,8 +214,6 @@ fun DueBillFormDialog(
                 Text(if (customProviderIconUrl != null) stringResource(R.string.bills_change_icon) else stringResource(R.string.bills_upload_icon))
             }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         // Amount Input
         AmountTextField(
@@ -227,8 +225,6 @@ fun DueBillFormDialog(
             label = stringResource(R.string.bills_amount_label),
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         // Due Date Picker Field
         OutlinedTextField(
@@ -247,21 +243,7 @@ fun DueBillFormDialog(
             colors = bareuangOutlinedTextFieldColors()
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Notes Input
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text(stringResource(R.string.bills_notes_label)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = bareuangOutlinedTextFieldColors()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Recurring Switch
+        // Recurring Switch — placed above Notes so the feature is discoverable without scrolling
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -285,10 +267,10 @@ fun DueBillFormDialog(
         }
 
         if (isRecurring) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 listOf(RecurringInterval.WEEKLY, RecurringInterval.MONTHLY, RecurringInterval.YEARLY).forEach { interval ->
                     FilterChip(
@@ -302,13 +284,13 @@ fun DueBillFormDialog(
 
             // Day of week selector when WEEKLY is selected
             if (recurringInterval == RecurringInterval.WEEKLY) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.tx_recurring_on_day),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 val days = listOf(
                     1 to stringResource(R.string.day_mon),
                     2 to stringResource(R.string.day_tue),
@@ -350,7 +332,7 @@ fun DueBillFormDialog(
                     }
                 }
             } else if (recurringInterval == RecurringInterval.MONTHLY) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 val dayOfMonth = DateUtils.getDayOfMonth(dueDateIso)
                 Text(
                     text = stringResource(R.string.tx_recurring_on_date, dayOfMonth),
@@ -359,5 +341,15 @@ fun DueBillFormDialog(
                 )
             }
         }
+
+        // Notes Input (optional, last)
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it.take(500) },
+            label = { Text(stringResource(R.string.bills_notes_label)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            colors = bareuangOutlinedTextFieldColors()
+        )
     }
 }

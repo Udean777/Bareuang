@@ -61,6 +61,7 @@ import com.ssajudn.bareuang.ui.transaction.TransactionDetailScreen
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.collectAsState
 import com.ssajudn.bareuang.presentation.R
 
 sealed class Screen(val route: String) {
@@ -149,8 +150,12 @@ fun AppNavigation(
     val showNavigationBar = currentRoute in TopLevelRoutes && currentRoute != Screen.Transfer.route
     val topLevelDestinations = rememberTopLevelDestinations()
 
-    var requestAddBill by remember { mutableStateOf(false) }
-    var requestAddGoal by remember { mutableStateOf(false) }
+    var showFabBillDialog by remember { mutableStateOf(false) }
+    var showFabGoalDialog by remember { mutableStateOf(false) }
+
+    // FAB overlay dialogs — own VMs so they work from any route without navigating
+    val fabDueBillsViewModel: com.ssajudn.bareuang.ui.bills.DueBillsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val fabGoalsViewModel: com.ssajudn.bareuang.ui.goals.GoalsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 
     // ---- Tour guide state (hoisted here so the overlay covers FAB + bottom bar too) ----
     val tourViewModel: com.ssajudn.bareuang.ui.tour.TourViewModel = androidx.hilt.navigation.compose.hiltViewModel()
@@ -253,10 +258,14 @@ fun AppNavigation(
                     isSpeedDialExpanded = false
                 }
 
+                val networkVm: com.ssajudn.bareuang.utils.NetworkMonitorViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                val isOnline by networkVm.observeIsOnline().collectAsState(initial = networkVm.isOnline())
+
                 val speedDialItems = listOf(
                     SpeedDialItem(
                         label = stringResource(R.string.fab_menu_scan),
                         icon = Icons.Filled.DocumentScanner,
+                        enabled = isOnline,
                         onClick = {
                             navController.navigate(Screen.OcrScan.route)
                         }
@@ -271,32 +280,12 @@ fun AppNavigation(
                     SpeedDialItem(
                         label = stringResource(R.string.fab_menu_bill),
                         icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                        onClick = {
-                            if (currentRoute == Screen.DueBills.route) {
-                                requestAddBill = true
-                            } else {
-                                navController.navigate(Screen.DueBills.route) {
-                                    popUpTo(Screen.Dashboard.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        }
+                        onClick = { showFabBillDialog = true }
                     ),
                     SpeedDialItem(
                         label = stringResource(R.string.fab_menu_goal),
                         icon = Icons.Default.Savings,
-                        onClick = {
-                            if (currentRoute == Screen.Goals.route) {
-                                requestAddGoal = true
-                            } else {
-                                navController.navigate(Screen.Goals.route) {
-                                    popUpTo(Screen.Dashboard.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        }
+                        onClick = { showFabGoalDialog = true }
                     )
                 )
 
@@ -452,13 +441,8 @@ fun AppNavigation(
             }
 
             composable(Screen.DueBills.route) {
-                val autoOpenAddBill = requestAddBill
-                androidx.compose.runtime.LaunchedEffect(autoOpenAddBill) {
-                    if (autoOpenAddBill) requestAddBill = false
-                }
                 DueBillsScreen(
                     onNavigateBack = null,
-                    autoOpenAddBill = autoOpenAddBill
                 )
             }
 
@@ -498,13 +482,7 @@ fun AppNavigation(
             }
 
             composable(Screen.Goals.route) {
-                val autoOpenAddGoal = requestAddGoal
-                androidx.compose.runtime.LaunchedEffect(autoOpenAddGoal) {
-                    if (autoOpenAddGoal) requestAddGoal = false
-                }
-                GoalsScreen(
-                    autoOpenAddGoal = autoOpenAddGoal
-                )
+                GoalsScreen()
             }
 
             composable(Screen.Budget.route) {
@@ -533,6 +511,25 @@ fun AppNavigation(
             }
         }
     }
+
+        if (showFabBillDialog) {
+            com.ssajudn.bareuang.ui.bills.DueBillFormDialog(
+                onDismiss = { showFabBillDialog = false },
+                onConfirm = { provider, iconUrl, amount, dueDate, isRecurring, interval, notes ->
+                    fabDueBillsViewModel.addDueBill(provider, iconUrl, amount, dueDate, isRecurring, interval, notes)
+                    showFabBillDialog = false
+                }
+            )
+        }
+        if (showFabGoalDialog) {
+            com.ssajudn.bareuang.ui.goals.GoalFormDialog(
+                onDismiss = { showFabGoalDialog = false },
+                onConfirm = { name, targetAmount, targetDate, colorHex, notes ->
+                    fabGoalsViewModel.addGoal(name, targetAmount, targetDate, colorHex, notes)
+                    showFabGoalDialog = false
+                }
+            )
+        }
 
         com.ssajudn.bareuang.ui.tour.TourOverlay(
             step = currentTourStep,

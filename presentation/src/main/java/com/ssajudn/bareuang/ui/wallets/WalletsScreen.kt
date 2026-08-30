@@ -371,7 +371,7 @@ fun WalletFormDialog(
     ) {
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { name = it.take(100) },
             label = { Text(stringResource(R.string.wallets_name_label)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -384,7 +384,7 @@ fun WalletFormDialog(
                 value = balanceStr,
                 onValueChange = { newValue ->
                     val cleanString = newValue.replace("[^\\d]".toRegex(), "")
-                    if (cleanString.length <= 15) {
+                    if (cleanString.length <= 12) {
                         balanceStr = cleanString
                     }
                 },

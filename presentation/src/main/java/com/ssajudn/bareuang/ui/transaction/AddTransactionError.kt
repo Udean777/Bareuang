@@ -10,5 +10,6 @@ enum class AddTransactionError(@StringRes val resId: Int) {
     SAME_WALLET(R.string.tx_error_same_wallet),
     INSUFFICIENT_BALANCE(R.string.tx_error_insufficient_balance),
     BUDGET_REQUIRED(R.string.tx_error_budget_required),
+    DAILY_BUDGET_EXCEEDED(R.string.tx_error_daily_exceeded),
     SAVE_FAILED(R.string.tx_error_save_failed)
 }

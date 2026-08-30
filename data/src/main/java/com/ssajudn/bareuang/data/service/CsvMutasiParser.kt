@@ -15,8 +15,11 @@ class CsvMutasiParser @Inject constructor() {
     fun parse(csvText: String): List<ImportDraft> = parseWithStats(csvText).first
 
     fun parseWithStats(csvText: String): Pair<List<ImportDraft>, Int> {
+        // Guard: reject > 5MB or > 5000 lines (prevent OOM)
+        if (csvText.length > 5 * 1024 * 1024) return emptyList<ImportDraft>() to 0
         val lines = csvText.lines().map { it.trim() }.filter { it.isNotEmpty() }
         if (lines.isEmpty()) return emptyList<ImportDraft>() to 0
+        if (lines.size > 5000) return emptyList<ImportDraft>() to 0
 
         val delimiter = detectDelimiter(lines.first())
         val headerIndices = detectHeaderIndices(lines.first(), delimiter)

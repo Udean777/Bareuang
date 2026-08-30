@@ -62,9 +62,11 @@ class WalletLocalDataSource @Inject constructor(
 
     suspend fun createWallet(request: CreateWalletRequest): Result<Wallet> = withContext(Dispatchers.IO) {
         try {
+            if (request.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama dompet tidak boleh kosong"))
+            if (request.balance < 0) return@withContext Result.failure(IllegalArgumentException("Saldo tidak boleh negatif"))
             val wallet = Wallet(
                 id = UUID.randomUUID().toString(),
-                name = request.name,
+                name = request.name.trim(),
                 balance = request.balance,
                 colorHex = request.colorHex,
                 iconName = request.iconName
@@ -79,10 +81,11 @@ class WalletLocalDataSource @Inject constructor(
 
     suspend fun updateWallet(wallet: Wallet): Result<Unit> = withContext(Dispatchers.IO) {
         try {
+            if (wallet.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama dompet tidak boleh kosong"))
             val existing = db.walletDao().getWalletById(wallet.id!!)
                 ?: return@withContext Result.failure(Exception("Dompet tidak ditemukan"))
             db.walletDao().insertWallet(
-                existing.copy(name = wallet.name, colorHex = wallet.colorHex, isSynced = false)
+                existing.copy(name = wallet.name.trim(), colorHex = wallet.colorHex, isSynced = false)
             )
             Result.success(Unit)
         } catch (e: Exception) {

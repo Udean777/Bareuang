@@ -24,6 +24,16 @@ sealed class AppException(
         cause: Throwable? = null
     ) : AppException(message, cause)
 
+    /**
+     * Distinct marker for the daily-budget soft nudge: lets callers distinguish
+     * "exceeds today's allowance" from generic data failures so they can offer a
+     * "save anyway" confirmation instead of a hard error.
+     */
+    class DailyBudgetExceededException(
+        message: String? = "Jatah harian terlampaui",
+        cause: Throwable? = null
+    ) : AppException(message, cause)
+
     class SyncException(
         message: String? = "Gagal sinkronisasi",
         cause: Throwable? = null
@@ -42,6 +52,7 @@ fun AppException.userMessage(): String = when (this) {
     is AppException.NetworkException -> message ?: "Koneksi bermasalah"
     is AppException.AuthException -> message ?: "Sesi berakhir"
     is AppException.DataException -> message ?: "Data tidak valid"
+    is AppException.DailyBudgetExceededException -> message ?: "Jatah harian terlampaui"
     is AppException.SyncException -> message ?: "Gagal sinkron"
     is AppException.UnknownError -> message ?: "Terjadi kesalahan"
 }

@@ -6,9 +6,11 @@ import com.ssajudn.bareuang.domain.model.Transaction
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.Wallet
+import com.ssajudn.bareuang.domain.error.AppException
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
+import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
 import com.ssajudn.bareuang.testutil.MainDispatcherRule
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,12 +46,15 @@ class AddTransactionViewModelTest {
     private val walletRepository: WalletRepository = mockk(relaxed = true)
     private val transactionRepository: TransactionRepository = mockk(relaxed = true)
     private val budgetRepository: BudgetRepository = mockk()
+    private val checkDailyBudget: CheckDailyBudgetUseCase = mockk(relaxed = true)
 
     private fun createVm(monthlyBudget: Long = 2_000_000L): AddTransactionViewModel {
         coEvery { budgetRepository.getMonthlyBudget(any()) } returns Result.success(monthlyBudget)
         every { budgetRepository.getCategoryBudgets(any()) } returns kotlinx.coroutines.flow.flowOf(emptyList())
         val hasMonthlyBudget = com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase(budgetRepository)
-        return AddTransactionViewModel(walletRepository, transactionRepository, budgetRepository, hasMonthlyBudget)
+        // Daily-budget gate defaults to allowed; individual tests override as needed.
+        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.success(Unit)
+        return AddTransactionViewModel(walletRepository, transactionRepository, budgetRepository, hasMonthlyBudget, checkDailyBudget)
     }
 
     private fun walletsFixture(): List<Wallet> = listOf(
@@ -424,5 +429,81 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
 
         assertTrue(vm.uiState.value.isBudgetMissing)
+    }
+
+    @Test
+    fun `saveTransaction expense over daily budget shows soft-nudge prompt and does not save yet`() = runTest {
+        coEvery { walletRepository.getWallets() } returns Result.success(walletsFixture())
+
+        val vm = createVm()
+        advanceUntilIdle()
+
+        // Override the default pass-through stub: today's remaining allowance is less than 50000.
+        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.failure(
+            AppException.DataException("Melebihi jatah harian. Sisa hari ini Rp 10.000.")
+        )
+
+        vm.onAmountChange("50000")
+        vm.saveTransaction()
+        advanceUntilIdle()
+
+        // Soft nudge: not blocked outright — prompts for confirmation instead.
+        assertTrue(vm.uiState.value.pendingDailyOverride)
+        assertEquals("Melebihi jatah harian. Sisa hari ini Rp 10.000.", vm.uiState.value.pendingDailyMessage)
+        assertFalse(vm.uiState.value.isSuccess)
+        coVerify(exactly = 0) { transactionRepository.createTransaction(any()) }
+    }
+
+    @Test
+    fun `confirmDailyOverride saves the transaction after the prompt`() = runTest {
+        coEvery { walletRepository.getWallets() } returns Result.success(walletsFixture())
+        coEvery {
+            transactionRepository.createTransaction(any<CreateTransactionRequest>())
+        } returns Result.success(
+            Transaction(
+                id = "new-tx", amount = 50_000L, type = TransactionType.EXPENSE,
+                category = TransactionCategory.FOOD, merchant = "Test", date = "2026-08-19"
+            )
+        )
+
+        val vm = createVm()
+        advanceUntilIdle()
+
+        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.failure(
+            AppException.DataException("Melebihi jatah harian. Sisa hari ini Rp 10.000.")
+        )
+        vm.onAmountChange("50000")
+        vm.saveTransaction()
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.pendingDailyOverride)
+
+        vm.confirmDailyOverride()
+        advanceUntilIdle()
+
+        assertFalse(vm.uiState.value.pendingDailyOverride)
+        assertTrue(vm.uiState.value.isSuccess)
+        coVerify(exactly = 1) { transactionRepository.createTransaction(any()) }
+    }
+
+    @Test
+    fun `dismissDailyOverride cancels without saving`() = runTest {
+        coEvery { walletRepository.getWallets() } returns Result.success(walletsFixture())
+
+        val vm = createVm()
+        advanceUntilIdle()
+
+        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.failure(
+            AppException.DataException("Melebihi jatah harian. Sisa hari ini Rp 10.000.")
+        )
+        vm.onAmountChange("50000")
+        vm.saveTransaction()
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.pendingDailyOverride)
+
+        vm.dismissDailyOverride()
+
+        assertFalse(vm.uiState.value.pendingDailyOverride)
+        assertFalse(vm.uiState.value.isSuccess)
+        coVerify(exactly = 0) { transactionRepository.createTransaction(any()) }
     }
 }

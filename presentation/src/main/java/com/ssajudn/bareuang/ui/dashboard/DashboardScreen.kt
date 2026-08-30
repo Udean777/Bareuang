@@ -256,7 +256,11 @@ fun DashboardContent(
                 estimatedDeathDay = summary.estimatedDeathDay,
                 daysInMonth = summary.daysInMonth,
                 message = summary.runwayMessage,
-                onSetBudgetClick = onSetBudgetClick
+                onSetBudgetClick = onSetBudgetClick,
+                dailyAllowance = summary.dailyAllowance,
+                todaySpent = summary.todaySpent,
+                remainingToday = summary.remainingToday,
+                remainingDays = summary.remainingDays
             )
         }
 

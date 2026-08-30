@@ -69,42 +69,47 @@ class BackupRestoreManager @Inject constructor(
 
     suspend fun importBackupFromUri(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val stringBuilder = java.lang.StringBuilder()
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    var line: String? = reader.readLine()
-                    while (line != null) {
-                        stringBuilder.append(line)
-                        line = reader.readLine()
-                    }
-                }
+            // Guard size: reject > 5MB (prevent OOM)
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                if (pfd.statSize > 5 * 1024 * 1024) return@withContext Result.failure(AppException.DataException("File backup terlalu besar (maks 5MB)"))
+            }
+            val raw = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                val bytes = inputStream.readBytes()
+                if (bytes.size > 5 * 1024 * 1024) return@withContext Result.failure(AppException.DataException("File backup terlalu besar (maks 5MB)"))
+                String(bytes, Charsets.UTF_8)
             } ?: return@withContext Result.failure(AppException.DataException("Cannot open file for reading"))
 
-            val backup = gson.fromJson(stringBuilder.toString(), BareuangBackupData::class.java)
+            val backup = gson.fromJson(raw, BareuangBackupData::class.java)
                 ?: return@withContext Result.failure(AppException.DataException("Invalid backup format"))
+            if (backup.version != 1) return@withContext Result.failure(AppException.DataException("Versi backup tidak didukung"))
+            // Light sanitize before insert (reject negatives / blank names)
+            val sanitizedWallets = backup.wallets.filter { it.name.isNotBlank() && it.balance >= 0 }
 
             var totalRestored = 0
 
+            val sanitizedTx = backup.transactions.filter { it.amount > 0 }
+            val sanitizedBills = backup.dueBills.filter { it.providerName.isNotBlank() && it.totalAmount > 0 }
+            val sanitizedGoals = backup.goals.filter { it.name.isNotBlank() && it.targetAmount > 0 }
             db.withTransaction {
-                if (backup.wallets.isNotEmpty()) {
-                    db.walletDao().insertWallets(backup.wallets)
-                    totalRestored += backup.wallets.size
+                if (sanitizedWallets.isNotEmpty()) {
+                    db.walletDao().insertWallets(sanitizedWallets)
+                    totalRestored += sanitizedWallets.size
                 }
-                if (backup.transactions.isNotEmpty()) {
-                    db.transactionDao().insertTransactions(backup.transactions)
-                    totalRestored += backup.transactions.size
+                if (sanitizedTx.isNotEmpty()) {
+                    db.transactionDao().insertTransactions(sanitizedTx)
+                    totalRestored += sanitizedTx.size
                 }
-                if (backup.dueBills.isNotEmpty()) {
-                    db.dueBillDao().insertDueBills(backup.dueBills)
-                    totalRestored += backup.dueBills.size
+                if (sanitizedBills.isNotEmpty()) {
+                    db.dueBillDao().insertDueBills(sanitizedBills)
+                    totalRestored += sanitizedBills.size
                 }
                 if (backup.budgets.isNotEmpty()) {
                     db.budgetDao().insertBudgets(backup.budgets)
                     totalRestored += backup.budgets.size
                 }
-                if (backup.goals.isNotEmpty()) {
-                    db.goalDao().insertGoals(backup.goals)
-                    totalRestored += backup.goals.size
+                if (sanitizedGoals.isNotEmpty()) {
+                    db.goalDao().insertGoals(sanitizedGoals)
+                    totalRestored += sanitizedGoals.size
                 }
             }
 

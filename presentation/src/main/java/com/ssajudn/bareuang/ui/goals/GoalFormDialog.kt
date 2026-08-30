@@ -62,15 +62,13 @@ fun GoalFormDialog(
     ) {
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { name = it.take(100) },
             label = { Text(stringResource(R.string.goals_name_label)) },
             placeholder = { Text(stringResource(R.string.goals_name_hint)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             colors = bareuangOutlinedTextFieldColors()
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         AmountTextField(
             value = rawAmount,
@@ -81,8 +79,6 @@ fun GoalFormDialog(
             label = stringResource(R.string.goals_amount_label),
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = if (targetDateIso.isNotBlank()) DateUtils.formatDisplayDate(targetDateIso) else "",
@@ -101,18 +97,14 @@ fun GoalFormDialog(
             colors = bareuangOutlinedTextFieldColors()
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
         GoalColorRow(
             selectedColorHex = selectedColorHex,
             onSelectColor = { selectedColorHex = it }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
         OutlinedTextField(
             value = notes,
-            onValueChange = { notes = it },
+            onValueChange = { notes = it.take(500) },
             label = { Text(stringResource(R.string.goals_notes_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),

@@ -76,8 +76,6 @@ fun PayDueBillDialog(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
         Text(
             text = stringResource(R.string.bills_wallet_choose),
             style = MaterialTheme.typography.labelMedium,

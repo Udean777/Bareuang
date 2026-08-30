@@ -12,6 +12,7 @@ import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.UpdateDueBillRequest
 import com.ssajudn.bareuang.data.service.WalletBalanceService
 import com.ssajudn.bareuang.domain.repository.DueBillRepository
+import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import com.ssajudn.bareuang.utils.DateUtils
 import com.ssajudn.bareuang.data.error.ApiErrorParser
 import androidx.room.withTransaction
@@ -27,7 +28,8 @@ import javax.inject.Singleton
 class DueBillLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager
+    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager,
+    private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) {
 
     suspend fun getDueBills(status: String?): Result<List<DueBill>> = withContext(Dispatchers.IO) {
@@ -45,9 +47,11 @@ class DueBillLocalDataSource @Inject constructor(
 
     suspend fun createDueBill(request: CreateDueBillRequest): Result<DueBill> = withContext(Dispatchers.IO) {
         try {
+            if (request.providerName.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama provider tidak boleh kosong"))
+            if (request.totalAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Jumlah tagihan harus lebih dari 0"))
             val newBill = DueBill(
                 id = UUID.randomUUID().toString(),
-                providerName = request.providerName,
+                providerName = request.providerName.trim(),
                 providerIconUrl = request.providerIconUrl,
                 totalAmount = request.totalAmount,
                 dueDate = request.dueDate,
@@ -66,9 +70,11 @@ class DueBillLocalDataSource @Inject constructor(
     suspend fun updateDueBill(id: String, request: UpdateDueBillRequest): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
+                if (request.providerName.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama provider tidak boleh kosong"))
+                if (request.totalAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Jumlah tagihan harus lebih dari 0"))
                 db.dueBillDao().updateDueBill(
                     id = id,
-                    providerName = request.providerName,
+                    providerName = request.providerName.trim(),
                     providerIconUrl = request.providerIconUrl,
                     totalAmount = request.totalAmount,
                     dueDate = request.dueDate,
@@ -94,7 +100,8 @@ class DueBillLocalDataSource @Inject constructor(
                             val wallet = db.walletDao().getWalletById(walletId)
                                 ?: throw IllegalArgumentException("Dompet tidak ditemukan")
                             if (wallet.balance < bill.totalAmount) {
-                                throw IllegalStateException("Saldo dompet tidak cukup. Saldo: ${wallet.balance}, tagihan: ${bill.totalAmount}")
+                                val cur = currencyPreferences.getCurrency()
+                                throw IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(wallet.balance, cur)}, tagihan: ${DomainCurrencyFormatter.format(bill.totalAmount, cur)}")
                             }
                         }
                         newPaidWalletId = walletId

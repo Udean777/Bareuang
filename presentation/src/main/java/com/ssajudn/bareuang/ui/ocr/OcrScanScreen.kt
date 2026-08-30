@@ -135,8 +135,32 @@ fun OcrScanScreen(
                 }
             }
 
+            if (!uiState.isOnline) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Tidak ada koneksi internet. Scan struk membutuhkan internet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                Button(onClick = ::launchCamera, modifier = Modifier.weight(1f)) {
+                Button(
+                    onClick = ::launchCamera,
+                    enabled = uiState.isOnline && !uiState.isProcessing,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(Icons.Default.CameraAlt, null); Spacer(Modifier.width(8.dp)); Text("Kamera")
                 }
                 OutlinedButton(
@@ -147,6 +171,7 @@ fun OcrScanScreen(
                             )
                         )
                     },
+                    enabled = uiState.isOnline && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text("Galeri")
@@ -155,7 +180,7 @@ fun OcrScanScreen(
 
             if (uiState.isProcessing) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text("Memproses OCR...", style = MaterialTheme.typography.bodySmall)
+                Text("Memproses dengan AI...", style = MaterialTheme.typography.bodySmall)
             }
 
             if (uiState.rawText == null && !uiState.isProcessing) {
@@ -186,8 +211,8 @@ fun OcrScanScreen(
                                 Text("Tips scan struk", style = MaterialTheme.typography.titleSmall)
                                 Text("• Foto struk dengan cahaya cukup, teks tidak blur", style = MaterialTheme.typography.bodySmall)
                                 Text("• Pastikan baris TOTAL / JUMLAH terlihat", style = MaterialTheme.typography.bodySmall)
-                                Text("• Hasil OCR bisa diedit sebelum disimpan", style = MaterialTheme.typography.bodySmall)
-                                Text("• 100% offline — ML Kit on-device", style = MaterialTheme.typography.bodySmall)
+                                Text("• Hasil AI bisa diedit sebelum disimpan", style = MaterialTheme.typography.bodySmall)
+                                Text("• Membutuhkan koneksi internet", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -243,35 +268,7 @@ fun OcrScanScreen(
                         TextButton(onClick = { showDatePicker = true }) { Text("Ubah") }
                     }
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(onClick = { viewModel.reset() }, modifier = Modifier.weight(1f)) { Text("Scan ulang") }
-                    var showEditDialog by remember { mutableStateOf(false) }
-                    OutlinedButton(onClick = { showEditDialog = true }, modifier = Modifier.weight(1f)) { Text("Perbaiki teks") }
-                    if (showEditDialog) {
-                        var edited by remember { mutableStateOf(uiState.rawText!!) }
-                        AlertDialog(
-                            onDismissRequest = { showEditDialog = false },
-                            title = { Text("Perbaiki susunan teks") },
-                            text = {
-                                OutlinedTextField(
-                                    value = edited,
-                                    onValueChange = { edited = it },
-                                    modifier = Modifier.fillMaxWidth().height(300.dp),
-                                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                                )
-                            },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    viewModel.onRawTextEdited(edited)
-                                    showEditDialog = false
-                                }) { Text("Simpan") }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showEditDialog = false }) { Text("Batal") }
-                            }
-                        )
-                    }
-                }
+                OutlinedButton(onClick = { viewModel.reset() }, modifier = Modifier.fillMaxWidth()) { Text("Scan ulang") }
 
                 ReceiptPaperCard(
                     rawText = uiState.rawText!!,
@@ -280,6 +277,25 @@ fun OcrScanScreen(
                 )
             }
         }
+    }
+
+    // Soft daily-budget nudge: confirm before saving a receipt over today's allowance.
+    if (uiState.pendingDailyOverride) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDailyOverride() },
+            title = { Text("Jatah harian terlampaui") },
+            text = { Text(uiState.pendingDailyMessage ?: "Jatah harian habis. Tetap simpan?") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmDailyOverride { onNavigateBack() } }) {
+                    Text("Tetap simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissDailyOverride() }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }
 
@@ -409,7 +425,7 @@ private fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
         }
         // Caption outside paper
         Text(
-            text = "Preview struk • hasil OCR dapat diedit di atas",
+            text = "Preview struk • hasil AI dapat diedit di atas",
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelSmall,

@@ -391,6 +391,11 @@
     <string name="tx_error_insufficient_balance">Saldo dompet tidak cukup (%1$s)</string>
     <string name="tx_error_budget_required">Setup anggaran bulan ini terlebih dahulu</string>
     <string name="tx_error_save_failed">Gagal menyimpan transaksi</string>
+    <!-- Soft nudge daily budget + pacing -->
+    <string name="tx_daily_override_title">Jatah harian terlampaui</string>
+    <string name="tx_daily_override_confirm">Tetap simpan</string>
+    <string name="budget_daily_pacing_desc">Pacing harian: %1$s per hari (budget bulanan ÷ jumlah hari).</string>
+    <string name="tx_category_overspent_warning">Jumlah ini melebihi sisa %1$s untuk budget kategori %2$s.</string>
     <string name="split_person_me">Saya</string>
     <string name="bills_provider_custom">Lainnya (Custom)</string>
     <string name="widget_empty">Buka Bareuang untuk memuat data</string>

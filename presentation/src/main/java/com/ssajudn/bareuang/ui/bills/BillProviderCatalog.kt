@@ -79,10 +79,15 @@ object BillProviderCatalog {
      */
     fun persistPickedImage(context: Context, uri: android.net.Uri): String? {
         return try {
+            val mime = context.contentResolver.getType(uri) ?: ""
+            if (mime.isNotBlank() && !mime.startsWith("image/")) return null
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                if (pfd.statSize > 5 * 1024 * 1024) return null
+            }
             val input = context.contentResolver.openInputStream(uri) ?: return null
             val dir = java.io.File(context.filesDir, "duebill_icons").apply { mkdirs() }
-            val mime = context.contentResolver.getType(uri)
-            val ext = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mime) ?: "jpg"
+            val ext = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.takeIf { it.isNotBlank() } ?: "jpg"
+            if (ext !in setOf("jpg","jpeg","png","webp","gif")) return null
             val file = java.io.File(dir, "duebill_${System.currentTimeMillis()}_${java.util.UUID.randomUUID()}.$ext")
             file.outputStream().use { input.copyTo(it) }
             input.close()

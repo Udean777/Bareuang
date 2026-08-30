@@ -70,6 +70,10 @@ fun FinancialRunwayCard(
     message: String,
     modifier: Modifier = Modifier,
     onSetBudgetClick: () -> Unit = {},
+    dailyAllowance: Long = 0L,
+    todaySpent: Long = 0L,
+    remainingToday: Long = 0L,
+    remainingDays: Int = 0,
 ) {
     val isDanger = remainingBudget <= 0 || estimatedDeathDay < daysInMonth
     val containerColor = if (isDanger) {
@@ -247,6 +251,58 @@ fun FinancialRunwayCard(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
                     color = contentColor
                 )
+            }
+
+            if (totalBudget > 0 && dailyAllowance >= 0) {
+                Spacer(Modifier.height(12.dp))
+                val dailyProgress = if (dailyAllowance > 0) (todaySpent.toFloat() / dailyAllowance).coerceIn(0f, 1f) else 0f
+                val dailyExceeded = remainingToday < 0
+                Surface(
+                    shape = AppShapes.Squircle,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.dashboard_daily_title),
+                                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp, fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = if (dailyExceeded) stringResource(R.string.tx_error_daily_exceeded)
+                                else stringResource(R.string.dashboard_daily_remaining, CurrencyFormatter.formatRupiah(remainingToday.coerceAtLeast(0L))),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = if (dailyExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.dashboard_daily_used, CurrencyFormatter.formatRupiah(todaySpent), CurrencyFormatter.formatRupiah(dailyAllowance)),
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        androidx.compose.material3.LinearProgressIndicator(
+                            progress = { dailyProgress },
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                            color = if (dailyExceeded) MaterialTheme.colorScheme.error else accentColor,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        if (remainingDays > 0) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Sisa $remainingDays hari • ${CurrencyFormatter.formatRupiah(dailyAllowance)}/hari",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(12.dp))

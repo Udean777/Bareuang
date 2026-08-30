@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- OCR via AI requires internet; used to gate FAB/scan when offline -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- Local bill due-date reminders (no network involved) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 

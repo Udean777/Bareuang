@@ -41,7 +41,7 @@ fun AppFormDialog(
     confirmButtonContainerColor: Color = MaterialTheme.colorScheme.primary,
     confirmButtonContentColor: Color = contentColorForContainer(confirmButtonContainerColor),
     isConfirmEnabled: Boolean = true,
-    contentSpacing: androidx.compose.ui.unit.Dp = Spacing.Medium,
+    contentSpacing: androidx.compose.ui.unit.Dp = Spacing.Small,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val effConfirm = if (confirmButtonText.isEmpty()) stringResource(com.ssajudn.bareuang.presentation.R.string.dialog_confirm_save) else confirmButtonText
@@ -68,7 +68,7 @@ fun AppFormDialog(
             tonalElevation = 6.dp
         ) {
             Column(
-                modifier = Modifier.padding(Spacing.Large),
+                modifier = Modifier.padding(Spacing.Medium),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (icon != null) {
@@ -77,30 +77,30 @@ fun AppFormDialog(
                         contentDescription = null,
                         tint = iconTint,
                         modifier = Modifier
-                            .size(32.dp)
-                            .padding(bottom = Spacing.Small)
+                            .size(24.dp)
+                            .padding(bottom = Spacing.ExtraSmall)
                     )
                 }
 
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(Spacing.Large))
+                Spacer(modifier = Modifier.height(Spacing.Medium))
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f, fill = false)
+                        .weight(1f, fill = true)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(contentSpacing),
                     content = content
                 )
 
-                Spacer(modifier = Modifier.height(Spacing.Large))
+                Spacer(modifier = Modifier.height(Spacing.Medium))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

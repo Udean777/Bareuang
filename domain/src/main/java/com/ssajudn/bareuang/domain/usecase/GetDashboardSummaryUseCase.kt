@@ -45,6 +45,12 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val remainingBudget = monthlyBudget - totalSpent
             val avgDaily = if (daysPassed > 0) totalSpent / daysPassed else 0L
 
+            val remainingDays = (daysInMonth - daysPassed + 1).coerceAtLeast(1)
+            val dailyAllowance = if (monthlyBudget > 0) monthlyBudget / daysInMonth else 0L
+            val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now.time)
+            val todaySpent = currentMonthTx.filter { it.date.take(10) == todayIso }.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+            val remainingToday = dailyAllowance - todaySpent
+
             val wallets = walletRepository.getWallets().getOrDefault(emptyList())
             val currentNetWorth = wallets.sumOf { it.balance }
 
@@ -98,7 +104,11 @@ class GetDashboardSummaryUseCase @Inject constructor(
                     .reversed()
                     .sortedByDescending { it.date }
                     .take(5),
-                recurringTransactions = recurringTemplates
+                recurringTransactions = recurringTemplates,
+                dailyAllowance = dailyAllowance,
+                todaySpent = todaySpent,
+                remainingToday = remainingToday,
+                remainingDays = remainingDays
             )
             Result.success(summary)
         } catch (e: Exception) {
