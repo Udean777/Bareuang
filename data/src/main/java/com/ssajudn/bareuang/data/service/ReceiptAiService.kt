@@ -8,6 +8,7 @@ import android.util.Base64
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.ssajudn.bareuang.data.BuildConfig
+import com.ssajudn.bareuang.domain.error.AppException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,6 +17,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,12 +64,11 @@ class ReceiptAiService @Inject constructor(
             val resp = client.newCall(req).execute()
             val bodyStr = resp.body?.string() ?: ""
             if (!resp.isSuccessful) {
-                val err = runCatching { gson.fromJson(bodyStr, ProxyResponse::class.java)?.error }.getOrNull()
-                throw IllegalStateException(err ?: "Gagal memproses struk (${resp.code})")
+                throw AppException.DataException("Gagal memproses struk. Coba lagi.")
             }
             val pr = gson.fromJson(bodyStr, ProxyResponse::class.java)
-                ?: throw IllegalStateException("Respons tidak valid")
-            if (pr.error != null) throw IllegalStateException(pr.error)
+                ?: throw AppException.DataException("Gagal memproses struk. Coba lagi.")
+            if (pr.error != null) throw AppException.DataException("Gagal memproses struk. Coba lagi.")
             // Sanitize client-side (proxy already does, but never trust)
             val allowed = setOf("FOOD","SHOPPING","TRANSPORT","BILLS","ENTERTAINMENT","HEALTH","EDUCATION","SOCIAL","OTHER")
             val cat = pr.category?.trim()?.uppercase() ?: "OTHER"
@@ -81,25 +82,30 @@ class ReceiptAiService @Inject constructor(
             )
         }.recoverCatching { e ->
             android.util.Log.e("ReceiptAiService", "parse failed", e)
-            throw IllegalStateException(e.message ?: "Gagal memproses struk. Cek koneksi internet.")
+            when (e) {
+                is AppException -> throw e
+                is IOException -> throw AppException.NetworkException("Koneksi bermasalah. Cek internet.", e)
+                is IllegalStateException, is IllegalArgumentException -> throw AppException.DataException("Gagal memproses struk. Coba lagi.", e)
+                else -> throw AppException.UnknownError(cause = e)
+            }
         }
     }
 
     private fun encodeImage(uri: Uri): String {
         // Guard size: reject > 5MB before decode (prevent OOM)
         context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
-            if (pfd.statSize > 5 * 1024 * 1024) throw IllegalStateException("Ukuran gambar terlalu besar (maks 5MB)")
+            if (pfd.statSize > 5 * 1024 * 1024) throw AppException.DataException("Ukuran gambar terlalu besar (maks 5MB)")
         }
         val input = context.contentResolver.openInputStream(uri)
-            ?: throw IllegalStateException("Gagal membuka gambar")
+            ?: throw AppException.DataException("Gagal membuka gambar")
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeStream(input, null, opts)
         input.close()
         // Reject absurd dimensions (prevent OOM on decode)
-        if (opts.outWidth > 8000 || opts.outHeight > 8000) throw IllegalStateException("Dimensi gambar terlalu besar")
+        if (opts.outWidth > 8000 || opts.outHeight > 8000) throw AppException.DataException("Dimensi gambar terlalu besar")
         // Re-open for actual decode
         val input2 = context.contentResolver.openInputStream(uri)
-            ?: throw IllegalStateException("Gagal membuka gambar")
+            ?: throw AppException.DataException("Gagal membuka gambar")
         // Downscale to ~1024px max side to keep body < 3MB and reduce cost (vision resizes to 800 anyway)
         val maxSide = 1024
         val sample = run {
@@ -112,7 +118,7 @@ class ReceiptAiService @Inject constructor(
         }
         val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
         var bmp = BitmapFactory.decodeStream(input2, null, decodeOpts)
-            ?: throw IllegalStateException("Gagal decode gambar")
+            ?: throw AppException.DataException("Gagal membuka gambar")
         input2.close()
 
         // Further scale if still > maxSide

@@ -184,7 +184,11 @@ class LocalGoalDueBillTest {
         val txDao = FakeTxDao2()
         val db = fakeDb(walletDao, FakeGoalDao2(), dueBillDao, txDao)
         val sm3 = io.mockk.mockk<com.ssajudn.bareuang.data.local.UserSessionManager>(relaxed = true).apply { io.mockk.every { userId } returns "" }
-        val currencyPrefs3 = io.mockk.mockk<com.ssajudn.bareuang.data.local.CurrencyPreferences>(relaxed = true).apply { io.mockk.every { getCurrency() } returns com.ssajudn.bareuang.domain.model.AppCurrency.IDR }
+        val currencyPrefs3 = run {
+            val prefs = io.mockk.mockk<android.content.SharedPreferences>(relaxed = true) { io.mockk.every { getString(any(), any()) } returns "IDR" }
+            val ctx = io.mockk.mockk<android.content.Context>(relaxed = true) { io.mockk.every { getSharedPreferences(any(), any()) } returns prefs; io.mockk.every { applicationContext } returns this }
+            com.ssajudn.bareuang.data.local.CurrencyPreferences(ctx)
+        }
         val repo = DueBillLocalDataSource(db, WalletBalanceService(walletDao), sm3, currencyPrefs3)
 
         val result = repo.updateDueBillStatus("b1", DueBillStatus.PAID, "w1")
@@ -204,7 +208,11 @@ class LocalGoalDueBillTest {
         val txDao = FakeTxDao2()
         val db = fakeDb(walletDao, FakeGoalDao2(), dueBillDao, txDao)
         val sm4 = io.mockk.mockk<com.ssajudn.bareuang.data.local.UserSessionManager>(relaxed = true).apply { io.mockk.every { userId } returns "" }
-        val currencyPrefs4 = io.mockk.mockk<com.ssajudn.bareuang.data.local.CurrencyPreferences>(relaxed = true).apply { io.mockk.every { getCurrency() } returns com.ssajudn.bareuang.domain.model.AppCurrency.IDR }
+        val currencyPrefs4 = run {
+            val prefs = io.mockk.mockk<android.content.SharedPreferences>(relaxed = true) { io.mockk.every { getString(any(), any()) } returns "IDR" }
+            val ctx = io.mockk.mockk<android.content.Context>(relaxed = true) { io.mockk.every { getSharedPreferences(any(), any()) } returns prefs; io.mockk.every { applicationContext } returns this }
+            com.ssajudn.bareuang.data.local.CurrencyPreferences(ctx)
+        }
         val repo = DueBillLocalDataSource(db, WalletBalanceService(walletDao), sm4, currencyPrefs4)
 
         val result = repo.updateDueBillStatus("b1", DueBillStatus.UNPAID, null)

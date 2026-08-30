@@ -112,10 +112,13 @@ class OcrScanViewModel @Inject constructor(
             }.onFailure { e ->
                 android.util.Log.e("Ocr", "AI parse failed", e)
                 _uiState.value = _uiState.value.copy(isProcessing = false)
-                val msg = e.message ?: ""
-                val res = if (msg.contains("internet", true) || msg.contains("Unable to resolve", true))
-                    UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)
-                else UiText.Dyn(msg.ifBlank { "Gagal memproses struk." })
+                val res = when (e) {
+                    is com.ssajudn.bareuang.domain.error.AppException.NetworkException ->
+                        UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)
+                    is com.ssajudn.bareuang.domain.error.AppException ->
+                        UiText.Dyn(e.message ?: "Gagal memproses struk.")
+                    else -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_generic)
+                }
                 _effect.send(UiEffect.ShowSnackbarRes(res))
             }
         }
