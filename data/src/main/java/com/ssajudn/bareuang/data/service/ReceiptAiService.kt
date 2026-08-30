@@ -68,13 +68,16 @@ class ReceiptAiService @Inject constructor(
             val pr = gson.fromJson(bodyStr, ProxyResponse::class.java)
                 ?: throw IllegalStateException("Respons tidak valid")
             if (pr.error != null) throw IllegalStateException(pr.error)
+            // Sanitize client-side (proxy already does, but never trust)
+            val allowed = setOf("FOOD","SHOPPING","TRANSPORT","BILLS","ENTERTAINMENT","HEALTH","EDUCATION","SOCIAL","OTHER")
+            val cat = pr.category?.trim()?.uppercase() ?: "OTHER"
             AiParsedReceipt(
-                merchant = pr.merchant?.trim() ?: "",
-                date = pr.date?.trim() ?: "",
-                total = pr.total ?: 0L,
-                category = pr.category?.trim() ?: "OTHER",
-                items = pr.items ?: emptyList(),
-                rawText = pr.rawText?.trim() ?: "",
+                merchant = pr.merchant?.trim()?.take(100) ?: "",
+                date = pr.date?.trim()?.take(10) ?: "",
+                total = maxOf(0L, pr.total ?: 0L),
+                category = if (cat in allowed) cat else "OTHER",
+                items = pr.items?.take(30)?.map { it.take(100) } ?: emptyList(),
+                rawText = pr.rawText?.trim()?.take(4000) ?: "",
             )
         }.recoverCatching { e ->
             android.util.Log.e("ReceiptAiService", "parse failed", e)
@@ -83,11 +86,17 @@ class ReceiptAiService @Inject constructor(
     }
 
     private fun encodeImage(uri: Uri): String {
+        // Guard size: reject > 5MB before decode (prevent OOM)
+        context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            if (pfd.statSize > 5 * 1024 * 1024) throw IllegalStateException("Ukuran gambar terlalu besar (maks 5MB)")
+        }
         val input = context.contentResolver.openInputStream(uri)
             ?: throw IllegalStateException("Gagal membuka gambar")
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeStream(input, null, opts)
         input.close()
+        // Reject absurd dimensions (prevent OOM on decode)
+        if (opts.outWidth > 8000 || opts.outHeight > 8000) throw IllegalStateException("Dimensi gambar terlalu besar")
         // Re-open for actual decode
         val input2 = context.contentResolver.openInputStream(uri)
             ?: throw IllegalStateException("Gagal membuka gambar")

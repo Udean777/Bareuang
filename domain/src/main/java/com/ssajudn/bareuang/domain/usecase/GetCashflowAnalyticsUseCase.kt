@@ -17,7 +17,7 @@ class GetCashflowAnalyticsUseCase @Inject constructor(
             val transactions = transactionRepository.getTransactions(limit = 500).getOrDefault(emptyList())
             // Exclude recurring parent templates (not actual occurrences) and future-dated entries
             val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().time)
-            val executedPast = transactions.filter { !it.isRecurringParent && it.date.substring(0, 10) <= todayIso }
+            val executedPast = transactions.filter { !it.isRecurringParent && it.date.length >= 10 && it.date.substring(0, 10) <= todayIso }
             val points = mutableListOf<CashflowDataPoint>()
             val monthFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
             val labelFormat = SimpleDateFormat("MMM", Locale("id", "ID"))

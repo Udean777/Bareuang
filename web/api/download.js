@@ -6,6 +6,10 @@
 const GH_URL = "https://github.com/Udean777/Bareuang/releases/latest/download/Bareuang-latest.apk";
 
 export default async function handler(req, res) {
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    res.setHeader("Allow", "GET, HEAD");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
   // HEAD: cek ketersediaan tanpa stream body
   if (req.method === "HEAD") {
     try {
@@ -28,7 +32,6 @@ export default async function handler(req, res) {
     }
     res.setHeader("Content-Type", "application/vnd.android.package-archive");
     res.setHeader("Content-Disposition", 'attachment; filename="Bareuang-latest.apk"');
-    // ponytail: teruskan Content-Length jika ada agar progress tidak stuck 100%
     const len = ghRes.headers.get("content-length");
     if (len) res.setHeader("Content-Length", len);
     res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300");

@@ -47,9 +47,11 @@ class DueBillLocalDataSource @Inject constructor(
 
     suspend fun createDueBill(request: CreateDueBillRequest): Result<DueBill> = withContext(Dispatchers.IO) {
         try {
+            if (request.providerName.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama provider tidak boleh kosong"))
+            if (request.totalAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Jumlah tagihan harus lebih dari 0"))
             val newBill = DueBill(
                 id = UUID.randomUUID().toString(),
-                providerName = request.providerName,
+                providerName = request.providerName.trim(),
                 providerIconUrl = request.providerIconUrl,
                 totalAmount = request.totalAmount,
                 dueDate = request.dueDate,
@@ -68,9 +70,11 @@ class DueBillLocalDataSource @Inject constructor(
     suspend fun updateDueBill(id: String, request: UpdateDueBillRequest): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
+                if (request.providerName.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama provider tidak boleh kosong"))
+                if (request.totalAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Jumlah tagihan harus lebih dari 0"))
                 db.dueBillDao().updateDueBill(
                     id = id,
-                    providerName = request.providerName,
+                    providerName = request.providerName.trim(),
                     providerIconUrl = request.providerIconUrl,
                     totalAmount = request.totalAmount,
                     dueDate = request.dueDate,

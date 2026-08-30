@@ -12,6 +12,7 @@ object ApiErrorParser {
     fun fromThrowable(e: Throwable): AppException = when (e) {
         is IOException -> AppException.NetworkException(cause = e)
         is AppException -> e
+        is IllegalArgumentException, is IllegalStateException -> AppException.DataException(e.message, e)
         else -> AppException.UnknownError(cause = e)
     }
 

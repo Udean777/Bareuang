@@ -107,7 +107,6 @@ data class DashboardSummary(
     val netWorth: Long = 0L,
     val recentTransactions: List<Transaction>?,
     val recurringTransactions: List<Transaction> = emptyList(),
-    // ponytail: daily budget derived from remainingBudget/remainingDays, no DB field
     val dailyAllowance: Long = 0L,
     val todaySpent: Long = 0L,
     val remainingToday: Long = 0L,

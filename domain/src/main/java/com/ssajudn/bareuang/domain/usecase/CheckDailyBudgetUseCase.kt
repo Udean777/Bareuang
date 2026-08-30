@@ -12,7 +12,6 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * ponytail: derived daily budget, no DB field. Blokir EXPENSE jika melebihi jatah harian.
  * Hanya enforce untuk transaksi dengan date == hari ini.
  */
 class CheckDailyBudgetUseCase @Inject constructor(
@@ -20,18 +19,18 @@ class CheckDailyBudgetUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
     suspend operator fun invoke(amount: Long, date: String, currency: AppCurrency): Result<Unit> {
+        if (amount <= 0) return Result.failure(AppException.DataException("Jumlah harus lebih dari 0"))
         return try {
             val now = Calendar.getInstance()
             val monthYear = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(now.time)
             val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now.time)
             // only enforce for today
-            if (date.take(10) != todayIso) return Result.success(Unit)
+            if (date.length < 10 || date.take(10) != todayIso) return Result.success(Unit)
 
             val monthlyBudget = budgetRepository.getMonthlyBudget(monthYear).getOrDefault(0L)
             if (monthlyBudget <= 0) return Result.success(Unit) // monthly gate handles this
 
             val daysInMonth = now.getActualMaximum(Calendar.DAY_OF_MONTH)
-            // ponytail: flat tanpa rollover — monthly/daysInMonth
             val dailyAllowance = if (monthlyBudget > 0) monthlyBudget / daysInMonth else 0L
             val allTx = transactionRepository.getTransactions(limit = 500).getOrDefault(emptyList())
             val currentMonthTx = allTx.filter { !it.isRecurringParent && it.date.startsWith(monthYear) }

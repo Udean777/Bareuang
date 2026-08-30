@@ -49,12 +49,20 @@ class TransactionLocalDataSource @Inject constructor(
     suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction> =
         withContext(Dispatchers.IO) {
             try {
+                if (request.amount <= 0) {
+                    return@withContext Result.failure(IllegalArgumentException("Jumlah transaksi harus lebih dari 0"))
+                }
                 // Validasi: semua tipe wajib pakai dompet
                 if (request.walletId.isNullOrBlank()) {
                     return@withContext Result.failure(IllegalArgumentException("Dompet wajib dipilih untuk transaksi"))
                 }
-                if (request.type == TransactionType.TRANSFER && request.toWalletId.isNullOrBlank()) {
-                    return@withContext Result.failure(IllegalArgumentException("Dompet tujuan wajib dipilih untuk transfer"))
+                if (request.type == TransactionType.TRANSFER) {
+                    if (request.toWalletId.isNullOrBlank()) {
+                        return@withContext Result.failure(IllegalArgumentException("Dompet tujuan wajib dipilih untuk transfer"))
+                    }
+                    if (request.walletId == request.toWalletId) {
+                        return@withContext Result.failure(IllegalArgumentException("Dompet asal dan tujuan tidak boleh sama"))
+                    }
                 }
                 // Validasi saldo untuk pengeluaran & transfer
                 if (request.type == TransactionType.EXPENSE) {
@@ -115,8 +123,13 @@ class TransactionLocalDataSource @Inject constructor(
             var inserted = 0
             db.withTransaction {
                 for (req in requests) {
+                    if (req.amount <= 0) throw IllegalArgumentException("Jumlah transaksi harus lebih dari 0")
                     if (req.walletId.isNullOrBlank()) throw IllegalArgumentException("Dompet wajib dipilih")
-                    if (req.type == TransactionType.EXPENSE) {
+                    if (req.type == TransactionType.TRANSFER) {
+                        if (req.toWalletId.isNullOrBlank()) throw IllegalArgumentException("Dompet tujuan wajib dipilih untuk transfer")
+                        if (req.walletId == req.toWalletId) throw IllegalArgumentException("Dompet asal dan tujuan tidak boleh sama")
+                    }
+                    if (req.type == TransactionType.EXPENSE || req.type == TransactionType.TRANSFER) {
                         val w = db.walletDao().getWalletById(req.walletId!!) ?: throw IllegalArgumentException("Dompet tidak ditemukan")
                         if (w.balance < req.amount) {
                             val cur = currencyPreferences.getCurrency()

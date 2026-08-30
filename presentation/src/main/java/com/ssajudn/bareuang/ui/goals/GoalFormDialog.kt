@@ -62,7 +62,7 @@ fun GoalFormDialog(
     ) {
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { name = it.take(100) },
             label = { Text(stringResource(R.string.goals_name_label)) },
             placeholder = { Text(stringResource(R.string.goals_name_hint)) },
             singleLine = true,
@@ -104,7 +104,7 @@ fun GoalFormDialog(
 
         OutlinedTextField(
             value = notes,
-            onValueChange = { notes = it },
+            onValueChange = { notes = it.take(500) },
             label = { Text(stringResource(R.string.goals_notes_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),

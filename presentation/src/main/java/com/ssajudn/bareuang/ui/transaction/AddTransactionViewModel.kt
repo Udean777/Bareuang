@@ -216,7 +216,7 @@ class AddTransactionViewModel @Inject constructor(
     }
 
     fun onMerchantChange(merchant: String) {
-        _uiState.value = _uiState.value.copy(merchant = merchant)
+        _uiState.value = _uiState.value.copy(merchant = merchant.take(100))
     }
 
     fun onCategoryChange(category: TransactionCategory) {
@@ -228,7 +228,7 @@ class AddTransactionViewModel @Inject constructor(
     }
 
     fun onNotesChange(notes: String) {
-        _uiState.value = _uiState.value.copy(notes = notes)
+        _uiState.value = _uiState.value.copy(notes = notes.take(500))
     }
 
     fun onRecurringChange(isRecurring: Boolean) {
@@ -292,7 +292,6 @@ class AddTransactionViewModel @Inject constructor(
                 return@launch
             }
 
-            // ponytail: daily budget blokir — hanya EXPENSE dan tanggal hari ini
             if (state.transactionType == TransactionType.EXPENSE) {
                 val dailyCheck = checkDailyBudget(state.parsedAmount, state.date, CurrencyFormatter.getActiveCurrency())
                 if (dailyCheck.isFailure) {

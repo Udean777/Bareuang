@@ -196,7 +196,7 @@ fun DueBillFormDialog(
             Spacer(modifier = Modifier.height(4.dp))
             OutlinedTextField(
                 value = customProviderName,
-                onValueChange = { customProviderName = it },
+                onValueChange = { customProviderName = it.take(100) },
                 label = { Text(stringResource(R.string.bills_name_label)) },
                 placeholder = { Text(stringResource(R.string.bills_name_hint)) },
                 singleLine = true,
@@ -345,7 +345,7 @@ fun DueBillFormDialog(
         // Notes Input (optional, last)
         OutlinedTextField(
             value = notes,
-            onValueChange = { notes = it },
+            onValueChange = { notes = it.take(500) },
             label = { Text(stringResource(R.string.bills_notes_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),

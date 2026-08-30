@@ -77,7 +77,7 @@ class OcrScanViewModel @Inject constructor(
     }
 
     fun onWalletSelected(id: String) { _uiState.value = _uiState.value.copy(selectedWalletId = id) }
-    fun onMerchantChange(v: String) { _uiState.value = _uiState.value.copy(merchant = v) }
+    fun onMerchantChange(v: String) { _uiState.value = _uiState.value.copy(merchant = v.take(100)) }
     fun onCategoryChange(c: TransactionCategory) { _uiState.value = _uiState.value.copy(category = c) }
     fun onDateChange(d: String) { _uiState.value = _uiState.value.copy(date = d) }
     fun onAmountChange(input: String) {
@@ -97,8 +97,9 @@ class OcrScanViewModel @Inject constructor(
             val result = receiptAiService.parseReceiptImage(uri)
             result.onSuccess { ai ->
                 val cat = runCatching { TransactionCategory.valueOf(ai.category) }.getOrDefault(TransactionCategory.SHOPPING)
-                // Use AI date if valid ISO, otherwise keep current
-                val aiDate = ai.date.takeIf { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) } ?: _uiState.value.date
+                val aiDate = ai.date.takeIf {
+                    runCatching { java.time.LocalDate.parse(it) }.isSuccess
+                } ?: _uiState.value.date
                 _uiState.value = _uiState.value.copy(
                     isProcessing = false,
                     rawText = ai.rawText.ifBlank { ai.items.joinToString("\n") },

@@ -45,7 +45,6 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val remainingBudget = monthlyBudget - totalSpent
             val avgDaily = if (daysPassed > 0) totalSpent / daysPassed else 0L
 
-            // ponytail: daily flat = monthly / daysInMonth, tanpa rollover
             val remainingDays = (daysInMonth - daysPassed + 1).coerceAtLeast(1)
             val dailyAllowance = if (monthlyBudget > 0) monthlyBudget / daysInMonth else 0L
             val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now.time)

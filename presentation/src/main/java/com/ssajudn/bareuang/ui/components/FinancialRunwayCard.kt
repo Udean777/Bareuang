@@ -253,7 +253,6 @@ fun FinancialRunwayCard(
                 )
             }
 
-            // Daily Budget section — ponytail: derived, no toggle
             if (totalBudget > 0 && dailyAllowance >= 0) {
                 Spacer(Modifier.height(12.dp))
                 val dailyProgress = if (dailyAllowance > 0) (todaySpent.toFloat() / dailyAllowance).coerceIn(0f, 1f) else 0f

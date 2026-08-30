@@ -58,7 +58,6 @@ function showToast(msg){
 for(const a of document.querySelectorAll("a.js-download")){
   a.setAttribute("href", DL_URL);
   a.setAttribute("download", "Bareuang-latest.apk");
-  // ponytail: biarkan native <a download> handle, tanpa preventDefault/await → keep user gesture
   a.addEventListener("click", ()=>{
     // fire-and-forget HEAD check — tidak block download, hanya toast jika 404
     fetch(DL_URL, {method:"HEAD"}).then(r=>{

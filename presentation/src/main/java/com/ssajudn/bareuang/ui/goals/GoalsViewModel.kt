@@ -84,7 +84,7 @@ class GoalsViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     fun onSearchQueryChange(query: String) {
-        _searchQuery.value = query
+        _searchQuery.value = query.take(100)
     }
 
     init {

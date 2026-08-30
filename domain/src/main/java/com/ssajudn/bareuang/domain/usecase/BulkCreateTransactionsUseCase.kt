@@ -24,9 +24,10 @@ class BulkCreateTransactionsUseCase @Inject constructor(
         // true (user confirmed) the gate is skipped.
         force: Boolean = false
     ): Result<Int> {
-        if (walletId.isBlank()) return Result.failure(IllegalArgumentException("Dompet wajib dipilih"))
+        if (walletId.isBlank()) return Result.failure(AppException.DataException("Dompet wajib dipilih"))
         val selected = drafts.filter { it.isSelected && !it.isDuplicate }
-        if (selected.isEmpty()) return Result.failure(IllegalStateException("Tidak ada transaksi yang dipilih"))
+        if (selected.isEmpty()) return Result.failure(AppException.DataException("Tidak ada transaksi yang dipilih"))
+        if (selected.any { it.amount <= 0 }) return Result.failure(AppException.DataException("Jumlah transaksi harus lebih dari 0"))
         // Budget gate — single check for all
         if (!hasMonthlyBudget()) return Result.failure(AppException.DataException("Budget bulan ini belum diatur"))
         // Daily gate — cek per item yang tanggalnya hari ini dan bertipe EXPENSE

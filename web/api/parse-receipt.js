@@ -9,7 +9,6 @@ const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
 
-// ponytail: in-memory per-IP rate limit — single instance only, use Vercel KV/Upstash if strict cross-instance limit needed
 const RATE_LIMIT_RPD = Number(process.env.RATE_LIMIT_RPD || 20);
 const RATE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const _rateMap = new Map(); // ip -> { count, windowStart }
@@ -21,7 +20,11 @@ function getClientIp(req) {
 }
 
 function checkRateLimit(ip) {
+  // prune expired entries (prevent memory leak)
   const now = Date.now();
+  for (const [k, v] of _rateMap) {
+    if (now - v.windowStart >= RATE_WINDOW_MS) _rateMap.delete(k);
+  }
   const entry = _rateMap.get(ip);
   if (!entry || now - entry.windowStart >= RATE_WINDOW_MS) {
     _rateMap.set(ip, { count: 1, windowStart: now });
@@ -34,11 +37,34 @@ function checkRateLimit(ip) {
   return { allowed: true, remaining: RATE_LIMIT_RPD - entry.count, resetMs: entry.windowStart + RATE_WINDOW_MS - now };
 }
 
+const ALLOWED_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+function isValidImageMagic(b64) {
+  try {
+    const buf = Buffer.from(b64.slice(0, 32), "base64");
+    if (buf.length < 4) return false;
+    // JPEG FF D8 FF, PNG 89 50 4E 47, GIF 47 49 46 38, WebP 52 49 46 46 ... 57 45 42 50
+    if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return true;
+    if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return true;
+    if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return true;
+    if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46) {
+      if (buf.length >= 12 && buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return true;
+    }
+    return false;
+  } catch { return false; }
+}
+
 export default async function handler(req, res) {
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(204).end();
+  }
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
   }
+  res.setHeader("Access-Control-Allow-Origin", "*");
 
   const len = Number(req.headers["content-length"] || 0);
   if (len > MAX_BODY_BYTES) {
@@ -80,6 +106,12 @@ export default async function handler(req, res) {
   if (raw.startsWith("data:")) {
     const m = raw.match(/^data:([^;]+);base64,(.*)$/s);
     if (m) { mimeType = m[1]; b64Data = m[2]; }
+  }
+  if (!ALLOWED_MIMES.has(mimeType.toLowerCase())) {
+    return res.status(400).json({ error: "Unsupported image type (allow jpeg/png/webp/gif)" });
+  }
+  if (!isValidImageMagic(b64Data)) {
+    return res.status(400).json({ error: "Invalid image data" });
   }
 
   const systemPrompt = `Kamu adalah parser struk Indonesia. Dari gambar struk, ekstrak JSON dengan format:

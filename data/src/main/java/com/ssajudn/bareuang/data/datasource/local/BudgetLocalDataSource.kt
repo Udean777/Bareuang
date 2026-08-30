@@ -23,6 +23,7 @@ class BudgetLocalDataSource @Inject constructor(
     suspend fun setBudget(monthlyLimit: Long, monthYear: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
+                if (monthlyLimit <= 0) return@withContext Result.failure(IllegalArgumentException("Budget harus lebih dari 0"))
                 val my = if (monthYear.isBlank()) {
                     SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Calendar.getInstance().time)
                 } else monthYear
@@ -89,6 +90,7 @@ class BudgetLocalDataSource @Inject constructor(
         monthYear: String
     ): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
+            if (limitAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Batas kategori harus lebih dari 0"))
             val my = if (monthYear.isBlank()) {
                 SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
             } else monthYear
