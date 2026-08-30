@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssajudn.bareuang.data.service.CsvMutasiParser
+import com.ssajudn.bareuang.domain.error.AppException
 import com.ssajudn.bareuang.domain.model.ImportDraft
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
@@ -35,7 +36,9 @@ data class ImportUiState(
     val isParsing: Boolean = false,
     val isImporting: Boolean = false,
     val skippedRows: Int = 0,
-    val error: UiText? = null
+    val error: UiText? = null,
+    // Soft daily-budget nudge: some selected drafts exceed today's allowance.
+    val pendingDailyOverride: Boolean = false
 )
 
 @HiltViewModel
@@ -155,10 +158,37 @@ class ImportMutasiViewModel @Inject constructor(
             viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_wallet_required))) }
             return
         }
+        doImport(force = false, onSuccess = onSuccess)
+    }
+
+    /** Proceed after the user accepts the daily-budget override prompt for a batch. */
+    fun confirmDailyOverrideImport(onSuccess: (Int) -> Unit) {
+        _uiState.value = _uiState.value.copy(pendingDailyOverride = false)
+        doImport(force = true, onSuccess = onSuccess)
+    }
+
+    /** Cancel a daily-budget override prompt for a batch. */
+    fun dismissDailyOverrideImport() {
+        _uiState.value = _uiState.value.copy(pendingDailyOverride = false, isImporting = false)
+        _operation.value = OperationState.Idle
+    }
+
+    private fun doImport(force: Boolean, onSuccess: (Int) -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isImporting = true)
             _operation.value = OperationState.Loading
-            val res = bulkCreate(_uiState.value.drafts, walletId, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency())
+            val walletId = _uiState.value.selectedWalletId
+            if (walletId.isNullOrBlank()) {
+                _uiState.value = _uiState.value.copy(isImporting = false)
+                _operation.value = OperationState.Idle
+                return@launch
+            }
+            val res = bulkCreate(
+                _uiState.value.drafts,
+                walletId,
+                com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency(),
+                force
+            )
             res.onSuccess { count ->
                 importPrefs.increment(count)
                 android.util.Log.d("Import", "import success $count, total ${importPrefs.importCount.value}")
@@ -168,6 +198,11 @@ class ImportMutasiViewModel @Inject constructor(
                 onSuccess(count)
             }.onFailure { e ->
                 android.util.Log.e("Import", "import failed", e)
+                if (e is AppException.DailyBudgetExceededException) {
+                    // Soft nudge: ask before importing drafts that exceed today's allowance.
+                    _uiState.value = _uiState.value.copy(isImporting = false, pendingDailyOverride = true)
+                    return@launch
+                }
                 val ui = UiText.Res(com.ssajudn.bareuang.presentation.R.string.import_error_save)
                 _uiState.value = _uiState.value.copy(isImporting = false)
                 _operation.value = OperationState.Error("", ui)

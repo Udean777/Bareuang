@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.material3.SnackbarHostState
@@ -289,6 +290,34 @@ fun BudgetScreen(
 
             // CATEGORY BUDGETS SECTION — only shown after a budget has been saved
             if (uiState.currentLimit > 0) {
+                // Read-only daily pacing info: shows where the per-day number comes from.
+                val daysInMonth = java.time.YearMonth.now().lengthOfMonth()
+                val dailyAllowance = uiState.currentLimit / daysInMonth
+                Surface(
+                    shape = AppShapes.Squircle,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Today,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = stringResource(R.string.budget_daily_pacing_desc, CurrencyFormatter.formatCompact(dailyAllowance)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
                 var showCategoryDialog by remember { mutableStateOf(false) }
                 var editingCategoryBudget by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
                 var categoryToDelete by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
@@ -614,7 +643,6 @@ private fun SetCategoryBudgetDialog(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
         }
 
         AmountTextField(

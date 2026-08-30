@@ -320,6 +320,7 @@
     <string name="ocr_processing">Processing OCR…</string>
     <string name="ocr_no_text">No text detected, try a clearer photo</string>
     <string name="ocr_error_generic">Failed to process image. Try again with a clearer photo.</string>
+    <string name="ocr_error_no_internet">No internet connection. Receipt scan requires internet.</string>
     <string name="ocr_btn_save">Save Transaction</string>
     <string name="ocr_save_success">Receipt transaction saved</string>
     <string name="ocr_tips_title">Tips for scanning</string>
@@ -328,7 +329,7 @@
     <string name="settings_import_mutasi_title">Import CSV Transactions</string>
     <string name="settings_import_mutasi_desc">Import from BCA, GoPay, OVO (offline)</string>
     <string name="settings_ocr_title">Scan Receipt</string>
-    <string name="settings_ocr_desc">Photo receipt → auto OCR (offline)</string>
+    <string name="settings_ocr_desc">Photo receipt → AI scan (requires internet)</string>
 
     <!-- Appearance -->
     <string name="appearance_title">Appearance</string>
@@ -459,6 +460,11 @@
     <string name="tx_error_budget_required">Please set this month\'s budget first</string>
     <string name="tx_error_daily_exceeded">Daily budget exceeded. Try again tomorrow.</string>
     <string name="tx_error_save_failed">Failed to save transaction</string>
+    <!-- Daily budget soft nudge + pacing -->
+    <string name="tx_daily_override_title">Daily budget exceeded</string>
+    <string name="tx_daily_override_confirm">Save anyway</string>
+    <string name="budget_daily_pacing_desc">Daily pacing: %1$s per day (monthly budget ÷ days in month).</string>
+    <string name="tx_category_overspent_warning">This amount exceeds the %1$s left in the %2$s budget.</string>
     <!-- Daily budget -->
     <string name="dashboard_daily_title">Daily Budget</string>
     <string name="dashboard_daily_remaining">Remaining today: %1$s</string>

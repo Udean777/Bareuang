@@ -18,7 +18,11 @@ class BulkCreateTransactionsUseCase @Inject constructor(
     suspend operator fun invoke(
         drafts: List<ImportDraft>,
         walletId: String,
-        currency: AppCurrency
+        currency: AppCurrency,
+        // Soft daily-budget nudge: when false the daily gate trips and returns a
+        // DailyBudgetExceededException so the UI can ask before overriding; when
+        // true (user confirmed) the gate is skipped.
+        force: Boolean = false
     ): Result<Int> {
         if (walletId.isBlank()) return Result.failure(IllegalArgumentException("Dompet wajib dipilih"))
         val selected = drafts.filter { it.isSelected && !it.isDuplicate }
@@ -26,10 +30,16 @@ class BulkCreateTransactionsUseCase @Inject constructor(
         // Budget gate — single check for all
         if (!hasMonthlyBudget()) return Result.failure(AppException.DataException("Budget bulan ini belum diatur"))
         // Daily gate — cek per item yang tanggalnya hari ini dan bertipe EXPENSE
-        for (d in selected) {
-            if (d.type == com.ssajudn.bareuang.domain.model.TransactionType.EXPENSE) {
-                val dailyCheck = checkDailyBudget(d.amount, d.date, currency)
-                if (dailyCheck.isFailure) return Result.failure(dailyCheck.exceptionOrNull()!!)
+        if (!force) {
+            for (d in selected) {
+                if (d.type == com.ssajudn.bareuang.domain.model.TransactionType.EXPENSE) {
+                    val dailyCheck = checkDailyBudget(d.amount, d.date, currency)
+                    if (dailyCheck.isFailure) {
+                        return Result.failure(
+                            AppException.DailyBudgetExceededException(dailyCheck.exceptionOrNull()?.message ?: "Jatah harian terlampaui")
+                        )
+                    }
+                }
             }
         }
         // Saldo check — sum of expenses vs wallet balance

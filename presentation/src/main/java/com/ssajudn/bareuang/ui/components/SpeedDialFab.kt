@@ -44,7 +44,8 @@ data class SpeedDialItem(
     val icon: ImageVector,
     val onClick: () -> Unit,
     val containerColor: Color? = null,
-    val contentColor: Color? = null
+    val contentColor: Color? = null,
+    val enabled: Boolean = true,
 )
 
 @Composable
@@ -86,7 +87,10 @@ fun AppSpeedDialFab(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End,
-                        modifier = Modifier.clickable(interactionSource = subInteraction, indication = null) { onExpandedChange(false); item.onClick() }
+                        modifier = Modifier.then(
+                            if (item.enabled) Modifier.clickable(interactionSource = subInteraction, indication = null) { onExpandedChange(false); item.onClick() }
+                            else Modifier
+                        )
                     ) {
                         Surface(
                             shape = MaterialTheme.shapes.small,
@@ -94,15 +98,20 @@ fun AppSpeedDialFab(
                             tonalElevation = 3.dp, shadowElevation = 2.dp,
                             modifier = Modifier.padding(end = 10.dp)
                         ) {
-                            Text(item.label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp))
+                            Text(
+                                item.label + if (!item.enabled) " • offline" else "",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                                color = if (item.enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
                         }
                         SmallFloatingActionButton(
-                            onClick = { onExpandedChange(false); item.onClick() },
+                            onClick = { if (item.enabled) { onExpandedChange(false); item.onClick() } },
                             interactionSource = subInteraction,
-                            containerColor = item.containerColor ?: MaterialTheme.colorScheme.surfaceContainerLowest,
-                            contentColor = item.contentColor ?: MaterialTheme.colorScheme.primary,
+                            containerColor = if (item.enabled) (item.containerColor ?: MaterialTheme.colorScheme.surfaceContainerLowest) else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (item.enabled) (item.contentColor ?: MaterialTheme.colorScheme.primary) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
                             shape = CircleShape,
-                            modifier = Modifier.pressScale(subInteraction, pressedScale = 0.88f)
+                            modifier = Modifier.pressScale(subInteraction, pressedScale = if (item.enabled) 0.88f else 1f)
                         ) {
                             Icon(item.icon, contentDescription = item.label, modifier = Modifier.size(20.dp))
                         }

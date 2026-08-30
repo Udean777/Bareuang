@@ -407,6 +407,11 @@
     <string name="tx_error_insufficient_balance">Saldo dompet tidak cukup (%1$s)</string>
     <string name="tx_error_budget_required">Setup anggaran bulan ini terlebih dahulu</string>
     <string name="tx_error_save_failed">Gagal menyimpan transaksi</string>
+    <!-- Soft nudge daily budget + pacing -->
+    <string name="tx_daily_override_title">Jatah harian terlampaui</string>
+    <string name="tx_daily_override_confirm">Tetap simpan</string>
+    <string name="budget_daily_pacing_desc">Pacing harian: %1$s per hari (budget bulanan ÷ jumlah hari).</string>
+    <string name="tx_category_overspent_warning">Jumlah ini melebihi sisa %1$s untuk budget kategori %2$s.</string>
     <string name="split_person_me">Saya</string>
     <string name="bills_provider_custom">Lainnya (Custom)</string>
     <string name="widget_empty">Buka Bareuang untuk memuat data</string>
@@ -449,6 +454,7 @@
     <string name="ocr_processing">Memproses OCR…</string>
     <string name="ocr_no_text">Tidak ada teks terdeteksi, coba foto lebih jelas</string>
     <string name="ocr_error_generic">Gagal memproses gambar. Coba lagi dengan foto yang lebih jelas.</string>
+    <string name="ocr_error_no_internet">Tidak ada koneksi internet. Scan struk membutuhkan internet.</string>
     <string name="ocr_btn_save">Simpan Transaksi</string>
     <string name="ocr_save_success">Transaksi dari struk disimpan</string>
     <string name="ocr_tips_title">Tips scan struk</string>
@@ -457,5 +463,5 @@
     <string name="settings_import_mutasi_title">Impor Transaksi CSV</string>
     <string name="settings_import_mutasi_desc">Impor dari BCA, GoPay, OVO (offline)</string>
     <string name="settings_ocr_title">Scan Struk Belanja</string>
-    <string name="settings_ocr_desc">Foto struk → OCR otomatis (offline)</string>
+    <string name="settings_ocr_desc">Foto struk → AI scan (butuh internet)</string>
 </resources>

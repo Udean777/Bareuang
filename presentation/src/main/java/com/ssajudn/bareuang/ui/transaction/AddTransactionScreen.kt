@@ -379,6 +379,42 @@ fun AddTransactionScreen(
                 }
             }
 
+            // SOFT-WARN: category budget overspent hint (informational, never blocks)
+            val selectedCatBudget = uiState.categoryBudgets.find { it.category == uiState.selectedCategory }
+            if (uiState.transactionType == TransactionType.EXPENSE &&
+                selectedCatBudget != null && selectedCatBudget.limitAmount > 0 &&
+                selectedCatBudget.spentAmount + uiState.parsedAmount > selectedCatBudget.limitAmount
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = stringResource(
+                                R.string.tx_category_overspent_warning,
+                                CurrencyFormatter.formatCompact((selectedCatBudget.limitAmount - selectedCatBudget.spentAmount).coerceAtLeast(0L)),
+                                selectedCatBudget.category.displayName
+                            ),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+
             // 3. MERCHANT / STORE NAME
             Column {
                 Text(
@@ -618,6 +654,25 @@ fun AddTransactionScreen(
                     viewModel.onNotesChange("Split bill (${CurrencyFormatter.formatRupiah(uiState.parsedAmount)})")
                 }
                 showSplitBottomSheet = false
+            }
+        )
+    }
+
+    // Soft daily-budget nudge: confirm before saving over today's allowance.
+    if (uiState.pendingDailyOverride) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDailyOverride() },
+            title = { Text(stringResource(R.string.tx_daily_override_title)) },
+            text = { Text(uiState.pendingDailyMessage ?: stringResource(R.string.tx_error_daily_exceeded)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmDailyOverride() }) {
+                    Text(stringResource(R.string.tx_daily_override_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissDailyOverride() }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
             }
         )
     }

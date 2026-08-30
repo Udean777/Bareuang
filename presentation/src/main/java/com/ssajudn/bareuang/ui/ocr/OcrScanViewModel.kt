@@ -3,7 +3,7 @@ package com.ssajudn.bareuang.ui.ocr
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.data.service.OcrService
+import com.ssajudn.bareuang.data.service.ReceiptAiService
 import com.ssajudn.bareuang.domain.model.CreateTransactionRequest
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
@@ -15,8 +15,7 @@ import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.utils.DateUtils
-import com.ssajudn.bareuang.utils.ParsedReceipt
-import com.ssajudn.bareuang.utils.ReceiptParser
+import com.ssajudn.bareuang.utils.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,32 +30,40 @@ data class OcrUiState(
     val selectedWalletId: String? = null,
     val isProcessing: Boolean = false,
     val rawText: String? = null,
-    val parsed: ParsedReceipt? = null,
     // editable fields
     val merchant: String = "",
     val amount: String = "", // digits only
     val parsedAmount: Long = 0L,
     val category: TransactionCategory = TransactionCategory.SHOPPING,
     val date: String = DateUtils.getCurrentDateISO(),
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val pendingDailyOverride: Boolean = false,
+    val pendingDailyMessage: String? = null,
+    val isOnline: Boolean = true,
 )
 
 @HiltViewModel
 class OcrScanViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
-    private val ocrService: OcrService,
+    private val receiptAiService: ReceiptAiService,
     private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
-    private val checkDailyBudget: CheckDailyBudgetUseCase
+    private val checkDailyBudget: CheckDailyBudgetUseCase,
+    private val networkMonitor: NetworkMonitor,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(OcrUiState())
+    private val _uiState = MutableStateFlow(OcrUiState(isOnline = networkMonitor.isOnline()))
     val uiState: StateFlow<OcrUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<UiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
     init {
+        viewModelScope.launch {
+            networkMonitor.observeIsOnline().collect { online ->
+                _uiState.value = _uiState.value.copy(isOnline = online)
+            }
+        }
         viewModelScope.launch {
             val wallets = walletRepository.getWallets().getOrDefault(emptyList())
             _uiState.value = _uiState.value.copy(
@@ -79,31 +86,36 @@ class OcrScanViewModel @Inject constructor(
     }
 
     fun processImage(uri: Uri) {
+        if (!networkMonitor.isOnline()) {
+            viewModelScope.launch {
+                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)))
+            }
+            return
+        }
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isProcessing = true, rawText = null, parsed = null)
-            val result = ocrService.recognizeFromUri(uri)
-            result.onSuccess { text ->
-                android.util.Log.d("Ocr", "recognized ${text.length} chars")
-                if (text.isBlank()) {
-                    _uiState.value = _uiState.value.copy(isProcessing = false)
-                    android.util.Log.w("Ocr", "empty text")
-                    _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_no_text)))
-                    return@launch
-                }
-                val parsed = ReceiptParser.parse(text)
+            _uiState.value = _uiState.value.copy(isProcessing = true, rawText = null)
+            val result = receiptAiService.parseReceiptImage(uri)
+            result.onSuccess { ai ->
+                val cat = runCatching { TransactionCategory.valueOf(ai.category) }.getOrDefault(TransactionCategory.SHOPPING)
+                // Use AI date if valid ISO, otherwise keep current
+                val aiDate = ai.date.takeIf { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) } ?: _uiState.value.date
                 _uiState.value = _uiState.value.copy(
                     isProcessing = false,
-                    rawText = text,
-                    parsed = parsed,
-                    merchant = parsed.merchantName,
-                    amount = if (parsed.totalAmount > 0) parsed.totalAmount.toString() else "",
-                    parsedAmount = parsed.totalAmount,
-                    category = parsed.suggestedCategory
+                    rawText = ai.rawText.ifBlank { ai.items.joinToString("\n") },
+                    merchant = ai.merchant,
+                    amount = if (ai.total > 0) ai.total.toString() else "",
+                    parsedAmount = ai.total,
+                    category = cat,
+                    date = aiDate,
                 )
             }.onFailure { e ->
-                android.util.Log.e("Ocr", "recognize failed", e)
+                android.util.Log.e("Ocr", "AI parse failed", e)
                 _uiState.value = _uiState.value.copy(isProcessing = false)
-                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_generic)))
+                val msg = e.message ?: ""
+                val res = if (msg.contains("internet", true) || msg.contains("Unable to resolve", true))
+                    UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)
+                else UiText.Dyn(msg.ifBlank { "Gagal memproses struk." })
+                _effect.send(UiEffect.ShowSnackbarRes(res))
             }
         }
     }
@@ -124,50 +136,56 @@ class OcrScanViewModel @Inject constructor(
             val dailyCheck = checkDailyBudget(s.parsedAmount, s.date, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency())
             if (dailyCheck.isFailure) {
                 val msg = dailyCheck.exceptionOrNull()?.message ?: ""
-                _effect.send(UiEffect.ShowSnackbarRes(if (msg.isNotBlank()) UiText.Dyn(msg) else UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_daily_exceeded)))
+                _uiState.value = _uiState.value.copy(
+                    isSaving = false,
+                    pendingDailyOverride = true,
+                    pendingDailyMessage = msg.ifBlank { null }
+                )
                 return@launch
             }
-            val wallet = walletRepository.getWallets().getOrNull()?.find { it.id == s.selectedWalletId }
-            if (wallet != null && wallet.balance < s.parsedAmount) {
-                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_insufficient_balance, listOf(com.ssajudn.bareuang.utils.CurrencyFormatter.formatRupiah(wallet.balance)))))
-                return@launch
-            }
-            _uiState.value = _uiState.value.copy(isSaving = true)
-            val req = CreateTransactionRequest(
-                amount = s.parsedAmount,
-                type = TransactionType.EXPENSE,
-                category = s.category,
-                merchant = s.merchant.ifBlank { s.category.displayName },
-                date = s.date,
-                walletId = s.selectedWalletId
-            )
-            val res = transactionRepository.createTransaction(req)
-            res.onSuccess {
-                _uiState.value = _uiState.value.copy(isSaving = false)
-                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_save_success)))
-                onSuccess()
-            }.onFailure { e ->
-                android.util.Log.e("Ocr", "save failed", e)
-                _uiState.value = _uiState.value.copy(isSaving = false)
-                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_save)))
-            }
+            performCreate(onSuccess)
         }
     }
 
-    fun onRawTextEdited(newText: String) {
-        val parsed = ReceiptParser.parse(newText)
-        _uiState.value = _uiState.value.copy(
-            rawText = newText,
-            parsed = parsed,
-            merchant = parsed.merchantName.ifBlank { _uiState.value.merchant },
-            // only override amount if parser found valid amount and current amount was auto
-            parsedAmount = if (parsed.totalAmount > 0) parsed.totalAmount else _uiState.value.parsedAmount,
-            amount = if (parsed.totalAmount > 0) parsed.totalAmount.toString() else _uiState.value.amount,
-            category = parsed.suggestedCategory
+    fun confirmDailyOverride(onSuccess: () -> Unit) {
+        _uiState.value = _uiState.value.copy(pendingDailyOverride = false, pendingDailyMessage = null)
+        viewModelScope.launch { performCreate(onSuccess) }
+    }
+
+    fun dismissDailyOverride() {
+        _uiState.value = _uiState.value.copy(pendingDailyOverride = false, pendingDailyMessage = null, isSaving = false)
+    }
+
+    private suspend fun performCreate(onSuccess: () -> Unit) {
+        val s = _uiState.value
+        val wallet = walletRepository.getWallets().getOrNull()?.find { it.id == s.selectedWalletId }
+        if (wallet != null && wallet.balance < s.parsedAmount) {
+            _uiState.value = _uiState.value.copy(isSaving = false)
+            _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_insufficient_balance, listOf(com.ssajudn.bareuang.utils.CurrencyFormatter.formatRupiah(wallet.balance)))))
+            return
+        }
+        _uiState.value = _uiState.value.copy(isSaving = true)
+        val req = CreateTransactionRequest(
+            amount = s.parsedAmount,
+            type = TransactionType.EXPENSE,
+            category = s.category,
+            merchant = s.merchant.ifBlank { s.category.displayName },
+            date = s.date,
+            walletId = s.selectedWalletId
         )
+        val res = transactionRepository.createTransaction(req)
+        res.onSuccess {
+            _uiState.value = _uiState.value.copy(isSaving = false)
+            _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_save_success)))
+            onSuccess()
+        }.onFailure { e ->
+            android.util.Log.e("Ocr", "save failed", e)
+            _uiState.value = _uiState.value.copy(isSaving = false)
+            _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_save)))
+        }
     }
 
     fun reset() {
-        _uiState.value = _uiState.value.copy(rawText = null, parsed = null, merchant = "", amount = "", parsedAmount = 0L)
+        _uiState.value = _uiState.value.copy(rawText = null, merchant = "", amount = "", parsedAmount = 0L)
     }
 }
