@@ -28,7 +28,6 @@ import javax.inject.Singleton
 class DueBillLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager,
     private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) {
 
@@ -60,7 +59,7 @@ class DueBillLocalDataSource @Inject constructor(
                 recurringInterval = request.recurringInterval,
                 notes = request.notes
             )
-            db.dueBillDao().insertDueBill(LocalDueBillEntity.fromDueBill(newBill, isSynced = false).copy(ownerId = sessionManager.userId))
+            db.dueBillDao().insertDueBill(LocalDueBillEntity.fromDueBill(newBill, isSynced = false))
             Result.success(newBill)
         } catch (e: Exception) {
             Result.failure(ApiErrorParser.fromThrowable(e))
@@ -108,14 +107,14 @@ class DueBillLocalDataSource @Inject constructor(
                         if (bill != null) {
                             val newTx = Transaction(id = UUID.randomUUID().toString(), amount = bill.totalAmount, type = TransactionType.EXPENSE, category = TransactionCategory.BILLS, merchant = bill.providerName, date = DateUtils.getCurrentDateISO(), notes = "Pembayaran tagihan: ${bill.providerName}", walletId = walletId)
                             balanceService.add(walletId, -bill.totalAmount)
-                            db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId))
+                            db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(newTx, isSynced = false))
                         }
                     } else if (status == DueBillStatus.UNPAID) {
                         val previousPaidWalletId = bill?.paidWalletId
                         if (bill != null && bill.status == DueBillStatus.PAID.name && !previousPaidWalletId.isNullOrBlank()) {
                             balanceService.add(previousPaidWalletId, bill.totalAmount)
                             val refundTx = Transaction(id = UUID.randomUUID().toString(), amount = bill.totalAmount, type = TransactionType.INCOME, category = TransactionCategory.BILLS, merchant = "Refund: ${bill.providerName}", date = DateUtils.getCurrentDateISO(), notes = "Pembatalan pembayaran tagihan ${bill.providerName}", walletId = previousPaidWalletId)
-                            db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(refundTx, isSynced = false).copy(ownerId = sessionManager.userId))
+                            db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(refundTx, isSynced = false))
                         }
                         newPaidWalletId = null
                     }

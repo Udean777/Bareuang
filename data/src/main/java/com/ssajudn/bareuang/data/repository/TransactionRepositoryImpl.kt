@@ -16,6 +16,8 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun getTransactions(category: String?, page: Int, limit: Int): Result<List<Transaction>> =
         local.getTransactions(category, page, limit)
 
+    override suspend fun getAllTransactions(): Result<List<Transaction>> = local.getAllTransactions()
+
     override suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction> =
         local.createTransaction(request)
 

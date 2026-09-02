@@ -18,9 +18,9 @@ import javax.inject.Singleton
 @Singleton
 class BillReminderScheduler @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : com.ssajudn.bareuang.domain.port.BillReminderSchedulerPort {
 
-    fun scheduleDailyAt(hour: Int, minute: Int) {
+    override fun scheduleDailyAt(hour: Int, minute: Int) {
         val request = OneTimeWorkRequestBuilder<BillReminderWorker>()
             .setInitialDelay(millisUntil(hour, minute), TimeUnit.MILLISECONDS)
             .build()
@@ -31,7 +31,7 @@ class BillReminderScheduler @Inject constructor(
         )
     }
 
-    fun runNow() {
+    override fun runNow() {
         WorkManager.getInstance(context).enqueueUniqueWork(
             BillReminderWorker.UNIQUE_ONE_TIME,
             ExistingWorkPolicy.REPLACE,

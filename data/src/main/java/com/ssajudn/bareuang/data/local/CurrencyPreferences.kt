@@ -13,19 +13,19 @@ import javax.inject.Singleton
 @Singleton
 class CurrencyPreferences @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : com.ssajudn.bareuang.domain.port.CurrencyPreferencesPort {
     private val prefs = context.applicationContext
         .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     private val _currency = MutableStateFlow(readCurrency())
-    val currency: StateFlow<AppCurrency> = _currency.asStateFlow()
+    override val currency: StateFlow<AppCurrency> = _currency.asStateFlow()
 
-    fun setCurrency(currency: AppCurrency) {
+    override fun setCurrency(currency: AppCurrency) {
         prefs.edit { putString(KEY_CURRENCY, currency.code) }
         _currency.value = currency
     }
 
-    fun getCurrency(): AppCurrency = _currency.value
+    override fun getCurrency(): AppCurrency = _currency.value
 
     private fun readCurrency(): AppCurrency =
         AppCurrency.fromCode(prefs.getString(KEY_CURRENCY, null))

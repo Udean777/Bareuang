@@ -3,7 +3,8 @@ package com.ssajudn.bareuang.ui.ocr
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.data.service.ReceiptAiService
+import com.ssajudn.bareuang.domain.port.OcrConsentPort
+import com.ssajudn.bareuang.domain.port.ReceiptAiPort
 import com.ssajudn.bareuang.domain.model.CreateTransactionRequest
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
@@ -15,7 +16,7 @@ import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.utils.DateUtils
-import com.ssajudn.bareuang.utils.NetworkMonitor
+import com.ssajudn.bareuang.domain.port.NetworkMonitorPort
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,19 +41,27 @@ data class OcrUiState(
     val pendingDailyOverride: Boolean = false,
     val pendingDailyMessage: String? = null,
     val isOnline: Boolean = true,
+    val hasOcrConsent: Boolean = false,
+    val showOcrConsent: Boolean = false,
 )
 
 @HiltViewModel
 class OcrScanViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
-    private val receiptAiService: ReceiptAiService,
+    private val receiptAiService: ReceiptAiPort,
     private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
     private val checkDailyBudget: CheckDailyBudgetUseCase,
-    private val networkMonitor: NetworkMonitor,
+    private val networkMonitor: NetworkMonitorPort,
+    private val ocrConsentPreferences: OcrConsentPort,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(OcrUiState(isOnline = networkMonitor.isOnline()))
+    private val _uiState = MutableStateFlow(
+        OcrUiState(
+            isOnline = networkMonitor.isOnline(),
+            hasOcrConsent = ocrConsentPreferences.hasCurrentConsent,
+        )
+    )
     val uiState: StateFlow<OcrUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<UiEffect>(Channel.BUFFERED)
@@ -85,7 +94,29 @@ class OcrScanViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(amount = digits, parsedAmount = digits.toLongOrNull() ?: 0L)
     }
 
+    fun requestOcrConsent() {
+        if (!ocrConsentPreferences.hasCurrentConsent) {
+            _uiState.value = _uiState.value.copy(showOcrConsent = true)
+        } else {
+            _uiState.value = _uiState.value.copy(hasOcrConsent = true)
+        }
+    }
+
+    fun acceptOcrConsent() {
+        ocrConsentPreferences.grantCurrentConsent()
+        _uiState.value = _uiState.value.copy(hasOcrConsent = true, showOcrConsent = false)
+    }
+
+    fun dismissOcrConsent() {
+        _uiState.value = _uiState.value.copy(showOcrConsent = false)
+    }
+
     fun processImage(uri: Uri) {
+        // Defense in depth: picker/camera callbacks must not upload without consent.
+        if (!ocrConsentPreferences.hasCurrentConsent) {
+            _uiState.value = _uiState.value.copy(hasOcrConsent = false, showOcrConsent = true)
+            return
+        }
         if (!networkMonitor.isOnline()) {
             viewModelScope.launch {
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)))
@@ -94,7 +125,7 @@ class OcrScanViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isProcessing = true, rawText = null)
-            val result = receiptAiService.parseReceiptImage(uri)
+            val result = receiptAiService.parseReceiptImage(uri.toString())
             result.onSuccess { ai ->
                 val cat = runCatching { TransactionCategory.valueOf(ai.category) }.getOrDefault(TransactionCategory.SHOPPING)
                 val aiDate = ai.date.takeIf {

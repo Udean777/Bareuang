@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +42,8 @@ import com.ssajudn.bareuang.ui.components.AppDatePickerDialog
 import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.utils.DateUtils
 import java.io.File
+
+private const val PRIVACY_POLICY_URL = "https://bareuang.vercel.app/privacy"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +66,25 @@ fun OcrScanScreen(
     }
 
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingScanAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    fun openPrivacyPolicy() {
+        context.startActivity(
+            android.content.Intent(
+                android.content.Intent.ACTION_VIEW,
+                Uri.parse(PRIVACY_POLICY_URL)
+            )
+        )
+    }
+
+    fun runAfterOcrConsent(action: () -> Unit) {
+        if (uiState.hasOcrConsent) {
+            action()
+        } else {
+            pendingScanAction = action
+            viewModel.requestOcrConsent()
+        }
+    }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) cameraUri?.let { viewModel.processImage(it) }
     }
@@ -157,7 +179,7 @@ fun OcrScanScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = ::launchCamera,
+                    onClick = { runAfterOcrConsent(::launchCamera) },
                     enabled = uiState.isOnline && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
@@ -165,11 +187,13 @@ fun OcrScanScreen(
                 }
                 OutlinedButton(
                     onClick = {
-                        galleryLauncher.launch(
-                            androidx.activity.result.PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                        runAfterOcrConsent {
+                            galleryLauncher.launch(
+                                androidx.activity.result.PickVisualMediaRequest(
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
                             )
-                        )
+                        }
                     },
                     enabled = uiState.isOnline && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
@@ -293,6 +317,42 @@ fun OcrScanScreen(
             dismissButton = {
                 TextButton(onClick = { viewModel.dismissDailyOverride() }) {
                     Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (uiState.showOcrConsent) {
+        AlertDialog(
+            onDismissRequest = {
+                pendingScanAction = null
+                viewModel.dismissOcrConsent()
+            },
+            title = { Text(stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_consent_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_consent_message))
+                    TextButton(onClick = ::openPrivacyPolicy) {
+                        Text(stringResource(com.ssajudn.bareuang.presentation.R.string.privacy_policy_link))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.acceptOcrConsent()
+                    val action = pendingScanAction
+                    pendingScanAction = null
+                    action?.invoke()
+                }) {
+                    Text(stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_consent_accept))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingScanAction = null
+                    viewModel.dismissOcrConsent()
+                }) {
+                    Text(stringResource(com.ssajudn.bareuang.presentation.R.string.common_cancel))
                 }
             }
         )

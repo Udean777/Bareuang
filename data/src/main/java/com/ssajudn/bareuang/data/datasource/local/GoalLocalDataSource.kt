@@ -25,8 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class GoalLocalDataSource @Inject constructor(
     private val db: AppDatabase,
-    private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager
+    private val balanceService: WalletBalanceService
 ) {
 
     suspend fun getGoals(): Result<List<Goal>> = withContext(Dispatchers.IO) {
@@ -50,7 +49,7 @@ class GoalLocalDataSource @Inject constructor(
                 colorHex = request.colorHex,
                 notes = request.notes
             )
-            db.goalDao().insertGoal(LocalGoalEntity.fromGoal(localGoal, isSynced = false).copy(ownerId = sessionManager.userId))
+            db.goalDao().insertGoal(LocalGoalEntity.fromGoal(localGoal, isSynced = false))
             Result.success(localGoal)
         } catch (e: Exception) {
             return@withContext Result.failure(ApiErrorParser.fromThrowable(e))
@@ -90,7 +89,7 @@ class GoalLocalDataSource @Inject constructor(
                         walletId = walletId
                     )
                     db.transactionDao().insertTransaction(
-                        LocalTransactionEntity.fromTransaction(localTx, isSynced = false).copy(ownerId = sessionManager.userId)
+                        LocalTransactionEntity.fromTransaction(localTx, isSynced = false)
                     )
                 }
                 db.runInTransaction { block() }

@@ -50,20 +50,10 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-            buildConfigField(
-                "String",
-                "WEB_CLIENT_ID",
-                "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\""
-            )
         }
         release {
             signingConfig = signingConfigs.getByName("release")
             buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\"")
-            buildConfigField(
-                "String",
-                "WEB_CLIENT_ID",
-                "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\""
-            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -132,17 +122,6 @@ dependencies {
     // Home screen widget (Glance)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
-
-    // Networking (Retrofit & Gson)
-
-    // CameraX & ML Kit (Snap Ledger OCR)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
-    implementation(libs.google.mlkit.text.recognition)
-
-    // Firebase Authentication & Google Credentials
 
     // Room Database (Local Offline Storage)
     implementation(libs.androidx.room.runtime)

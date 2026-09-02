@@ -1,9 +1,9 @@
 package com.ssajudn.bareuang.ui.onboarding
 
 import androidx.lifecycle.ViewModel
-import com.ssajudn.bareuang.data.local.CurrencyPreferences
-import com.ssajudn.bareuang.data.local.ThemePreferences
-import com.ssajudn.bareuang.data.local.UserSessionManager
+import com.ssajudn.bareuang.domain.port.CurrencyPreferencesPort
+import com.ssajudn.bareuang.domain.port.ThemePreferencesPort
+import com.ssajudn.bareuang.domain.port.OnboardingStatePort
 import com.ssajudn.bareuang.domain.model.AppCurrency
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,9 +12,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val sessionManager: UserSessionManager,
-    private val themePreferences: ThemePreferences,
-    private val currencyPreferences: CurrencyPreferences
+    private val onboardingState: OnboardingStatePort,
+    private val themePreferences: ThemePreferencesPort,
+    private val currencyPreferences: CurrencyPreferencesPort
 ) : ViewModel() {
 
     val darkMode: StateFlow<AppThemeDarkMode> = themePreferences.darkMode
@@ -28,12 +28,9 @@ class OnboardingViewModel @Inject constructor(
         currencyPreferences.setCurrency(curr)
     }
 
-    /**
-     * Full-offline app: a locally generated session id is the only identity
-     * needed. All data stays in Room on this device.
-     */
+    /** Marks local onboarding complete; the app has no account or cloud profile. */
     fun startLocalSession(onStarted: () -> Unit) {
-        sessionManager.startGuestSession()
+        onboardingState.completeOnboarding()
         onStarted()
     }
 }

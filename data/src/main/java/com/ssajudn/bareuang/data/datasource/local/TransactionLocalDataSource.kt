@@ -25,7 +25,6 @@ import javax.inject.Singleton
 class TransactionLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager,
     private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) {
 
@@ -45,6 +44,14 @@ class TransactionLocalDataSource @Inject constructor(
                 Result.failure(ApiErrorParser.fromThrowable(e))
             }
         }
+
+    suspend fun getAllTransactions(): Result<List<Transaction>> = withContext(Dispatchers.IO) {
+        try {
+            Result.success(db.transactionDao().getAllTransactions().map { it.toTransaction() })
+        } catch (e: Exception) {
+            Result.failure(ApiErrorParser.fromThrowable(e))
+        }
+    }
 
     suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction> =
         withContext(Dispatchers.IO) {
@@ -109,8 +116,7 @@ class TransactionLocalDataSource @Inject constructor(
                     if (!isRecurring) {
                         balanceService.adjustForCreate(request)
                     }
-                    val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
-                    db.transactionDao().insertTransaction(entity)
+                    db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(newTx, isSynced = false))
                 }
                 Result.success(newTx)
             } catch (e: Exception) {
@@ -156,8 +162,7 @@ class TransactionLocalDataSource @Inject constructor(
                         nextOccurrenceDate = nextDate
                     )
                     if (!isRecurring) balanceService.adjustForCreate(req)
-                    val entity = LocalTransactionEntity.fromTransaction(newTx, isSynced = false).copy(ownerId = sessionManager.userId)
-                    db.transactionDao().insertTransaction(entity)
+                    db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(newTx, isSynced = false))
                     inserted++
                 }
             }

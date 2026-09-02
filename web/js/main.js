@@ -110,8 +110,8 @@ function applyLang(lang) {
   if (metaDesc) {
     metaDesc.content =
       lang === "en"
-        ? "Know how long your money lasts. Multi-wallet, bill tracking, and savings goals — 100% offline, no account, no internet."
-        : "Tahu sampai kapan uangmu tahan. Kelola banyak dompet, pantau tagihan, dan wujudkan target tabungan — 100% offline, tanpa akun, tanpa internet.";
+        ? "Know how long your money lasts. Core financial data stays local; optional receipt OCR is online and consent-gated."
+        : "Tahu sampai kapan uangmu tahan. Data keuangan utama tersimpan lokal; OCR struk online bersifat opsional dan membutuhkan consent.";
   }
 }
 

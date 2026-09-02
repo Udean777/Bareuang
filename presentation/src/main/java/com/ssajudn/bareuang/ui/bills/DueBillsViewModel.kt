@@ -2,7 +2,7 @@ package com.ssajudn.bareuang.ui.bills
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.data.notification.BillReminderScheduler
+import com.ssajudn.bareuang.domain.port.BillReminderSchedulerPort
 import com.ssajudn.bareuang.domain.model.CreateDueBillRequest
 import com.ssajudn.bareuang.domain.model.DueBill
 import com.ssajudn.bareuang.domain.model.DueBillStatus
@@ -40,7 +40,7 @@ sealed interface DueBillsUiState {
 class DueBillsViewModel @Inject constructor(
     private val repository: DueBillRepository,
     private val walletRepository: WalletRepository,
-    private val reminderScheduler: BillReminderScheduler
+    private val reminderScheduler: BillReminderSchedulerPort
 ) : ViewModel() {
 
     private val _selectedStatus = MutableStateFlow(DueBillStatus.UNPAID)

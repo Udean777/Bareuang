@@ -32,9 +32,9 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val daysInMonth = now.getActualMaximum(Calendar.DAY_OF_MONTH)
             val daysPassed = now.get(Calendar.DAY_OF_MONTH)
 
-            val monthlyBudget = budgetRepository.getMonthlyBudget(monthYear).getOrDefault(0L)
+            val monthlyBudget = budgetRepository.getMonthlyBudget(monthYear).getOrElse { return Result.failure(it) }
 
-            val allTx = transactionRepository.getTransactions(limit = 500).getOrDefault(emptyList())
+            val allTx = transactionRepository.getAllTransactions().getOrElse { return Result.failure(it) }
             val recurringTemplates = allTx.filter { it.isRecurringParent }
             val executedTx = allTx.filter { !it.isRecurringParent }
             val currentMonthTx = executedTx.filter { it.date.startsWith(monthYear) }
@@ -51,7 +51,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val todaySpent = currentMonthTx.filter { it.date.take(10) == todayIso }.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
             val remainingToday = dailyAllowance - todaySpent
 
-            val wallets = walletRepository.getWallets().getOrDefault(emptyList())
+            val wallets = walletRepository.getWallets().getOrElse { return Result.failure(it) }
             val currentNetWorth = wallets.sumOf { it.balance }
 
             var estimatedDeathDay = daysInMonth
@@ -85,7 +85,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 )
             }.sortedByDescending { it.total }
 
-            val allBills = dueBillRepository.getDueBills().getOrDefault(emptyList())
+            val allBills = dueBillRepository.getDueBills().getOrElse { return Result.failure(it) }
             val unpaidSum = allBills.filter { it.status == DueBillStatus.UNPAID }.sumOf { it.totalAmount }
 
             val summary = DashboardSummary(

@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
  */
 interface TransactionRepository {
     suspend fun getTransactions(category: String? = null, page: Int = 1, limit: Int = 50): Result<List<Transaction>>
+    /** Full dataset for calculations/import dedup; UI lists must use pagination. */
+    suspend fun getAllTransactions(): Result<List<Transaction>> = getTransactions(page = 1, limit = Int.MAX_VALUE)
     suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction>
     suspend fun bulkCreate(requests: List<CreateTransactionRequest>): Result<Int>
     suspend fun deleteTransaction(id: String): Result<Boolean>

@@ -2,32 +2,28 @@ name: CI
 
 on:
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
   push:
-    branches:
-      - main
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Build debug APK & run unit tests
-        run: ./gradlew :app:assembleDebug test --no-daemon --continue
-
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -35,3 +31,73 @@ jobs:
           name: test-results
           path: '**/build/reports/tests/**'
           if-no-files-found: ignore
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Run lint
+        run: ./gradlew lint --no-daemon
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: '**/build/reports/lint-results*'
+          if-no-files-found: ignore
+
+  migration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Run instrumentation and migration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          script: ./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon
+
+  web-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate web JavaScript and SEO
+        run: |
+          node --check web/js/main.js
+          node --check web/js/i18n.js
+          node --check web/api/download.js
+          node --check web/api/parse-receipt.js
+          node web/test/seo-check.mjs
+
+  assemble-debug:
+    needs: [unit-test, lint, migration-test, web-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon

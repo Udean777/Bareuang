@@ -197,8 +197,8 @@ fun AppNavigation(
     androidx.compose.runtime.LaunchedEffect(tourIndex) {
         val step = com.ssajudn.bareuang.ui.tour.TourScript.steps.getOrNull(tourIndex)
             ?: return@LaunchedEffect
-            kotlinx.coroutines.delay(800)
-            navigateToStepRoute(step.route)
+        kotlinx.coroutines.delay(800)
+        navigateToStepRoute(step.route)
     }
 
     val currentTourStep = com.ssajudn.bareuang.ui.tour.TourScript.steps.getOrNull(tourIndex)
@@ -406,7 +406,7 @@ fun AppNavigation(
                     onNavigateToOcr = {
                         navController.navigate(Screen.OcrScan.route)
                     },
-                    onSignOutSuccess = {
+                    onLocalDataReset = {
                         navController.navigate(Screen.Onboarding.route) {
                             popUpTo(0) { inclusive = true }
                         }

@@ -90,15 +90,29 @@ class AnalyticsViewModel @Inject constructor(
             }
 
             val summaryResult = getDashboardSummary()
-            val transactionsResult = transactionRepository.getTransactions(limit = 100)
+            val transactionsResult = transactionRepository.getAllTransactions()
             val cashflowResult = getCashflow()
             val netWorthResult = getNetWorth()
 
+            val failedResult = listOf(summaryResult, transactionsResult, cashflowResult, netWorthResult)
+                .firstOrNull { it.isFailure }
+            if (failedResult != null) {
+                _isRefreshing.value = false
+                if (_uiState.value !is AnalyticsUiState.Success) {
+                    val cause = failedResult.exceptionOrNull()
+                    android.util.Log.e("Analytics", "load failed", cause)
+                    _uiState.value = AnalyticsUiState.Error(
+                        (cause as? AppException)?.userMessage() ?: "Gagal memuat data analytics"
+                    )
+                }
+                return@launch
+            }
+
             if (summaryResult.isSuccess) {
                 val summary = summaryResult.getOrNull()!!
-                val transactions = transactionsResult.getOrDefault(emptyList())
-                val cashflow = cashflowResult.getOrDefault(emptyList())
-                val netWorthTrend = netWorthResult.getOrDefault(emptyList())
+                val transactions = transactionsResult.getOrNull()!!
+                val cashflow = cashflowResult.getOrNull()!!
+                val netWorthTrend = netWorthResult.getOrNull()!!
 
                 val totalSpent = summary.totalSpent
                 val totalIncome = cashflow.lastOrNull()?.income ?: 0L
@@ -133,12 +147,6 @@ class AnalyticsViewModel @Inject constructor(
                     selectedTab = prevTab
                 )
                 _isRefreshing.value = false
-            } else {
-                _isRefreshing.value = false
-                if (_uiState.value !is AnalyticsUiState.Success) {
-                    android.util.Log.e("Analytics", "load failed", summaryResult.exceptionOrNull())
-                    _uiState.value = AnalyticsUiState.Error("")
-                }
             }
         }
     }

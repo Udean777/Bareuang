@@ -38,7 +38,6 @@ class ProcessRecurringTransactionsUseCase @Inject constructor() {
                 iterations++
                 val newTx = Transaction(
                     id = UUID.randomUUID().toString(),
-                    userId = template.userId,
                     amount = template.amount,
                     type = template.type,
                     category = template.category,

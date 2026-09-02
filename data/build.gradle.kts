@@ -7,17 +7,18 @@ plugins {
 android {
     namespace = "com.ssajudn.bareuang.data"
     compileSdk = 36
-    defaultConfig { minSdk = 26 }
+    defaultConfig {
+        minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
     buildTypes {
         debug {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
             buildConfigField("String", "PARSE_RECEIPT_URL", "\"http://10.0.2.2:3000/api/parse-receipt\"")
-            buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"")
         }
         release {
             buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\"")
             buildConfigField("String", "PARSE_RECEIPT_URL", "\"https://bareuang.vercel.app/api/parse-receipt\"")
-            buildConfigField("String", "WEB_CLIENT_ID", "\"234922787074-fnm37va5028brlr45jmc9gvfp1ksgr17.apps.googleusercontent.com\"")
         }
     }
     compileOptions {
@@ -45,25 +46,22 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
     implementation(libs.okhttp)
     implementation(libs.google.gson)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
-    ksp(libs.hilt.compiler)
 
     // Translation & Preferences
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.appcompat)
-    implementation(libs.google.gson)
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.room.testing)
 }

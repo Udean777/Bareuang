@@ -61,7 +61,7 @@ object BillProviderCatalog {
             return if (id != 0) id else null
         }
         if (providerIconUrl != null && providerIconUrl.startsWith("/")) {
-            // Full-offline app: hanya path file lokal yang didukung.
+            // Path file lokal yang didukung; OCR online adalah fitur terpisah.
             return java.io.File(providerIconUrl)
         }
         return when {
@@ -98,7 +98,8 @@ object BillProviderCatalog {
 
 /**
  * Renders a local-only provider icon: drawable resource id or a local image
- * file (from the photo picker). The app is fully offline — no remote URLs.
+ * file (from the photo picker). Core bill data stays local; optional OCR uses
+ * the separately disclosed online endpoint.
  */
 @Composable
 internal fun LocalProviderIcon(model: Any, size: androidx.compose.ui.unit.Dp) {

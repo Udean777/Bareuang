@@ -2,11 +2,15 @@ package com.ssajudn.bareuang.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.data.local.BackupRestoreManager
-import com.ssajudn.bareuang.data.local.ThemePreferences
-import com.ssajudn.bareuang.data.local.TourPreferences
-import com.ssajudn.bareuang.data.local.UserSessionManager
-import com.ssajudn.bareuang.data.local.LocalDataResetter
+import com.ssajudn.bareuang.domain.port.BackupRestorePort
+import com.ssajudn.bareuang.domain.port.ThemePreferencesPort
+import com.ssajudn.bareuang.domain.port.TourPreferencesPort
+import com.ssajudn.bareuang.domain.port.OnboardingStatePort
+import com.ssajudn.bareuang.domain.port.LocalDataResetPort
+import com.ssajudn.bareuang.domain.port.WidgetPreferencesPort
+import com.ssajudn.bareuang.domain.port.CurrencyPreferencesPort
+import com.ssajudn.bareuang.domain.port.BillReminderPreferencesPort
+import com.ssajudn.bareuang.domain.port.BillReminderSchedulerPort
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,9 +26,8 @@ import com.ssajudn.bareuang.ui.common.UiEffect
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val userId: String = "",
     val isLoading: Boolean = false,
-    val isSignedOut: Boolean = false,
+    val isLocalDataReset: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null,
     val errorText: UiText? = null,
@@ -33,24 +36,33 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val sessionManager: UserSessionManager,
-    private val dataResetter: LocalDataResetter,
-    private val backupManager: BackupRestoreManager,
-    private val themePrefs: ThemePreferences,
-    private val tourPrefs: TourPreferences,
-    private val widgetPrefs: com.ssajudn.bareuang.data.local.WidgetPreferences,
-    private val currencyPrefs: com.ssajudn.bareuang.data.local.CurrencyPreferences
+    private val onboardingState: OnboardingStatePort,
+    private val dataResetter: LocalDataResetPort,
+    private val backupManager: BackupRestorePort,
+    private val themePrefs: ThemePreferencesPort,
+    private val tourPrefs: TourPreferencesPort,
+    private val widgetPrefs: WidgetPreferencesPort,
+    private val currencyPrefs: CurrencyPreferencesPort,
+    private val reminderPrefs: BillReminderPreferencesPort,
+    private val reminderScheduler: BillReminderSchedulerPort
 ) : ViewModel() {
 
     val darkMode get() = themePrefs.darkMode
     val widgetHideBalance get() = widgetPrefs.hideBalance
     val currency get() = currencyPrefs.currency
+    val reminderHour get() = reminderPrefs.reminderHour()
+    val reminderMinute get() = reminderPrefs.reminderMinute()
 
     fun setDarkMode(mode: AppThemeDarkMode) = themePrefs.setDarkMode(mode)
 
     fun setCurrency(currency: com.ssajudn.bareuang.domain.model.AppCurrency) = currencyPrefs.setCurrency(currency)
 
     fun setHideBalance(hidden: Boolean) = widgetPrefs.setHideBalance(hidden)
+
+    fun setReminderTime(hour: Int, minute: Int) {
+        reminderPrefs.setReminderTime(hour, minute)
+        reminderScheduler.scheduleDailyAt(hour, minute)
+    }
 
     fun resetTour() = tourPrefs.resetTour()
 
@@ -62,19 +74,11 @@ class SettingsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    init {
-        loadUserProfile()
-    }
-
-    fun loadUserProfile() {
-        _uiState.value = _uiState.value.copy(userId = sessionManager.userId)
-    }
-
     fun exportBackup(uri: android.net.Uri) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             _operation.value = OperationState.Loading
-            val result = backupManager.exportBackupToUri(uri)
+            val result = backupManager.exportBackup(uri.toString())
             _uiState.value = _uiState.value.copy(isLoading = false)
             if (result.isSuccess) {
                 val ui = UiText.Res(R.string.settings_backup_success_msg)
@@ -95,7 +99,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             _operation.value = OperationState.Loading
-            val result = backupManager.importBackupFromUri(uri)
+            val result = backupManager.importBackup(uri.toString())
             _uiState.value = _uiState.value.copy(isLoading = false)
             if (result.isSuccess) {
                 val count = result.getOrNull() ?: 0
@@ -114,7 +118,7 @@ class SettingsViewModel @Inject constructor(
     }
 
 
-    fun signOut() {
+    fun resetLocalData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             _operation.value = OperationState.Loading
@@ -122,8 +126,8 @@ class SettingsViewModel @Inject constructor(
                 dataResetter.wipe()
             } catch (_: Exception) {
             }
-            sessionManager.clearSession(preserveOnboarding = false)
-            _uiState.value = _uiState.value.copy(isLoading = false, isSignedOut = true)
+            onboardingState.resetOnboarding()
+            _uiState.value = _uiState.value.copy(isLoading = false, isLocalDataReset = true)
             _operation.value = OperationState.Success()
             _effect.send(UiEffect.Navigate("splash"))
         }

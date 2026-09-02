@@ -2,16 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!--
-      CAMERA is declared for the planned receipt-scanning (OCR) feature. The UI
-      for it does not exist yet (ui/ocr/ is empty), so nothing currently requests
-      this permission at runtime. If that feature is dropped, remove this along
-      with the CameraX and ML Kit dependencies in app/build.gradle.kts.
-    -->
+    <!-- Used only when the user chooses receipt scanning. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
-    <!-- OCR via AI requires internet; used to gate FAB/scan when offline -->
+    <!-- Receipt AI OCR is optional, consent-gated, and requires internet. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 

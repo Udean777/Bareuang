@@ -1,4 +1,4 @@
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
     <string name="app_name">Bareuang</string>
     <!-- Language -->
     <string name="language_settings">Language</string>
@@ -31,15 +31,11 @@
     <string name="common_add">Add</string>
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_google_connected">Google Account Connected</string>
     <string name="settings_backup_title">Offline Backup</string>
     <string name="settings_export_title">Export Backup File (Download)</string>
     <string name="settings_export_desc">Save all transactions, bills, wallets, and savings goals to a JSON file</string>
     <string name="settings_import_title">Import Backup File (Restore)</string>
     <string name="settings_import_desc">Restore all data from a previous JSON backup file</string>
-    <string name="settings_cloud_title">Account &amp; Cloud Sync (Optional)</string>
-    <string name="settings_link_google_title">Link Google Account</string>
-    <string name="settings_link_google_desc">Sync data automatically to the cloud</string>
     <string name="settings_support_title">Support &amp; Appreciation</string>
     <string name="settings_donate_title">Donate to Developer</string>
     <string name="settings_donate_desc">Buy a coffee or support Bareuang development</string>
@@ -49,17 +45,13 @@
     <string name="settings_share_desc">Invite friends to manage finances &amp; financial runway</string>
     <string name="settings_share_message">Manage your finances and calculate your financial runway with Bareuang! Check the repo at: https://github.com/Udean777/Bare-Budget</string>
     <string name="settings_share_chooser">Share Bareuang</string>
-    <string name="settings_danger_title">Session &amp; Danger Zone</string>
-    <string name="settings_danger_desc">Clear current session and return to onboarding</string>
+    <string name="settings_danger_title">Local Data</string>
+    <string name="settings_danger_desc">Erase data stored on this device and return to onboarding</string>
     <string name="settings_reset_local">Reset Local Data</string>
-    <string name="settings_sign_out">Sign Out</string>
     <string name="settings_footer_tagline">Finance that feels like a warm hug</string>
-    <string name="settings_dialog_reset_title">Reset Guest Session?</string>
-    <string name="settings_dialog_signout_title">Sign Out?</string>
-    <string name="settings_dialog_reset_message">Are you sure you want to exit? Since you are in Guest Mode, your local transactions and records will be cleared.</string>
-    <string name="settings_dialog_signout_message">Are you sure you want to sign out from your Google account on this device?</string>
+    <string name="settings_dialog_reset_title">Reset Local Data?</string>
+    <string name="settings_dialog_reset_message">This erases all transactions and records stored on this device. Export a backup first if you want to keep them.</string>
     <string name="settings_dialog_reset_confirm">Reset</string>
-    <string name="settings_dialog_signout_confirm">Sign Out</string>
     <!-- Formatted -->
     <string name="remaining_amount">Remaining <xliff:g id="amount">%1$s</xliff:g></string>
     <!-- Runway / CommonComponents -->
@@ -330,6 +322,12 @@
     <string name="settings_import_mutasi_desc">Import from BCA, GoPay, OVO (offline)</string>
     <string name="settings_ocr_title">Scan Receipt</string>
     <string name="settings_ocr_desc">Photo receipt → AI scan (requires internet)</string>
+    <string name="ocr_consent_title">Receipt scan privacy</string>
+    <string name="ocr_consent_message">To extract the receipt, its image will be sent over an encrypted connection to Bareuang\'s server and Google Gemini. The image is used only for this scan and is not stored by Bareuang. You can cancel and enter the transaction manually.</string>
+    <string name="ocr_consent_accept">Continue and send</string>
+    <string name="privacy_policy_link">Read Privacy Policy</string>
+    <string name="settings_privacy_title">Privacy Policy</string>
+    <string name="settings_privacy_desc">See how receipt images and local financial data are handled</string>
 
     <!-- Appearance -->
     <string name="appearance_title">Appearance</string>
@@ -425,19 +423,17 @@
     <string name="split_apply">Apply My Share (<xliff:g id="amount">%1$s</xliff:g>)</string>
     <!-- Onboarding -->
     <string name="onboarding_welcome">Welcome to Bareuang</string>
-    <string name="onboarding_choose_mode">Select an account mode to proceed</string>
-    <string name="onboarding_auth_desc">Sign in to sync your cloud records or continue instantly with a guest profile.</string>
-    <string name="auth_offline_message">You are offline. Connect to the internet to sign in with Google.</string>
-    <string name="auth_guest_offline_message">No internet connection. Guest mode still works offline — your data stays on this device.</string>
+    <string name="onboarding_choose_mode">Set up your local finance tracker</string>
+    <string name="onboarding_auth_desc">No account or cloud sync is required; your finance data stays on this device.</string>
+    <string name="auth_offline_message">Bareuang works offline. An internet connection is only needed for optional online receipt scanning.</string>
+    <string name="auth_guest_offline_message">No internet connection. Your financial data remains available on this device.</string>
     <string name="notif_perm_title">Never Miss a Bill</string>
     <string name="notif_perm_desc">Bareuang can remind you when bills are due — 3 days ahead, tomorrow, and today. Reminders are generated entirely on your device; nothing is sent anywhere.</string>
     <string name="notif_perm_allow">Allow Notifications</string>
     <string name="notif_perm_later">Maybe later</string>
-    <string name="onboarding_google_title">Sign In with Google</string>
-    <string name="onboarding_google_desc">Recommended. All your transaction history, budgets, and bills are backed up securely to the cloud. You won\'t lose your data when reinstalling.</string>
-    <string name="onboarding_guest_title">Guest Mode</string>
-    <string name="onboarding_guest_desc">100% Offline &amp; without login. All data is stored on device and can be backed up/restored anytime via JSON file.</string>
-    <string name="onboarding_guest_btn">Continue as Guest</string>
+    <string name="onboarding_guest_title">Local Profile</string>
+    <string name="onboarding_guest_desc">No account required. Core financial data stays on device; receipt scanning is optional, online, and requires consent. Backup and restore use a JSON file.</string>
+    <string name="onboarding_guest_btn">Continue</string>
     <string name="onboarding_slide1_title">Zero Friction Expense Tracking</string>
     <string name="onboarding_slide1_desc">Log your daily expenses in seconds. Clean, minimal, and focused on what truly matters to your wallet.</string>
     <string name="onboarding_slide2_title">Track Your Financial Runway</string>

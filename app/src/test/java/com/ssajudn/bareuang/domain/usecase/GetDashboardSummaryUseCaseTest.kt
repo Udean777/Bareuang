@@ -35,7 +35,11 @@ private class FakeBudgetRepo(var budget: Long = 0L) : BudgetRepository {
 }
 
 private class FakeTxRepo(var txs: List<Transaction> = emptyList()) : TransactionRepository {
-    override suspend fun getTransactions(category: String?, page: Int, limit: Int) = Result.success(txs)
+    var requestedLimit: Int = 0
+    override suspend fun getTransactions(category: String?, page: Int, limit: Int): Result<List<Transaction>> {
+        requestedLimit = limit
+        return Result.success(txs)
+    }
     override suspend fun createTransaction(request: CreateTransactionRequest) = Result.success(txs.firstOrNull()!!)
     override suspend fun bulkCreate(requests: List<CreateTransactionRequest>) = Result.success(requests.size)
     override suspend fun deleteTransaction(id: String) = Result.success(true)
@@ -76,9 +80,10 @@ class GetDashboardSummaryUseCaseTest {
         val wallets = listOf(Wallet(id = "w1", name = "Main", balance = 1_000_000L))
         val bills = listOf(DueBill(id = "b1", providerName = "Listrik", totalAmount = 200_000L, dueDate = "$monthYear-25", status = DueBillStatus.UNPAID))
 
+        val txRepo = FakeTxRepo(txs)
         val useCase = GetDashboardSummaryUseCase(
             budgetRepository = FakeBudgetRepo(budget = 1_000_000L),
-            transactionRepository = FakeTxRepo(txs),
+            transactionRepository = txRepo,
             walletRepository = FakeWalletRepo(wallets),
             dueBillRepository = FakeDueBillRepo(bills)
         )
@@ -94,5 +99,6 @@ class GetDashboardSummaryUseCaseTest {
         assertEquals(daysInMonth, summary.daysInMonth)
         assertEquals(1_000_000L, summary.netWorth)
         assertEquals(200_000L, summary.unpaidDueBillsSum)
+        assertEquals(Int.MAX_VALUE, txRepo.requestedLimit)
     }
 }

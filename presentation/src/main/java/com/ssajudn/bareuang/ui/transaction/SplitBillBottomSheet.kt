@@ -36,6 +36,8 @@ fun SplitBillBottomSheet(
     onApplyMyPortion: (Long) -> Unit
 ) {
     val context = LocalContext.current
+    val personDefaultTemplate = stringResource(R.string.split_person_default)
+    val defaultMerchant = stringResource(R.string.split_default_merchant)
     var peopleCount by remember { mutableIntStateOf(2) }
     var taxPercentage by remember { mutableStateOf("0") }
     var servicePercentage by remember { mutableStateOf("0") }
@@ -43,14 +45,14 @@ fun SplitBillBottomSheet(
     val meLabel = stringResource(R.string.split_person_me)
     var personNames by remember(meLabel) {
         mutableStateOf(
-            listOf(meLabel, context.getString(R.string.split_person_default, 1))
+            listOf(meLabel, String.format(personDefaultTemplate, 1))
         )
     }
 
     LaunchedEffect(peopleCount) {
         val current = personNames.toMutableList()
         while (current.size < peopleCount) {
-            current.add(context.getString(R.string.split_person_default, current.size + 1))
+            current.add(String.format(personDefaultTemplate, current.size + 1))
         }
         while (current.size > peopleCount && current.size > 1) {
             current.removeAt(current.size - 1)
@@ -242,7 +244,7 @@ fun SplitBillBottomSheet(
                     onClick = {
                         shareSplitToWhatsApp(
                             context = context,
-                            merchant = merchantName.ifBlank { context.getString(R.string.split_default_merchant) },
+                            merchant = merchantName.ifBlank { defaultMerchant },
                             total = grandTotal,
                             peopleCount = peopleCount,
                             perPerson = perPersonAmount,

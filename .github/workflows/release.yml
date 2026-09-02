@@ -30,7 +30,10 @@ jobs:
           echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > keystores/bareuang-release.keystore
 
       - name: Run unit tests
-        run: ./gradlew test --no-daemon --continue
+        run: ./gradlew test --no-daemon
+
+      - name: Run lint quality gate
+        run: ./gradlew lint --no-daemon
 
       - name: Build signed APK
         env:
@@ -44,9 +47,15 @@ jobs:
       - name: Collect artifacts
         run: |
           CODE="${{ github.run_number }}"
+          ZIPALIGN=$(find "$ANDROID_HOME/build-tools" -name zipalign | sort -V | tail -1)
+          "$ZIPALIGN" -c -P 16 -v 4 app/build/outputs/apk/release/app-release.apk
+          APK_SIZE=$(stat -c%s app/build/outputs/apk/release/app-release.apk)
+          echo "Release APK size: ${APK_SIZE} bytes"
+          test "$APK_SIZE" -le 25000000
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-v1.0-${CODE}.apk"
           cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-latest.apk"
+          sha256sum dist/*.apk > dist/SHA256SUMS.txt
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -57,4 +66,5 @@ jobs:
             Build manual via GitHub Actions.
             - Commit: ${{ github.sha }}
             - versionCode: ${{ github.run_number }}
+            - SHA-256: lihat `SHA256SUMS.txt` pada release artifact.
           files: dist/*

@@ -27,12 +27,12 @@ class CheckDailyBudgetUseCase @Inject constructor(
             // only enforce for today
             if (date.length < 10 || date.take(10) != todayIso) return Result.success(Unit)
 
-            val monthlyBudget = budgetRepository.getMonthlyBudget(monthYear).getOrDefault(0L)
+            val monthlyBudget = budgetRepository.getMonthlyBudget(monthYear).getOrElse { return Result.failure(it) }
             if (monthlyBudget <= 0) return Result.success(Unit) // monthly gate handles this
 
             val daysInMonth = now.getActualMaximum(Calendar.DAY_OF_MONTH)
             val dailyAllowance = if (monthlyBudget > 0) monthlyBudget / daysInMonth else 0L
-            val allTx = transactionRepository.getTransactions(limit = 500).getOrDefault(emptyList())
+            val allTx = transactionRepository.getAllTransactions().getOrElse { return Result.failure(it) }
             val currentMonthTx = allTx.filter { !it.isRecurringParent && it.date.startsWith(monthYear) }
             val todaySpent = currentMonthTx.filter { it.type == TransactionType.EXPENSE && it.date.take(10) == todayIso }.sumOf { it.amount }
             val remainingToday = dailyAllowance - todaySpent

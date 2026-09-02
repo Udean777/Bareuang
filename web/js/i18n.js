@@ -6,7 +6,7 @@ const dict = {
     "nav.screenshots": "Screenshot",
     "nav.faq": "FAQ",
     "nav.download": "Download",
-    "hero.eyebrow": "100% Offline · Tanpa akun · Tanpa internet",
+    "hero.eyebrow": "Offline-first · Data lokal · OCR online opsional",
     "hero.title":
       "Tahu sampai <em>kapan uangmu tahan</em>, tanpa spreadsheet dingin.",
     "hero.desc":
@@ -14,12 +14,12 @@ const dict = {
     "hero.download": "Download",
     "hero.viewFeatures": "Lihat fitur",
     "hero.note": "Gratis · Tidak ada iklan · Data tetap di HP kamu",
-    "hero.badge1": "No Internet permission",
+    "hero.badge1": "OCR online, dengan consent",
     "hero.badge2": "Backup .json offline",
     "hero.badge3": "Cozy, bukan kaku",
     "hero.floatTitle": "Runway: 47 hari lagi",
     "hero.floatSub": "Burn rate Rp 68.400 / hari · Estimasi habis 12 Feb",
-    "trust.ocr": "Scan struk OCR on-device",
+    "trust.ocr": "Scan struk AI opsional",
     "trust.note":
       "Transaksi baru aktif setelah budget bulanan diatur — biar runway selalu akurat.",
     "features.kicker": "Fitur cozy",
@@ -42,7 +42,7 @@ const dict = {
       "Impor BCA/e-wallet (delimiter , / ;, 8 format tanggal, dedup otomatis). 5MB guard.",
     "features.c6t": "Scan Struk (OCR)",
     "features.c6d":
-      "Foto struk → ML Kit on-device. Preview kertas termal, edit merchant/total/category, tanpa upload.",
+      "Foto struk → Google Gemini via proxy Bareuang (butuh internet dan consent). Preview termal, edit hasil sebelum disimpan lokal.",
     "features.c7t": "Savings Goals",
     "features.c7d":
       "Target tabungan + kalkulator setoran/penarikan. Progress jelas, motivasi jalan.",
@@ -70,7 +70,7 @@ const dict = {
     "faq.title": "Yang sering ditanya",
     "faq.q1": "Apakah data saya dikirim ke server?",
     "faq.a1":
-      "Tidak. Bareuang 100% offline. Tidak minta izin INTERNET, tidak ada akun, tidak ada upload. Semua di Room DB lokal HP kamu. Backup pun file .json offline.",
+      "Data keuangan utama tersimpan di Room DB lokal. Scan struk adalah fitur online opsional: setelah consent, foto dikirim melalui proxy Bareuang ke Google Gemini untuk diekstrak. Input manual dan import CSV tetap bisa dipakai tanpa scan.",
     "faq.q2": "Kenapa harus atur budget dulu sebelum catat transaksi?",
     "faq.a2":
       'Ini "Budget Gate" — biar Financial Runway punya acuan yang akurat. Tanpa budget, estimasi hari bertahan tidak bisa dihitung dengan benar.',
@@ -79,7 +79,7 @@ const dict = {
       "Bisa via Import CSV. Mendukung delimiter koma/semicolon, debit-kredit terpisah, 8 format tanggal, dan dedup otomatis berdasarkan tanggal + nominal + merchant.",
     "faq.q4": "Scan struk butuh internet?",
     "faq.a4":
-      "Tidak. OCR pakai ML Kit on-device. Foto struk diproses lokal, preview kertas termal, kamu bisa edit sebelum simpan.",
+      "Ya. Scan struk membutuhkan internet dan consent karena foto dikirim ke proxy Bareuang dan Google Gemini. Hasilnya dapat kamu edit sebelum disimpan ke database lokal.",
     "faq.q5": "Apakah Bareuang memberi saran investasi?",
     "faq.a5":
       "Tidak. Bareuang hanya alat pencatatan & estimasi. Bukan penasihat keuangan — lihat Disclaimer di Terms.",
@@ -87,10 +87,10 @@ const dict = {
     "faq.a6":
       "Pengaturan → Hapus Data, atau hapus langsung via Settings Android → Apps → Bareuang → Clear Data, atau uninstall. Karena offline, data hilang permanen.",
     "cta.title": "Siap tahu kapan uangmu habis — sebelum benar-benar habis?",
-    "cta.sub": "Download Bareuang. Cozy, offline, dan jujur soal angka.",
+    "cta.sub": "Download Bareuang. Data lokal, OCR online opsional, dan jujur soal angka.",
     "cta.play": "Download",
     "footer.desc":
-      "Teman cozy buat uangmu. 100% offline, tanpa akun, tanpa internet. Dibuat dengan ❤️ di Indonesia.",
+      "Teman cozy buat uangmu. Data utama lokal; Scan Struk online opsional dengan consent. Dibuat dengan ❤️ di Indonesia.",
     "footer.product": "Produk",
     "footer.features": "Fitur",
     "footer.screenshots": "Screenshot",
@@ -102,7 +102,7 @@ const dict = {
     "nav.screenshots": "Screenshots",
     "nav.faq": "FAQ",
     "nav.download": "Download",
-    "hero.eyebrow": "100% Offline · No account · No internet",
+    "hero.eyebrow": "Offline-first · Local data · Optional online OCR",
     "hero.title":
       "Know <em>how long your money lasts</em> — no cold spreadsheets.",
     "hero.desc":
@@ -110,12 +110,12 @@ const dict = {
     "hero.download": "Download",
     "hero.viewFeatures": "View features",
     "hero.note": "Free · No ads · Data stays on your phone",
-    "hero.badge1": "No Internet permission",
+    "hero.badge1": "Online OCR, with consent",
     "hero.badge2": "Backup .json offline",
     "hero.badge3": "Cozy, not stiff",
     "hero.floatTitle": "Runway: 47 days left",
     "hero.floatSub": "Burn rate Rp 68,400 / day · Est. out Feb 12",
-    "trust.ocr": "Receipt OCR on-device",
+    "trust.ocr": "Optional AI receipt scan",
     "trust.note":
       "New transactions unlock after setting monthly budget — so runway stays accurate.",
     "features.kicker": "Cozy features",
@@ -137,7 +137,7 @@ const dict = {
       "Import BCA/e-wallet (comma/semicolon, 8 date formats, auto dedup). 5MB guard.",
     "features.c6t": "Receipt Scan (OCR)",
     "features.c6d":
-      "Snap receipt → ML Kit on-device. Thermal preview, edit merchant/total/category, no upload.",
+      "Snap a receipt → Google Gemini through Bareuang's proxy (internet and consent required). Edit the result before saving locally.",
     "features.c7t": "Savings Goals",
     "features.c7d":
       "Targets + deposit/withdraw calculator. Clear progress, real motivation.",
@@ -165,7 +165,7 @@ const dict = {
     "faq.title": "Frequently asked",
     "faq.q1": "Is my data sent to a server?",
     "faq.a1":
-      "No. Bareuang is 100% offline. No INTERNET permission, no account, no upload. Everything in local Room DB. Even backup is an offline .json file.",
+      "Core financial data stays in the local Room database. Receipt scan is optional and online: after consent, the photo is sent through Bareuang's proxy to Google Gemini for extraction. Manual entry and CSV import remain available without scanning.",
     "faq.q2": "Why set budget before logging transactions?",
     "faq.a2":
       "That's the Budget Gate — so Financial Runway has an accurate baseline. Without budget, the survival estimate can't be computed correctly.",
@@ -174,7 +174,7 @@ const dict = {
       "Yes via CSV import. Supports comma/semicolon, split debit-credit, 8 date formats, and auto dedup by date + amount + merchant.",
     "faq.q4": "Does receipt scan need internet?",
     "faq.a4":
-      "No. OCR uses on-device ML Kit. Photo is processed locally, thermal preview, editable before saving.",
+      "Yes. Receipt scan needs internet and consent because the photo is sent to Bareuang's proxy and Google Gemini. You can edit the result before saving it locally.",
     "faq.q5": "Does Bareuang give investment advice?",
     "faq.a5":
       "No. Bareuang is a logging & estimation tool, not a financial advisor — see Disclaimer in Terms.",
@@ -182,10 +182,10 @@ const dict = {
     "faq.a6":
       "Settings → Clear Data, or Android Settings → Apps → Bareuang → Clear Data, or uninstall. Offline means permanently gone.",
     "cta.title": "Ready to know when your money runs out — before it does?",
-    "cta.sub": "Download Bareuang. Cozy, offline, and honest about numbers.",
+    "cta.sub": "Download Bareuang. Local data, optional online OCR, and honest numbers.",
     "cta.play": "Download",
     "footer.desc":
-      "Your cozy money companion. 100% offline, no account, no internet. Made with ❤️ in Indonesia.",
+      "Your cozy money companion. Core data stays local; receipt scanning is optional online OCR with consent. Made with ❤️ in Indonesia.",
     "footer.product": "Product",
     "footer.features": "Features",
     "footer.screenshots": "Screenshots",

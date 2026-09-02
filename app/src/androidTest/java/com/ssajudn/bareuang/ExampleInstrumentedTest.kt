@@ -14,9 +14,9 @@ import org.junit.Assert.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 @RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
+class AppLaunchSmokeTest {
     @Test
-    fun useAppContext() {
+    fun appContext_hasBareuangPackage() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.ssajudn.bareuang", appContext.packageName)

@@ -6,30 +6,30 @@
     <title>Bareuang — Teman cozy buat uangmu</title>
     <meta
       name="description"
-      content="Tahu sampai kapan uangmu tahan. Kelola banyak dompet, pantau tagihan, dan wujudkan target tabungan — 100% offline, tanpa akun, tanpa internet."
+      content="Tahu sampai kapan uangmu tahan. Data keuangan utama lokal, dengan Scan Struk AI online opsional setelah consent."
     />
     <meta name="author" content="Bareuang" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#3E2A00" />
-    <link rel="canonical" href="https://bareuang.vercel.app/" />
-    <link rel="alternate" hreflang="id" href="https://bareuang.vercel.app/" />
-    <link rel="alternate" hreflang="en" href="https://bareuang.vercel.app/?lang=en" />
-    <link rel="alternate" hreflang="x-default" href="https://bareuang.vercel.app/" />
+    <link rel="canonical" href="https://bareuang.app/" />
+    <link rel="alternate" hreflang="id" href="https://bareuang.app/" />
+    <link rel="alternate" hreflang="en" href="https://bareuang.app/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://bareuang.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bareuang" />
-    <meta property="og:url" content="https://bareuang.vercel.app/" />
+    <meta property="og:url" content="https://bareuang.app/" />
     <meta property="og:title" content="Bareuang — Teman cozy buat uangmu" />
     <meta
       property="og:description"
-      content="Financial Runway, multi-wallet, budget per kategori, scan struk OCR on-device. 100% offline."
+      content="Financial Runway, multi-wallet, budget per kategori, dan Scan Struk AI online opsional dengan consent."
     />
     <meta
       property="og:image"
-      content="https://bareuang.vercel.app/assets/og-image.png"
+      content="https://bareuang.app/assets/og-image.png"
     />
     <meta
       property="og:image:secure_url"
-      content="https://bareuang.vercel.app/assets/og-image.png"
+      content="https://bareuang.app/assets/og-image.png"
     />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
@@ -41,11 +41,11 @@
     <meta name="twitter:title" content="Bareuang — Teman cozy buat uangmu" />
     <meta
       name="twitter:description"
-      content="Tahu sampai kapan uangmu tahan — 100% offline, tanpa akun, tanpa internet."
+      content="Tahu sampai kapan uangmu tahan — data keuangan utama lokal, Scan Struk AI online opsional."
     />
     <meta
       name="twitter:image"
-      content="https://bareuang.vercel.app/assets/og-image.png"
+      content="https://bareuang.app/assets/og-image.png"
     />
     <meta name="twitter:image:alt" content="Bareuang — Teman cozy buat uangmu" />
     <link rel="icon" href="/assets/logo.png" type="image/png" />
@@ -62,7 +62,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Bareuang",
-        "description": "Teman cozy buat uangmu — Financial Runway, multi-wallet, budget, scan struk OCR 100% offline.",
+        "description": "Teman cozy buat uangmu — Financial Runway, multi-wallet, budget, dan Scan Struk AI online opsional.",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Android",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
@@ -86,7 +86,7 @@
             "name": "Apakah data saya dikirim ke server?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Tidak. Bareuang 100% offline. Tidak minta izin INTERNET, tidak ada akun, tidak ada upload. Semua di Room DB lokal HP kamu."
+              "text": "Data keuangan utama tersimpan di Room DB lokal. Scan struk adalah fitur online opsional: setelah consent, foto dikirim melalui proxy Bareuang ke Google Gemini untuk diekstrak."
             }
           },
           {
@@ -110,7 +110,7 @@
             "name": "Scan struk butuh internet?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Tidak. OCR pakai ML Kit on-device."
+              "text": "Ya. Scan struk membutuhkan internet dan consent karena foto dikirim ke proxy Bareuang dan Google Gemini. Hasilnya dapat diedit sebelum disimpan lokal."
             }
           },
           {
@@ -157,13 +157,13 @@
             "@type": "ListItem",
             "position": 2,
             "name": "Privacy",
-            "item": "https://bareuang.vercel.app/privacy"
+                "item": "https://bareuang.app/privacy"
           },
           {
             "@type": "ListItem",
             "position": 3,
             "name": "Terms",
-            "item": "https://bareuang.vercel.app/terms"
+                "item": "https://bareuang.app/terms"
           }
         ]
       }
@@ -243,7 +243,7 @@
         <div class="container hero-grid">
           <div>
             <span class="eyebrow" data-i18n="hero.eyebrow"
-              ><i></i> 100% Offline · Tanpa akun · Tanpa internet</span
+              ><i></i> Offline-first · Data utama lokal · OCR online opsional</span
             >
             <h1 data-i18n="hero.title">
               Tahu sampai <em>kapan uangmu tahan</em>, tanpa spreadsheet dingin.
@@ -337,7 +337,7 @@
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                No Internet permission</span
+                OCR online, dengan consent</span
               >
               <span class="badge" data-i18n="hero.badge2"
                 ><svg
@@ -482,7 +482,7 @@
                   <path d="M5 13l4 4L19 7" />
                 </svg>
                 <span data-i18n="trust.ocr"
-                  >Scan struk OCR on-device</span
+                  >Scan struk AI opsional (dengan consent)</span
                 ></span
               >
               <span class="badge"
@@ -699,8 +699,8 @@
               </div>
               <h3 data-i18n="features.c6t">Scan Struk (OCR)</h3>
               <p data-i18n="features.c6d">
-                Foto struk → ML Kit on-device. Preview kertas termal, edit
-                merchant/total/category, tanpa upload.
+                Foto struk → Google Gemini via proxy Bareuang. Butuh internet
+                dan consent; hasil dapat diedit sebelum disimpan lokal.
               </p>
             </div>
             <div class="card reveal">
@@ -927,9 +927,10 @@
                 ></span>
               </summary>
               <p data-i18n="faq.a1">
-                Tidak. Bareuang 100% offline. Tidak minta izin INTERNET, tidak
-                ada akun, tidak ada upload. Semua di Room DB lokal HP kamu.
-                Backup pun file .json offline.
+                Data keuangan utama tersimpan di Room DB lokal. Scan struk
+                bersifat online dan opsional: setelah consent, foto dikirim ke
+                proxy Bareuang dan Google Gemini. Backup tetap berupa file JSON
+                yang kamu simpan sendiri.
               </p>
             </details>
             <details>
@@ -1003,8 +1004,9 @@
                 ></span>
               </summary>
               <p data-i18n="faq.a4">
-                Tidak. OCR pakai ML Kit on-device. Foto struk diproses lokal,
-                preview kertas termal, kamu bisa edit sebelum simpan.
+                Ya. Scan struk membutuhkan internet dan consent karena foto
+                dikirim ke proxy Bareuang dan Google Gemini. Hasilnya bisa
+                diedit sebelum disimpan ke database lokal.
               </p>
             </details>
             <details>
@@ -1128,7 +1130,8 @@
               ></a
             >
             <p class="footer-meta footer-desc" data-i18n="footer.desc">
-              Teman cozy buat uangmu. 100% offline, tanpa akun, tanpa internet.
+              Teman cozy buat uangmu. Data utama lokal, dengan OCR online
+              opsional setelah consent.
               Dibuat dengan
               <svg
                 width="12"
@@ -1146,8 +1149,8 @@
             </p>
             <p class="footer-meta footer-contact" id="contact">
               Kontak:
-              <a href="mailto:support@bareuang.app" class="contact-link"
-                >support@bareuang.app</a
+              <a href="mailto:sajudinmaruf@gmail.com" class="contact-link"
+                >sajudinmaruf@gmail.com</a
               >
             </p>
           </div>
