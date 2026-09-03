@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
 import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import com.ssajudn.bareuang.domain.error.AppException
-import com.ssajudn.bareuang.domain.error.userMessage
 import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.ui.common.toUiText
@@ -31,7 +30,6 @@ data class BudgetUiState(
     val parsedAmount: Long = 0L,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val errorMessage: String? = null,
     val error: UiText? = null,
     val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList(),
     val isCustomDailyTarget: Boolean = false,
@@ -153,32 +151,33 @@ class BudgetViewModel @Inject constructor(
 
     fun saveBudget() {
         val state = _uiState.value
+        if (state.isLoading || _operation.value is OperationState.Loading) return
         if (state.isLocked) {
             val ui = UiText.Res(BudgetError.LOCKED.resId)
-            _uiState.value = state.copy(errorMessage = null, error = ui)
+            _uiState.value = state.copy(error = ui)
             return
         }
         if (state.parsedAmount <= 0) {
             val ui = UiText.Res(BudgetError.INVALID_AMOUNT.resId)
-            _uiState.value = state.copy(errorMessage = null, error = ui)
+            _uiState.value = state.copy(error = ui)
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true, errorMessage = null, error = null)
+            _uiState.value = state.copy(isLoading = true, error = null)
             _operation.value = OperationState.Loading
             repository.setBudget(state.parsedAmount)
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
                     _operation.value = OperationState.Success()
-                    viewModelScope.launch { _effect.send(UiEffect.PopBackStack) }
+                    _effect.trySend(UiEffect.PopBackStack)
                 }
                 .onFailure { error ->
                     android.util.Log.e("Budget", "setBudget failed", error)
                     val ui = (error as? AppException)?.toUiText() ?: UiText.Res(BudgetError.SET_FAILED.resId)
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "", error = ui)
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = ui)
                     _operation.value = OperationState.Error("", ui)
-                    viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(ui)) }
+                    _effect.trySend(UiEffect.ShowSnackbarRes(ui))
                 }
         }
     }

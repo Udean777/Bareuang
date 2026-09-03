@@ -1,5 +1,6 @@
 package com.ssajudn.bareuang.ui.components
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -134,7 +135,7 @@ fun FinancialRunwayCard(
         val sweep by aurora.animateFloat(
             initialValue = 0f,
             targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(7000, easing = androidx.compose.animation.core.LinearEasing)),
+            animationSpec = infiniteRepeatable(tween(7000, easing = LinearEasing)),
             label = "auroraSweep",
         )
         Box {
@@ -285,81 +286,5 @@ fun FinancialRunwayCard(
             }
             }
         }
-    }
-}
-
-@Composable
-fun DailyPacingCard(
-    dailyAllowance: Long,
-    todaySpent: Long,
-    remainingToday: Long,
-    remainingDays: Int,
-    modifier: Modifier = Modifier,
-) {
-    val dailyExceeded = remainingToday < 0
-    val dailyProgress = if (dailyAllowance > 0) (todaySpent.toFloat() / dailyAllowance).coerceIn(0f, 1f) else 0f
-    val accent = if (dailyExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
-    val darkTheme = isSystemInDarkTheme()
-    val cardContent = when {
-        dailyExceeded -> MaterialTheme.colorScheme.onErrorContainer
-        darkTheme -> MaterialTheme.colorScheme.onTertiaryContainer
-        else -> MaterialTheme.colorScheme.onSurface
-    }
-
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .crispBorder(shape = AppShapes.Squircle, color = accent.copy(alpha = 0.35f)),
-        shape = AppShapes.Squircle,
-        color = if (dailyExceeded) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer,
-        tonalElevation = 1.dp,
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(stringResource(R.string.dashboard_daily_title), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = cardContent)
-                    Text(stringResource(R.string.dashboard_daily_auto_desc), style = MaterialTheme.typography.bodySmall, color = cardContent.copy(alpha = 0.75f))
-                }
-                if (dailyExceeded) Icon(Icons.Default.Warning, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                val metricColor = when {
-                    dailyExceeded -> MaterialTheme.colorScheme.onErrorContainer
-                    darkTheme -> MaterialTheme.colorScheme.onTertiaryContainer
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
-                DailyPacingMetric(stringResource(R.string.dashboard_daily_target), CurrencyFormatter.formatRupiah(dailyAllowance), Modifier.weight(1f), metricColor)
-                DailyPacingMetric(stringResource(R.string.dashboard_daily_spent), CurrencyFormatter.formatRupiah(todaySpent), Modifier.weight(1f), metricColor)
-                DailyPacingMetric(stringResource(R.string.dashboard_daily_remaining_label), CurrencyFormatter.formatRupiah(remainingToday.coerceAtLeast(0L)), Modifier.weight(1f), if (dailyExceeded) accent else metricColor)
-            }
-            Spacer(Modifier.height(12.dp))
-            BearProgressIndicator(
-                progress = dailyProgress,
-                modifier = Modifier.fillMaxWidth(),
-                color = accent,
-                trackColor = if (dailyExceeded) MaterialTheme.colorScheme.error.copy(alpha = 0.18f) else (if (darkTheme) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface).copy(alpha = 0.18f),
-                trackHeight = 8.dp,
-                bearSize = 28.dp,
-                indicatorRes = R.drawable.ic_app_logo,
-            )
-            if (remainingDays > 0) {
-                Spacer(Modifier.height(6.dp))
-                Text("${stringResource(R.string.dashboard_daily_days_left, remainingDays)} • ${CurrencyFormatter.formatRupiah(dailyAllowance)}/hari", style = MaterialTheme.typography.labelSmall, color = cardContent.copy(alpha = 0.75f))
-            }
-            if (dailyExceeded) {
-                Spacer(Modifier.height(6.dp))
-                Text(stringResource(R.string.tx_error_daily_exceeded), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = accent)
-            }
-        }
-    }
-}
-
-@Composable
-private fun DailyPacingMetric(label: String, value: String, modifier: Modifier, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.Start) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(2.dp))
-        Text(value, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = valueColor, maxLines = 1)
     }
 }
