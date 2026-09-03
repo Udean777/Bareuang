@@ -3,6 +3,18 @@ package com.ssajudn.bareuang.data.local.room
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
+data class MonthlyCashflowProjection(
+    val month: String,
+    val income: Long?,
+    val expense: Long?
+)
+
+data class CategoryAggregateProjection(
+    val category: String,
+    val total: Long?,
+    val count: Long
+)
+
 @Dao
 interface TransactionDao {
     @Query("SELECT * FROM local_transactions ORDER BY date DESC")
@@ -11,14 +23,8 @@ interface TransactionDao {
     @Query("SELECT * FROM local_transactions ORDER BY date DESC LIMIT :limit OFFSET :offset")
     fun getTransactionsPaged(limit: Int, offset: Int): List<LocalTransactionEntity>
 
-    @Query("SELECT * FROM local_transactions WHERE ownerId = :ownerId ORDER BY date DESC")
-    fun getAllTransactionsByOwner(ownerId: String): List<LocalTransactionEntity>
-
     @Query("SELECT * FROM local_transactions ORDER BY date DESC")
     fun observeAllTransactions(): Flow<List<LocalTransactionEntity>>
-
-    @Query("SELECT * FROM local_transactions WHERE ownerId = :ownerId ORDER BY date DESC")
-    fun observeTransactionsByOwner(ownerId: String): Flow<List<LocalTransactionEntity>>
 
     @Query("SELECT * FROM local_transactions WHERE category = :category ORDER BY date DESC")
     fun getTransactionsByCategory(category: String): List<LocalTransactionEntity>
@@ -38,8 +44,43 @@ interface TransactionDao {
     @Query("SELECT * FROM local_transactions WHERE isRecurringParent = 1 AND recurringInterval != 'NONE'")
     fun getRecurringTemplates(): List<LocalTransactionEntity>
 
-    @Query("SELECT * FROM local_transactions WHERE isRecurringParent = 1 AND recurringInterval != 'NONE' AND ownerId = :ownerId")
-    fun getRecurringTemplatesByOwner(ownerId: String): List<LocalTransactionEntity>
+    @Query("""
+        SELECT substr(date, 1, 7) AS month,
+               SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END) AS income,
+               SUM(CASE WHEN type = 'EXPENSE' OR type = '' THEN amount ELSE 0 END) AS expense
+        FROM local_transactions
+        WHERE date >= :fromDate AND date < :toDate
+          AND isRecurringParent = 0
+          AND type IN ('INCOME', 'EXPENSE', '')
+        GROUP BY substr(date, 1, 7)
+        ORDER BY month ASC
+    """)
+    fun getCashflowByMonth(fromDate: String, toDate: String): List<MonthlyCashflowProjection>
+
+    @Query("""
+        SELECT category, SUM(amount) AS total, COUNT(*) AS count
+        FROM local_transactions
+        WHERE date >= :fromDate AND date < :toDate
+          AND isRecurringParent = 0 AND type = 'EXPENSE'
+          AND category != 'BILLS'
+        GROUP BY category
+        ORDER BY total DESC
+    """)
+    fun getExpenseByCategory(fromDate: String, toDate: String): List<CategoryAggregateProjection>
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0) FROM local_transactions
+        WHERE date >= :fromDate AND date < :toDate
+          AND isRecurringParent = 0 AND type = 'EXPENSE'
+    """)
+    fun getExpenseTotal(fromDate: String, toDate: String): Long
+
+    @Query("""
+        SELECT COALESCE(SUM(amount), 0) FROM local_transactions
+        WHERE date >= :fromDate AND date < :toDate
+          AND isRecurringParent = 0 AND type = 'INCOME'
+    """)
+    fun getIncomeTotal(fromDate: String, toDate: String): Long
 
     @Query("UPDATE local_transactions SET nextOccurrenceDate = :nextDate WHERE id = :id")
     fun updateNextOccurrence(id: String, nextDate: String)
@@ -59,17 +100,14 @@ interface DueBillDao {
     @Query("SELECT * FROM local_due_bills ORDER BY dueDate ASC")
     fun getAllDueBills(): List<LocalDueBillEntity>
 
-    @Query("SELECT * FROM local_due_bills WHERE ownerId = :ownerId ORDER BY dueDate ASC")
-    fun getDueBillsByOwner(ownerId: String): List<LocalDueBillEntity>
-
     @Query("SELECT * FROM local_due_bills ORDER BY dueDate ASC")
     fun observeAllDueBills(): Flow<List<LocalDueBillEntity>>
 
-    @Query("SELECT * FROM local_due_bills WHERE ownerId = :ownerId ORDER BY dueDate ASC")
-    fun observeDueBillsByOwner(ownerId: String): Flow<List<LocalDueBillEntity>>
-
     @Query("SELECT * FROM local_due_bills WHERE status = :status ORDER BY dueDate ASC")
     fun getDueBillsByStatus(status: String): List<LocalDueBillEntity>
+
+    @Query("SELECT COALESCE(SUM(totalAmount), 0) FROM local_due_bills WHERE status = 'UNPAID'")
+    fun getUnpaidTotal(): Long
 
     @Query("SELECT * FROM local_due_bills WHERE id = :id LIMIT 1")
     fun getDueBillById(id: String): LocalDueBillEntity?
@@ -130,6 +168,9 @@ interface BudgetDao {
     @Query("SELECT * FROM local_category_budgets WHERE monthYear = :monthYear")
     fun getCategoryBudgets(monthYear: String): List<LocalCategoryBudgetEntity>
 
+    @Query("SELECT * FROM local_category_budgets ORDER BY monthYear DESC")
+    fun getAllCategoryBudgets(): List<LocalCategoryBudgetEntity>
+
     @Query("SELECT * FROM local_category_budgets WHERE monthYear = :monthYear")
     fun observeCategoryBudgets(monthYear: String): Flow<List<LocalCategoryBudgetEntity>>
 
@@ -151,14 +192,8 @@ interface GoalDao {
     @Query("SELECT * FROM local_goals")
     fun getAllGoals(): List<LocalGoalEntity>
 
-    @Query("SELECT * FROM local_goals WHERE ownerId = :ownerId")
-    fun getGoalsByOwner(ownerId: String): List<LocalGoalEntity>
-
     @Query("SELECT * FROM local_goals")
     fun observeAllGoals(): Flow<List<LocalGoalEntity>>
-
-    @Query("SELECT * FROM local_goals WHERE ownerId = :ownerId")
-    fun observeGoalsByOwner(ownerId: String): Flow<List<LocalGoalEntity>>
 
     @Query("SELECT * FROM local_goals WHERE id = :id LIMIT 1")
     fun getGoalById(id: String): LocalGoalEntity?
@@ -187,14 +222,8 @@ interface WalletDao {
     @Query("SELECT * FROM local_wallets ORDER BY createdAt ASC")
     fun getAllWallets(): List<LocalWalletEntity>
 
-    @Query("SELECT * FROM local_wallets WHERE ownerId = :ownerId ORDER BY createdAt ASC")
-    fun getWalletsByOwner(ownerId: String): List<LocalWalletEntity>
-
     @Query("SELECT * FROM local_wallets ORDER BY createdAt ASC")
     fun observeAllWallets(): Flow<List<LocalWalletEntity>>
-
-    @Query("SELECT * FROM local_wallets WHERE ownerId = :ownerId ORDER BY createdAt ASC")
-    fun observeWalletsByOwner(ownerId: String): Flow<List<LocalWalletEntity>>
 
     @Query("SELECT * FROM local_wallets ORDER BY createdAt ASC LIMIT 1")
     fun getFirstWallet(): LocalWalletEntity?
@@ -215,20 +244,5 @@ interface WalletDao {
     fun deleteWallet(id: String)
 
     @Query("DELETE FROM local_wallets")
-    fun clearAll()
-}
-
-@Dao
-interface CachedTranslationDao {
-    @Query("SELECT * FROM cached_translations WHERE cacheKey = :key LIMIT 1")
-    fun getByKey(key: String): CachedTranslationEntity?
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(entity: CachedTranslationEntity)
-
-    @Query("DELETE FROM cached_translations WHERE createdAt < :before")
-    fun evictOlderThan(before: Long)
-
-    @Query("DELETE FROM cached_translations")
     fun clearAll()
 }

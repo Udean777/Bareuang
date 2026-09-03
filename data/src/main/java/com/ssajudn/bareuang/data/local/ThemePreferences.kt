@@ -13,14 +13,14 @@ import javax.inject.Singleton
 @Singleton
 class ThemePreferences @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : com.ssajudn.bareuang.domain.port.ThemePreferencesPort {
     private val prefs = context.applicationContext
         .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     private val _darkMode = MutableStateFlow(readDarkMode())
-    val darkMode: StateFlow<AppThemeDarkMode> = _darkMode.asStateFlow()
+    override val darkMode: StateFlow<AppThemeDarkMode> = _darkMode.asStateFlow()
 
-    fun setDarkMode(mode: AppThemeDarkMode) {
+    override fun setDarkMode(mode: AppThemeDarkMode) {
         prefs.edit { putString(KEY_DARK_MODE, mode.name) }
         _darkMode.value = mode
     }

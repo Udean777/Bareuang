@@ -5,8 +5,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.ssajudn.bareuang.data.R
 import com.ssajudn.bareuang.domain.usecase.BillReminder
 import com.ssajudn.bareuang.domain.usecase.BillReminderUrgency
@@ -40,6 +42,9 @@ class BillNotificationHelper @Inject constructor(
     fun showSummary(reminders: List<BillReminder>): Boolean {
         if (reminders.isEmpty()) return false
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) return false
 
         ensureChannel()
 
@@ -59,7 +64,7 @@ class BillNotificationHelper @Inject constructor(
             preview
         }
 
-        // Membuka aplikasi; tidak ada deep link karena app full-offline
+        // Membuka aplikasi; pengingat tagihan tetap diproses lokal.
         val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = launchIntent?.let {
             PendingIntent.getActivity(

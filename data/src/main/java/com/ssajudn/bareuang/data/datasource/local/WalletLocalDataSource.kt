@@ -17,10 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class WalletLocalDataSource @Inject constructor(
-    private val db: AppDatabase,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager? = null
-) {
+class WalletLocalDataSource @Inject constructor(private val db: AppDatabase) {
 
     suspend fun getWallets(): Result<List<Wallet>> = withContext(Dispatchers.IO) {
         try {
@@ -71,8 +68,7 @@ class WalletLocalDataSource @Inject constructor(
                 colorHex = request.colorHex,
                 iconName = request.iconName
             )
-            val ownerId = sessionManager?.userId ?: ""
-            db.walletDao().insertWallet(LocalWalletEntity.fromWallet(wallet, isSynced = false).copy(ownerId = ownerId))
+            db.walletDao().insertWallet(LocalWalletEntity.fromWallet(wallet, isSynced = false))
             Result.success(wallet)
         } catch (e: Exception) {
             Result.failure(ApiErrorParser.fromThrowable(e))

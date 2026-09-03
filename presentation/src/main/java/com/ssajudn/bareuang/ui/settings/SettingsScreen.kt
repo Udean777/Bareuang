@@ -40,7 +40,7 @@ fun SettingsScreen(
     onReplayTour: () -> Unit = {},
     onNavigateToImport: () -> Unit = {},
     onNavigateToOcr: () -> Unit = {},
-    onSignOutSuccess: () -> Unit
+    onLocalDataReset: () -> Unit
 ) {
     val context = LocalContext.current
     // viewModel { } rather than remember { }: a ViewModel created with remember is
@@ -52,7 +52,7 @@ fun SettingsScreen(
     val isOperationLoading = operation is OperationState.Loading
 
     val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
-    var showSignOutConfirmDialog by remember { mutableStateOf(false) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -67,9 +67,9 @@ fun SettingsScreen(
         }
     }
 
-    LaunchedEffect(uiState.isSignedOut) {
-        if (uiState.isSignedOut) {
-            onSignOutSuccess()
+    LaunchedEffect(uiState.isLocalDataReset) {
+        if (uiState.isLocalDataReset) {
+            onLocalDataReset()
         }
     }
 
@@ -79,7 +79,7 @@ fun SettingsScreen(
                 is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
                 is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
                 is UiEffect.Navigate -> {}
-                is UiEffect.PopBackStack -> onSignOutSuccess()
+                is UiEffect.PopBackStack -> onLocalDataReset()
             }
         }
     }
@@ -192,10 +192,8 @@ fun SettingsScreen(
             )
 
             // 3b. BILL REMINDER TIME
-            val billReminderPrefs = remember { com.ssajudn.bareuang.data.notification.BillReminderPrefs(context) }
-            val billReminderScheduler = remember { com.ssajudn.bareuang.data.notification.BillReminderScheduler(context) }
-            var reminderHour by remember { mutableIntStateOf(billReminderPrefs.reminderHour()) }
-            var reminderMinute by remember { mutableIntStateOf(billReminderPrefs.reminderMinute()) }
+            var reminderHour by remember { mutableIntStateOf(viewModel.reminderHour) }
+            var reminderMinute by remember { mutableIntStateOf(viewModel.reminderMinute) }
             var showReminderTimeDialog by remember { mutableStateOf(false) }
             com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
                 title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_bill_reminder_title),
@@ -226,8 +224,7 @@ fun SettingsScreen(
                         AppTextButton(onClick = {
                             reminderHour = timeState.hour
                             reminderMinute = timeState.minute
-                            billReminderPrefs.setReminderTime(timeState.hour, timeState.minute)
-                            billReminderScheduler.scheduleDailyAt(timeState.hour, timeState.minute)
+                            viewModel.setReminderTime(timeState.hour, timeState.minute)
                             showReminderTimeDialog = false
                         }) {
                             Text(stringResource(com.ssajudn.bareuang.presentation.R.string.common_save))
@@ -380,6 +377,19 @@ fun SettingsScreen(
                         }
                     ),
                     com.ssajudn.bareuang.ui.components.Material3SettingsItem(
+                        title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_privacy_title),
+                        description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_privacy_desc),
+                        icon = Icons.Default.Policy,
+                        onClick = {
+                            context.startActivity(
+                                android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse("https://bareuang.vercel.app/privacy")
+                                )
+                            )
+                        }
+                    ),
+                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
                         title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_donate_title),
                         description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_donate_desc),
                         icon = Icons.Default.VolunteerActivism,
@@ -427,7 +437,7 @@ fun SettingsScreen(
                         description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_danger_desc),
                         icon = Icons.AutoMirrored.Filled.Logout,
                         isDestructive = true,
-                        onClick = { showSignOutConfirmDialog = true }
+                        onClick = { showResetConfirmDialog = true }
                     )
                 )
             )
@@ -456,15 +466,15 @@ fun SettingsScreen(
         }
     }
 
-    if (showSignOutConfirmDialog) {
+    if (showResetConfirmDialog) {
         AppConfirmDialog(
             title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_dialog_reset_title),
             message = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_dialog_reset_message),
             confirmButtonText = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_dialog_reset_confirm),
-            onDismissRequest = { showSignOutConfirmDialog = false },
+            onDismissRequest = { showResetConfirmDialog = false },
             onConfirm = {
-                showSignOutConfirmDialog = false
-                viewModel.signOut()
+                showResetConfirmDialog = false
+                viewModel.resetLocalData()
             }
         )
     }

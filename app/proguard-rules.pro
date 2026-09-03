@@ -18,14 +18,8 @@
 -keep class com.google.gson.** { *; }
 -keepclassmembers class com.google.gson.reflect.TypeToken { *; }
 
-# Generic signatures and annotations are required by Retrofit/Gson/Room.
+# Generic signatures and annotations are required by Gson/Room.
 -keepattributes Signature, InnerClasses, EnclosingMethod, *Annotation*, RuntimeVisibleAnnotations
-
-# Retrofit interface methods with generic return types.
--keepclassmembers,allowshrinking,allowobfuscation interface * {
-    @retrofit2.http.* <methods>;
-}
--keep,allowobfuscation,allowshrinking class retrofit2.Response
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
 
 -dontwarn okhttp3.**
@@ -66,17 +60,6 @@
 -keep class com.ssajudn.bareuang.domain.model.DashboardSummary { *; }
 -keep class com.ssajudn.bareuang.utils.CurrencyFormatter { *; }
 
-# ML Kit + GMS — stripped by R8 full mode in release, causes
-# "Attempt to invoke virtual method java.lang.Class java.lang.Object.getClass() on a null object reference"
-# when picking image from gallery/camera (InputImage.fromFilePath / TextRecognition.getClient)
--keep class com.google.mlkit.** { *; }
--keep class com.google.android.gms.** { *; }
--keep class com.google.mlkit.vision.** { *; }
--keep class com.google.android.gms.tasks.** { *; }
--keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature
--dontwarn com.google.mlkit.**
--dontwarn com.google.android.gms.**
-
 # FileProvider + ActivityResultContracts — image/file pickers (TakePicture, OpenDocument, GetContent, CreateDocument)
 # androidx.activity consumer rules keep most, but full-mode can strip Uri permission helpers
 -keep class androidx.core.content.FileProvider { *; }
@@ -86,6 +69,3 @@
 # Keep Log for release diagnostics — proguard-android-optimize.txt has -assumenosideeffects for Log.v/d
 # which hides backup/import failures in release; we need error logs
 -keep class android.util.Log { *; }
-
-# ML Kit optional SDK internals not present at compile time.
--dontwarn com.google.mlkit.common.sdkinternal.LibraryVersion

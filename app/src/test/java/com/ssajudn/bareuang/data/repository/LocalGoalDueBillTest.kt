@@ -7,6 +7,8 @@ import com.ssajudn.bareuang.data.local.room.LocalDueBillEntity
 import com.ssajudn.bareuang.data.local.room.LocalGoalEntity
 import com.ssajudn.bareuang.data.local.room.LocalTransactionEntity
 import com.ssajudn.bareuang.data.local.room.TransactionDao
+import com.ssajudn.bareuang.data.local.room.MonthlyCashflowProjection
+import com.ssajudn.bareuang.data.local.room.CategoryAggregateProjection
 import com.ssajudn.bareuang.data.local.room.WalletDao
 import com.ssajudn.bareuang.data.local.room.BudgetDao
 import com.ssajudn.bareuang.data.local.room.LocalBudgetEntity
@@ -31,8 +33,6 @@ private class FakeWalletDao2 : WalletDao {
     override fun getAllWallets(): List<LocalWalletEntity> = balances.map { (id, bal) ->
         LocalWalletEntity(id = id, name = id, balance = bal, colorHex = "#000", iconName = "wallet", createdAt = "2026-08-21", isSynced = false)
     }
-    override fun getWalletsByOwner(ownerId: String): List<LocalWalletEntity> = getAllWallets()
-    override fun observeWalletsByOwner(ownerId: String): Flow<List<LocalWalletEntity>> = flowOf(getWalletsByOwner(ownerId))
     override fun observeAllWallets(): Flow<List<LocalWalletEntity>> = flowOf(getAllWallets())
     override fun getFirstWallet(): LocalWalletEntity? = null
     override fun getWalletById(id: String): LocalWalletEntity? = getAllWallets().firstOrNull { it.id == id }
@@ -46,8 +46,6 @@ private class FakeWalletDao2 : WalletDao {
 private class FakeGoalDao2 : GoalDao {
     val goals = mutableMapOf<String, LocalGoalEntity>()
     override fun getAllGoals(): List<LocalGoalEntity> = goals.values.toList()
-    override fun getGoalsByOwner(ownerId: String): List<LocalGoalEntity> = getAllGoals()
-    override fun observeGoalsByOwner(ownerId: String): Flow<List<LocalGoalEntity>> = flowOf(getGoalsByOwner(ownerId))
     override fun observeAllGoals(): Flow<List<LocalGoalEntity>> = flowOf(getAllGoals())
     override fun getGoalById(id: String): LocalGoalEntity? = goals[id]
     override fun insertGoal(goal: LocalGoalEntity) { goals[goal.id] = goal }
@@ -61,10 +59,9 @@ private class FakeGoalDao2 : GoalDao {
 private class FakeDueBillDao2 : DueBillDao {
     val bills = mutableMapOf<String, LocalDueBillEntity>()
     override fun getAllDueBills(): List<LocalDueBillEntity> = bills.values.toList()
-    override fun getDueBillsByOwner(ownerId: String): List<LocalDueBillEntity> = getAllDueBills()
-    override fun observeDueBillsByOwner(ownerId: String): Flow<List<LocalDueBillEntity>> = flowOf(getDueBillsByOwner(ownerId))
     override fun observeAllDueBills(): Flow<List<LocalDueBillEntity>> = flowOf(getAllDueBills())
     override fun getDueBillsByStatus(status: String): List<LocalDueBillEntity> = bills.values.filter { it.status == status }
+    override fun getUnpaidTotal(): Long = bills.values.filter { it.status == DueBillStatus.UNPAID.name }.sumOf { it.totalAmount }
     override fun getDueBillById(id: String): LocalDueBillEntity? = bills[id]
     override fun insertDueBill(bill: LocalDueBillEntity) { bills[bill.id] = bill }
     override fun insertDueBills(bills: List<LocalDueBillEntity>) { bills.forEach { this.bills[it.id] = it } }
@@ -78,8 +75,6 @@ private class FakeTxDao2 : TransactionDao {
     val txs = mutableListOf<LocalTransactionEntity>()
     override fun getAllTransactions(): List<LocalTransactionEntity> = txs.toList()
     override fun getTransactionsPaged(limit: Int, offset: Int): List<LocalTransactionEntity> = txs.drop(offset).take(limit)
-    override fun getAllTransactionsByOwner(ownerId: String): List<LocalTransactionEntity> = getAllTransactions()
-    override fun observeTransactionsByOwner(ownerId: String): Flow<List<LocalTransactionEntity>> = flowOf(getAllTransactionsByOwner(ownerId))
     override fun observeAllTransactions(): Flow<List<LocalTransactionEntity>> = flowOf(txs.toList())
     override fun getTransactionsByCategory(category: String): List<LocalTransactionEntity> = txs.filter { it.category == category }
     override fun getTransactionsByCategoryPaged(category: String, limit: Int, offset: Int): List<LocalTransactionEntity> = txs.filter { it.category == category }.drop(offset).take(limit)
@@ -88,7 +83,10 @@ private class FakeTxDao2 : TransactionDao {
     override fun insertTransactions(transactions: List<LocalTransactionEntity>) { txs.addAll(transactions) }
     override fun getByDates(dates: List<String>): List<LocalTransactionEntity> = txs.filter { it.date in dates }
     override fun getRecurringTemplates(): List<LocalTransactionEntity> = txs.filter { it.isRecurringParent }
-    override fun getRecurringTemplatesByOwner(ownerId: String): List<LocalTransactionEntity> = getRecurringTemplates()
+    override fun getCashflowByMonth(fromDate: String, toDate: String): List<MonthlyCashflowProjection> = emptyList()
+    override fun getExpenseByCategory(fromDate: String, toDate: String): List<CategoryAggregateProjection> = emptyList()
+    override fun getExpenseTotal(fromDate: String, toDate: String): Long = 0L
+    override fun getIncomeTotal(fromDate: String, toDate: String): Long = 0L
     override fun updateNextOccurrence(id: String, nextDate: String) {
         val index = txs.indexOfFirst { it.id == id }
         if (index != -1) {
@@ -106,6 +104,7 @@ private class FakeBudgetDao2 : BudgetDao {
     override fun insertBudget(budget: LocalBudgetEntity) {}
     override fun insertBudgets(budgets: List<LocalBudgetEntity>) {}
     override fun clearAll() {}
+    override fun getAllCategoryBudgets(): List<com.ssajudn.bareuang.data.local.room.LocalCategoryBudgetEntity> = emptyList()
     override fun getCategoryBudgets(monthYear: String): List<com.ssajudn.bareuang.data.local.room.LocalCategoryBudgetEntity> = emptyList()
     override fun observeCategoryBudgets(monthYear: String): Flow<List<com.ssajudn.bareuang.data.local.room.LocalCategoryBudgetEntity>> = flowOf(emptyList())
     override fun insertCategoryBudget(categoryBudget: com.ssajudn.bareuang.data.local.room.LocalCategoryBudgetEntity) {}
@@ -144,8 +143,7 @@ class LocalGoalDueBillTest {
         val txDao = FakeTxDao2()
         val db = fakeDb(walletDao, goalDao, FakeDueBillDao2(), txDao)
         val svc = WalletBalanceService(walletDao)
-        val sm = io.mockk.mockk<com.ssajudn.bareuang.data.local.UserSessionManager>(relaxed = true).apply { io.mockk.every { userId } returns "" }
-        val repo = GoalLocalDataSource(db, svc, sm)
+        val repo = GoalLocalDataSource(db, svc)
 
         val result = repo.depositToGoal("g1", 50_000L, "w1")
 
@@ -165,8 +163,7 @@ class LocalGoalDueBillTest {
         }
         val txDao = FakeTxDao2()
         val db = fakeDb(walletDao, goalDao, FakeDueBillDao2(), txDao)
-        val sm2 = io.mockk.mockk<com.ssajudn.bareuang.data.local.UserSessionManager>(relaxed = true).apply { io.mockk.every { userId } returns "" }
-        val repo = GoalLocalDataSource(db, WalletBalanceService(walletDao), sm2)
+        val repo = GoalLocalDataSource(db, WalletBalanceService(walletDao))
 
         val result = repo.depositToGoal("g1", -30_000L, "w1")
 
@@ -183,13 +180,12 @@ class LocalGoalDueBillTest {
         }
         val txDao = FakeTxDao2()
         val db = fakeDb(walletDao, FakeGoalDao2(), dueBillDao, txDao)
-        val sm3 = io.mockk.mockk<com.ssajudn.bareuang.data.local.UserSessionManager>(relaxed = true).apply { io.mockk.every { userId } returns "" }
         val currencyPrefs3 = run {
             val prefs = io.mockk.mockk<android.content.SharedPreferences>(relaxed = true) { io.mockk.every { getString(any(), any()) } returns "IDR" }
             val ctx = io.mockk.mockk<android.content.Context>(relaxed = true) { io.mockk.every { getSharedPreferences(any(), any()) } returns prefs; io.mockk.every { applicationContext } returns this }
             com.ssajudn.bareuang.data.local.CurrencyPreferences(ctx)
         }
-        val repo = DueBillLocalDataSource(db, WalletBalanceService(walletDao), sm3, currencyPrefs3)
+        val repo = DueBillLocalDataSource(db, WalletBalanceService(walletDao), currencyPrefs3)
 
         val result = repo.updateDueBillStatus("b1", DueBillStatus.PAID, "w1")
 
@@ -207,13 +203,12 @@ class LocalGoalDueBillTest {
         }
         val txDao = FakeTxDao2()
         val db = fakeDb(walletDao, FakeGoalDao2(), dueBillDao, txDao)
-        val sm4 = io.mockk.mockk<com.ssajudn.bareuang.data.local.UserSessionManager>(relaxed = true).apply { io.mockk.every { userId } returns "" }
         val currencyPrefs4 = run {
             val prefs = io.mockk.mockk<android.content.SharedPreferences>(relaxed = true) { io.mockk.every { getString(any(), any()) } returns "IDR" }
             val ctx = io.mockk.mockk<android.content.Context>(relaxed = true) { io.mockk.every { getSharedPreferences(any(), any()) } returns prefs; io.mockk.every { applicationContext } returns this }
             com.ssajudn.bareuang.data.local.CurrencyPreferences(ctx)
         }
-        val repo = DueBillLocalDataSource(db, WalletBalanceService(walletDao), sm4, currencyPrefs4)
+        val repo = DueBillLocalDataSource(db, WalletBalanceService(walletDao), currencyPrefs4)
 
         val result = repo.updateDueBillStatus("b1", DueBillStatus.UNPAID, null)
 

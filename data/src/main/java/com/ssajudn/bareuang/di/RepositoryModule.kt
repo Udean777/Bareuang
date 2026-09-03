@@ -18,6 +18,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.ssajudn.bareuang.data.local.*
+import com.ssajudn.bareuang.data.notification.*
+import com.ssajudn.bareuang.data.service.*
+import com.ssajudn.bareuang.domain.port.*
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -46,5 +50,20 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindAnalyticsRepository(impl: AnalyticsRepositoryImpl): AnalyticsRepository
+
+    @Binds abstract fun bindThemePreferences(impl: ThemePreferences): ThemePreferencesPort
+    @Binds abstract fun bindCurrencyPreferences(impl: CurrencyPreferences): CurrencyPreferencesPort
+    @Binds abstract fun bindWidgetPreferences(impl: WidgetPreferences): WidgetPreferencesPort
+    @Binds abstract fun bindTourPreferences(impl: TourPreferences): TourPreferencesPort
+    @Binds abstract fun bindImportPreferences(impl: ImportPreferences): ImportPreferencesPort
+    @Binds abstract fun bindOcrConsent(impl: OcrConsentPreferences): OcrConsentPort
+    @Binds abstract fun bindOnboardingState(impl: OnboardingStatePreferences): OnboardingStatePort
+    @Binds abstract fun bindBackup(impl: BackupRestoreManager): BackupRestorePort
+    @Binds abstract fun bindResetter(impl: LocalDataResetter): LocalDataResetPort
+    @Binds abstract fun bindCsvParser(impl: CsvMutasiParser): CsvParserPort
+    @Binds abstract fun bindReceiptAi(impl: ReceiptAiService): ReceiptAiPort
+    @Binds abstract fun bindReminderScheduler(impl: BillReminderScheduler): BillReminderSchedulerPort
+    @Binds abstract fun bindReminderPrefs(impl: BillReminderPrefs): BillReminderPreferencesPort
+    @Binds abstract fun bindDailyPacingPrefs(impl: DailyPacingPreferences): DailyPacingPreferencesPort
 
 }

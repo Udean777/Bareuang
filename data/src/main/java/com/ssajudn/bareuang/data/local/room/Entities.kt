@@ -36,7 +36,6 @@ data class LocalTransactionEntity(
     val walletId: String? = null,
     val toWalletId: String? = null,
     val isSynced: Boolean = false,
-    val ownerId: String = "",
     val recurringInterval: String = "NONE",
     val isRecurringParent: Boolean = false,
     val parentRecurringId: String? = null,
@@ -103,8 +102,7 @@ data class LocalDueBillEntity(
     val isRecurring: Boolean = false,
     val recurringInterval: String = "NONE",
     val notes: String?,
-    val isSynced: Boolean = false,
-    val ownerId: String = ""
+    val isSynced: Boolean = false
 ) {
     fun toDueBill(): DueBill {
         val s = runCatching { DueBillStatus.valueOf(status) }
@@ -148,8 +146,7 @@ data class LocalDueBillEntity(
 data class LocalBudgetEntity(
     @PrimaryKey val monthYear: String,
     val monthlyLimit: Long,
-    val isSynced: Boolean = false,
-    val ownerId: String = ""
+    val isSynced: Boolean = false
 )
 
 @Entity(
@@ -160,8 +157,7 @@ data class LocalCategoryBudgetEntity(
     val monthYear: String,
     val category: String,
     val limitAmount: Long,
-    val isSynced: Boolean = false,
-    val ownerId: String = ""
+    val isSynced: Boolean = false
 )
 
 @Entity(tableName = "local_goals")
@@ -173,8 +169,7 @@ data class LocalGoalEntity(
     val targetDate: String?,
     val colorHex: String = "#4E73DF",
     val notes: String?,
-    val isSynced: Boolean = false,
-    val ownerId: String = ""
+    val isSynced: Boolean = false
 ) {
     fun toGoal(): Goal {
         return Goal(
@@ -212,8 +207,7 @@ data class LocalWalletEntity(
     val colorHex: String,
     val iconName: String,
     val createdAt: String,
-    val isSynced: Boolean = false,
-    val ownerId: String = ""
+    val isSynced: Boolean = false
 ) {
     fun toWallet(): Wallet {
         return Wallet(

@@ -11,9 +11,9 @@ class GetNetWorthAnalyticsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): Result<List<NetWorthDataPoint>> {
         return try {
-            val wallets = walletRepository.getWallets().getOrDefault(emptyList())
+            val wallets = walletRepository.getWallets().getOrElse { return Result.failure(it) }
             val currentNetWorth = wallets.sumOf { it.balance }
-            val cashflow = cashflowUseCase().getOrDefault(emptyList())
+            val cashflow = cashflowUseCase().getOrElse { return Result.failure(it) }
 
             val points = ArrayList<NetWorthDataPoint>(cashflow.size)
             for (i in cashflow.indices) {

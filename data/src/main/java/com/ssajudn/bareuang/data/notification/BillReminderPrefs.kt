@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @Singleton
 class BillReminderPrefs @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : com.ssajudn.bareuang.domain.port.BillReminderPreferencesPort {
     private val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
 
@@ -53,15 +53,15 @@ class BillReminderPrefs @Inject constructor(
         }
     }
 
-    fun notificationsEnabled(): Boolean =
+    override fun notificationsEnabled(): Boolean =
         prefs.getBoolean(KEY_ENABLED, true)
 
     // Default 00:00 (12 malam)
-    fun reminderHour(): Int = prefs.getInt(KEY_HOUR, 0)
+    override fun reminderHour(): Int = prefs.getInt(KEY_HOUR, 0)
 
-    fun reminderMinute(): Int = prefs.getInt(KEY_MINUTE, 0)
+    override fun reminderMinute(): Int = prefs.getInt(KEY_MINUTE, 0)
 
-    fun setReminderTime(hour: Int, minute: Int) {
+    override fun setReminderTime(hour: Int, minute: Int) {
         prefs.edit().putInt(KEY_HOUR, hour).putInt(KEY_MINUTE, minute).apply()
     }
 }

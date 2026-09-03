@@ -12,19 +12,19 @@ import javax.inject.Singleton
 @Singleton
 class ImportPreferences @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : com.ssajudn.bareuang.domain.port.ImportPreferencesPort {
     private val prefs: SharedPreferences = context.getSharedPreferences("bareuang_import", Context.MODE_PRIVATE)
 
     private val _importCount = MutableStateFlow(prefs.getInt(KEY_COUNT, 0))
-    val importCount: StateFlow<Int> = _importCount.asStateFlow()
+    override val importCount: StateFlow<Int> = _importCount.asStateFlow()
 
-    fun increment(count: Int) {
+    override fun increment(count: Int) {
         val newVal = _importCount.value + count
         prefs.edit().putInt(KEY_COUNT, newVal).putLong(KEY_LAST_AT, System.currentTimeMillis()).apply()
         _importCount.value = newVal
     }
 
-    fun lastImportAt(): Long = prefs.getLong(KEY_LAST_AT, 0L)
+    override fun lastImportAt(): Long = prefs.getLong(KEY_LAST_AT, 0L)
 
     companion object {
         private const val KEY_COUNT = "import_count"

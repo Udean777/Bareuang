@@ -10,11 +10,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class CsvMutasiParser @Inject constructor() {
+class CsvMutasiParser @Inject constructor() : com.ssajudn.bareuang.domain.port.CsvParserPort {
 
     fun parse(csvText: String): List<ImportDraft> = parseWithStats(csvText).first
 
-    fun parseWithStats(csvText: String): Pair<List<ImportDraft>, Int> {
+    override fun parseWithStats(csvText: String): Pair<List<ImportDraft>, Int> {
         // Guard: reject > 5MB or > 5000 lines (prevent OOM)
         if (csvText.length > 5 * 1024 * 1024) return emptyList<ImportDraft>() to 0
         val lines = csvText.lines().map { it.trim() }.filter { it.isNotEmpty() }

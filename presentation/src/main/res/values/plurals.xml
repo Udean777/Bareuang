@@ -1,4 +1,4 @@
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
     <plurals name="transactions_count">
         <item quantity="one"><xliff:g id="count">%d</xliff:g> transaction</item>
         <item quantity="other"><xliff:g id="count">%d</xliff:g> transactions</item>

@@ -19,17 +19,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class AiParsedReceipt(
-    val merchant: String,
-    val date: String,
-    val total: Long,
-    val category: String,
-    val items: List<String>,
-    val rawText: String,
-)
+typealias AiParsedReceipt = com.ssajudn.bareuang.domain.port.AiParsedReceipt
 
 private data class ProxyResponse(
     @SerializedName("merchant") val merchant: String?,
@@ -45,7 +39,7 @@ private data class ProxyResponse(
 @Singleton
 class ReceiptAiService @Inject constructor(
     @ApplicationContext private val context: Context,
-) {
+) : com.ssajudn.bareuang.domain.port.ReceiptAiPort {
     private val gson = Gson()
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -53,18 +47,36 @@ class ReceiptAiService @Inject constructor(
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    suspend fun parseReceiptImage(uri: Uri): Result<AiParsedReceipt> = withContext(Dispatchers.IO) {
+    private val installationId: String by lazy {
+        val prefs = context.getSharedPreferences("bareuang_client_identity", Context.MODE_PRIVATE)
+        prefs.getString("installation_id", null) ?: UUID.randomUUID().toString().also {
+            prefs.edit().putString("installation_id", it).apply()
+        }
+    }
+
+    suspend fun parseReceiptImage(uri: Uri): Result<AiParsedReceipt> = parseReceiptImage(uri.toString())
+
+    override suspend fun parseReceiptImage(uri: String): Result<AiParsedReceipt> = withContext(Dispatchers.IO) {
+        val parsedUri = Uri.parse(uri)
         runCatching {
-            val base64 = encodeImage(uri)
+            val base64 = encodeImage(parsedUri)
             val reqJson = gson.toJson(mapOf("image_base64" to base64))
             val req = Request.Builder()
                 .url(BuildConfig.PARSE_RECEIPT_URL)
+                .header("X-Bareuang-Installation-Id", installationId)
                 .post(reqJson.toRequestBody("application/json".toMediaType()))
                 .build()
             val resp = client.newCall(req).execute()
             val bodyStr = resp.body?.string() ?: ""
             if (!resp.isSuccessful) {
-                throw AppException.DataException("Gagal memproses struk. Coba lagi.")
+                val message = when (resp.code) {
+                    401 -> "Scan struk membutuhkan identitas aplikasi yang valid."
+                    413 -> "Ukuran gambar terlalu besar."
+                    429 -> "Batas scan harian tercapai. Coba lagi besok."
+                    503 -> "Layanan scan sedang tidak tersedia."
+                    else -> "Gagal memproses struk. Coba lagi."
+                }
+                throw AppException.DataException(message)
             }
             val pr = gson.fromJson(bodyStr, ProxyResponse::class.java)
                 ?: throw AppException.DataException("Gagal memproses struk. Coba lagi.")

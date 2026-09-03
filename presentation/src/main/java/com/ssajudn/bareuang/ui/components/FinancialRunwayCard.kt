@@ -268,11 +268,18 @@ fun FinancialRunwayCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(R.string.dashboard_daily_title),
-                                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp, fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.dashboard_daily_title),
+                                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp, fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = stringResource(R.string.dashboard_daily_auto_desc),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                                )
+                            }
                             Text(
                                 text = if (dailyExceeded) stringResource(R.string.tx_error_daily_exceeded)
                                 else stringResource(R.string.dashboard_daily_remaining, CurrencyFormatter.formatRupiah(remainingToday.coerceAtLeast(0L))),

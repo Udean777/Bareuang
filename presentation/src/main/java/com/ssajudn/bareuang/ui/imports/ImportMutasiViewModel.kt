@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.data.service.CsvMutasiParser
+import com.ssajudn.bareuang.domain.port.CsvParserPort
 import com.ssajudn.bareuang.domain.error.AppException
 import com.ssajudn.bareuang.domain.model.ImportDraft
 import com.ssajudn.bareuang.domain.model.TransactionCategory
@@ -13,7 +13,7 @@ import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import com.ssajudn.bareuang.domain.usecase.BulkCreateTransactionsUseCase
 import com.ssajudn.bareuang.domain.usecase.ParseMutasiCsvUseCase
-import com.ssajudn.bareuang.data.local.ImportPreferences
+import com.ssajudn.bareuang.domain.port.ImportPreferencesPort
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
@@ -45,10 +45,10 @@ data class ImportUiState(
 class ImportMutasiViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val walletRepository: WalletRepository,
-    private val csvParser: CsvMutasiParser,
+    private val csvParser: CsvParserPort,
     private val parseMutasiCsvUseCase: ParseMutasiCsvUseCase,
     private val bulkCreate: BulkCreateTransactionsUseCase,
-    private val importPrefs: ImportPreferences
+    private val importPrefs: ImportPreferencesPort
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ImportUiState())
@@ -130,7 +130,7 @@ class ImportMutasiViewModel @Inject constructor(
                     _effect.send(UiEffect.ShowSnackbarRes(ui))
                     return@launch
                 }
-                val result = parseMutasiCsvUseCase.markDuplicates(rawDrafts, skipped)
+                val result = parseMutasiCsvUseCase.markDuplicates(rawDrafts, skipped).getOrElse { throw it }
                 _uiState.value = _uiState.value.copy(
                     drafts = result.drafts,
                     fileName = fileName,

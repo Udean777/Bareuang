@@ -8,6 +8,7 @@ import com.ssajudn.bareuang.data.local.room.DueBillDao
 import com.ssajudn.bareuang.data.local.room.GoalDao
 import com.ssajudn.bareuang.data.local.room.TransactionDao
 import com.ssajudn.bareuang.data.local.room.WalletDao
+import com.ssajudn.bareuang.data.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +23,7 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
+        val builder = Room.databaseBuilder(
             context.applicationContext,
             AppDatabase::class.java,
             "bareuang_offline.db"
@@ -36,10 +37,14 @@ object DatabaseModule {
                 AppDatabase.MIGRATION_10_11,
                 AppDatabase.MIGRATION_11_12,
                 AppDatabase.MIGRATION_12_13,
-                AppDatabase.MIGRATION_13_14
+                AppDatabase.MIGRATION_13_14,
+                AppDatabase.MIGRATION_14_15,
+                AppDatabase.MIGRATION_15_16
             )
-            .fallbackToDestructiveMigration()
-            .build()
+        // Never allow a release upgrade to silently delete financial data.
+        // Destructive fallback is limited to debug builds for local development.
+        if (BuildConfig.DEBUG) builder.fallbackToDestructiveMigration()
+        return builder.build()
     }
 
     @Provides
@@ -57,6 +62,4 @@ object DatabaseModule {
     @Provides
     fun provideWalletDao(db: AppDatabase): WalletDao = db.walletDao()
 
-    @Provides
-    fun provideCachedTranslationDao(db: AppDatabase) = db.cachedTranslationDao()
 }

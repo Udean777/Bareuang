@@ -15,8 +15,8 @@ import javax.inject.Singleton
 @Singleton
 class NetworkMonitor @Inject constructor(
     @ApplicationContext private val context: Context
-) {
-    fun isOnline(): Boolean {
+) : com.ssajudn.bareuang.domain.port.NetworkMonitorPort {
+    override fun isOnline(): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
@@ -25,7 +25,7 @@ class NetworkMonitor @Inject constructor(
                 caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
     }
 
-    fun observeIsOnline(): Flow<Boolean> = callbackFlow {
+    override fun observeIsOnline(): Flow<Boolean> = callbackFlow {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         fun current() = runCatching { isOnline() }.getOrDefault(false)
         trySend(current())

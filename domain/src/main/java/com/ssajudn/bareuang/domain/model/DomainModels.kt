@@ -31,7 +31,6 @@ data class Wallet(
 
 data class Transaction(
     val id: String? = null,
-    val userId: String? = null,
     val amount: Long,
     val type: TransactionType = TransactionType.EXPENSE,
     val category: TransactionCategory,
@@ -62,7 +61,6 @@ enum class RecurringInterval(val displayName: String) {
 
 data class DueBill(
     val id: String? = null,
-    val userId: String? = null,
     val providerName: String,
     val providerIconUrl: String? = null,
     val totalAmount: Long,
@@ -118,7 +116,6 @@ data class DashboardSummary(
 
 data class Goal(
     val id: String? = null,
-    val userId: String? = null,
     val name: String,
     val targetAmount: Long,
     val currentAmount: Long = 0L,

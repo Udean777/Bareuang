@@ -6,27 +6,27 @@
     <title>Privacy Policy — Bareuang</title>
     <meta
       name="description"
-      content="Privacy Policy Bareuang — 100% offline, tidak ada data dikirim ke server."
+      content="Privacy Policy Bareuang — data keuangan utama lokal; Scan Struk AI online opsional dengan consent."
     />
     <meta name="author" content="Bareuang" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#3E2A00" />
-    <link rel="canonical" href="https://bareuang.vercel.app/privacy" />
+    <link rel="canonical" href="https://bareuang.app/privacy" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bareuang" />
-    <meta property="og:url" content="https://bareuang.vercel.app/privacy" />
+    <meta property="og:url" content="https://bareuang.app/privacy" />
     <meta property="og:title" content="Privacy Policy — Bareuang" />
     <meta
       property="og:description"
-      content="Privacy Policy Bareuang — 100% offline, tidak ada data dikirim ke server."
+      content="Privacy Policy Bareuang — data keuangan utama lokal; Scan Struk AI online opsional dengan consent."
     />
     <meta
       property="og:image"
-      content="https://bareuang.vercel.app/assets/og-image.png"
+      content="https://bareuang.app/assets/og-image.png"
     />
     <meta
       property="og:image:secure_url"
-      content="https://bareuang.vercel.app/assets/og-image.png"
+      content="https://bareuang.app/assets/og-image.png"
     />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
@@ -37,11 +37,11 @@
     <meta name="twitter:title" content="Privacy Policy — Bareuang" />
     <meta
       name="twitter:description"
-      content="Privacy Policy Bareuang — 100% offline, tidak ada data dikirim ke server."
+      content="Privacy Policy Bareuang — data keuangan utama lokal; Scan Struk AI online opsional dengan consent."
     />
     <meta
       name="twitter:image"
-      content="https://bareuang.vercel.app/assets/og-image.png"
+      content="https://bareuang.app/assets/og-image.png"
     />
     <meta name="twitter:image:alt" content="Bareuang — Privacy Policy" />
     <link rel="icon" href="/assets/logo.png" type="image/png" />
@@ -71,15 +71,15 @@
       <a class="back" href="/">← Kembali</a>
       <h1>Privacy Policy</h1>
       <div class="meta">
-        Terakhir diperbarui: 26 Agustus 2026 · Berlaku untuk aplikasi Android
-        Bareuang & situs bareuang.app
+        Terakhir diperbarui: 2 September 2026 · Versi kebijakan: 2026-09-02 ·
+        Berlaku untuk aplikasi Android Bareuang & situs Bareuang
       </div>
 
       <div class="toc">
         <strong class="toc-title">Daftar isi</strong><br />
         <a href="#ringkas">1. Ringkasnya</a> ·
         <a href="#data">2. Data yang diproses</a> ·
-        <a href="#offline">3. 100% Offline</a> ·
+        <a href="#ocr-online">3. OCR Online Opsional</a> ·
         <a href="#permission">4. Izin</a> · <a href="#anak">5. Anak</a> ·
         <a href="#retensi">6. Retensi & Hapus</a> ·
         <a href="#cookies">7. Cookies</a> ·
@@ -90,46 +90,55 @@
       <div class="prose">
         <h2 id="ringkas">1. Ringkasnya</h2>
         <p>
-          <strong
-            >Bareuang tidak mengumpulkan, tidak mengirim, dan tidak menjual data
-            kamu.</strong
-          >
-          Semua data keuangan (transaksi, wallet, budget, goals, bills) disimpan
-          <strong>lokal di HP kamu</strong> via Room Database. Tidak ada akun,
-          tidak ada server, tidak ada analytics.
+          Bareuang tidak menjual data kamu. Data keuangan utama (transaksi,
+          wallet, budget, goals, dan bills) disimpan
+          <strong>lokal di HP kamu</strong> via Room Database.
         </p>
 
-        <h2 id="data">2. Data yang Kamu Masukkan — Tetap di HP</h2>
+        <h2 id="data">2. Data yang Diproses</h2>
         <p>
-          Data yang kamu input (nominal, kategori, merchant, foto struk untuk
-          OCR) hanya diproses on-device. OCR struk memakai
-          <strong>Google ML Kit Text Recognition (on-device)</strong> — gambar
-          struk tidak diupload ke internet.
+          Data yang kamu input seperti nominal, kategori, merchant, dan catatan
+          disimpan lokal. Jika kamu memilih Scan Struk, foto diproses melalui
+          proxy Bareuang dan dikirim ke <strong>Google Gemini</strong> untuk
+          mengekstrak merchant, tanggal, total, kategori, item, dan teks struk.
+          Hasilnya dapat kamu edit sebelum disimpan lokal.
         </p>
         <ul>
           <li>
-            <strong>Tidak ada</strong> pengumpulan email, nama, lokasi, kontak,
-            atau identifier iklan.
+            Aplikasi tidak meminta lokasi, kontak, SMS, atau identifier iklan.
           </li>
           <li>
-            <strong>Tidak ada</strong> SDK analytics, crash reporter, atau
-            tracker pihak ketiga.
+            Tidak ada SDK analytics, crash reporter, atau tracker iklan.
           </li>
-          <li><strong>Tidak ada</strong> sinkronisasi cloud.</li>
+          <li>Import CSV dan backup/restore dilakukan melalui file yang kamu pilih sendiri.</li>
         </ul>
         <p>
-          Untuk kebutuhan Google Play Data Safety, kami mendeklarasikan:
-          <em>No data collected, No data shared</em>.
+          Deklarasi Google Play Data Safety harus mengikuti pemrosesan OCR online
+          pada versi aplikasi yang dirilis.
         </p>
 
-        <h2 id="offline">3. 100% Offline — Tanpa Izin Internet</h2>
+        <h2 id="ocr-online">3. Scan Struk Online dan Consent</h2>
         <p>
-          Aplikasi Bareuang
-          <strong>tidak mendeklarasikan permission <code>INTERNET</code></strong
-          >. Secara teknis tidak bisa mengirim data keluar, bahkan jika mau.
-          Backup & Restore dilakukan via file <code>.json</code> yang kamu
-          simpan sendiri (mis. ke Files/Drive manual — di luar kendali
-          aplikasi).
+          Scan Struk adalah fitur online opsional dan membutuhkan permission
+          <code>INTERNET</code>. Sebelum foto pertama dikirim, aplikasi
+          menampilkan disclosure dan meminta persetujuan eksplisit. Jika kamu
+          menolak atau sedang offline, kamu tetap dapat mencatat transaksi
+          secara manual dan menggunakan import CSV.
+        </p>
+        <p>
+          Foto dikirim melalui koneksi terenkripsi ke proxy Bareuang, kemudian
+          ke Google Gemini. Bareuang tidak menyimpan foto, base64, merchant,
+          item, atau teks struk pada server setelah pemrosesan. Log operasional
+          hanya memuat request ID, waktu, status, ukuran payload, dan identifier
+          rate-limit pseudonim, dengan retensi maksimal 14 hari. Provider pihak
+          ketiga dapat memiliki kebijakan log dan retensi sendiri. Jangan scan
+          dokumen yang memuat data sensitif jika
+          kamu tidak menyetujui pemrosesan tersebut. Lihat kebijakan Google
+          Gemini untuk ketentuan provider.
+        </p>
+        <p>
+          Backup &amp; Restore tetap dilakukan melalui file <code>.json</code>
+          yang kamu pilih dan simpan sendiri.
         </p>
 
         <h2 id="permission">4. Izin yang Diminta</h2>
@@ -141,7 +150,8 @@
           <li>
             <strong>POST_NOTIFICATIONS</strong> (Android 13+) — hanya untuk
             pengingat tagihan H-3 (WorkManager lokal). Tidak ada push dari
-            server.
+            server untuk pengingat tagihan; hanya Scan Struk yang memakai koneksi
+            online saat kamu memilih dan menyetujuinya.
           </li>
           <li>
             <strong>Storage (via SAF)</strong> — hanya saat kamu memilih file
@@ -152,9 +162,9 @@
 
         <h2 id="anak">5. Anak di Bawah Umur</h2>
         <p>
-          Bareuang tidak ditujukan untuk anak di bawah 13 tahun dan tidak
-          mengumpulkan data anak secara sengaja. Karena tidak ada pengumpulan
-          data sama sekali, tidak ada pemrosesan khusus.
+          Bareuang tidak ditujukan untuk anak di bawah 13 tahun. Kami tidak
+          sengaja meminta data anak; jika Scan Struk digunakan, foto tetap
+          diproses sesuai disclosure dan consent yang berlaku.
         </p>
 
         <h2 id="retensi">6. Retensi & Cara Hapus Data</h2>
@@ -170,8 +180,10 @@
           </li>
         </ul>
         <p>
-          Karena tidak ada server, kami <strong>tidak bisa</strong> menghapus
-          data untuk kamu — kamu yang memegang kendali penuh.
+          Data lokal dapat dihapus dari aplikasi, Android Clear Data, atau
+          uninstall. Foto OCR yang sudah dikirim tidak dapat ditarik kembali
+          dari provider; permintaan terkait pemrosesan provider mengikuti
+          kebijakan dan kontak provider tersebut.
         </p>
 
         <h2 id="cookies">7. Cookies (Situs Web)</h2>
@@ -206,15 +218,17 @@
         <h2 id="kontak">10. Kontak</h2>
         <p>
           Pertanyaan privasi:
-          <a href="mailto:support@bareuang.app">support@bareuang.app</a><br />
+          <a href="mailto:sajudinmaruf@gmail.com">sajudinmaruf@gmail.com</a><br />
           Pengembang: Bareuang · Indonesia<br />
-          Alamat situs: <a href="/">bareuang.vercel.app</a>
+          Alamat situs: <a href="/">bareuang.app</a>
         </p>
 
         <p class="callout">
-          <strong>Play Store Data Safety — ringkas:</strong> Data collected:
-          None. Data shared: None. Encryption in transit: N/A (no transmission).
-          Data deletion: via app / Clear Data / uninstall.
+          <strong>Play Store Data Safety — ringkas:</strong> Data keuangan utama
+          disimpan lokal. Foto struk dikirim ke Bareuang/Google Gemini hanya
+          setelah consent untuk ekstraksi OCR, melalui koneksi terenkripsi.
+          Data deletion lokal: via app / Clear Data / uninstall. Detail final
+          mengikuti deklarasi Play Console untuk versi rilis.
         </p>
       </div>
     </main>

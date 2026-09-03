@@ -15,10 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class BudgetLocalDataSource @Inject constructor(
-    private val db: AppDatabase,
-    private val sessionManager: com.ssajudn.bareuang.data.local.UserSessionManager? = null
-) {
+class BudgetLocalDataSource @Inject constructor(private val db: AppDatabase) {
 
     suspend fun setBudget(monthlyLimit: Long, monthYear: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
@@ -35,8 +32,7 @@ class BudgetLocalDataSource @Inject constructor(
                         )
                     )
                 }
-                val ownerId = sessionManager?.userId ?: ""
-                db.budgetDao().insertBudget(LocalBudgetEntity(monthYear = my, monthlyLimit = monthlyLimit, isSynced = false, ownerId = ownerId))
+                db.budgetDao().insertBudget(LocalBudgetEntity(monthYear = my, monthlyLimit = monthlyLimit, isSynced = false))
                 Result.success(true)
             } catch (e: Exception) {
                 if (e is com.ssajudn.bareuang.domain.error.AppException) Result.failure(e)
@@ -94,14 +90,12 @@ class BudgetLocalDataSource @Inject constructor(
             val my = if (monthYear.isBlank()) {
                 SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
             } else monthYear
-            val ownerId = sessionManager?.userId ?: ""
             db.budgetDao().insertCategoryBudget(
                 com.ssajudn.bareuang.data.local.room.LocalCategoryBudgetEntity(
                     monthYear = my,
                     category = category.name,
                     limitAmount = limitAmount,
-                    isSynced = false,
-                    ownerId = ownerId
+                    isSynced = false
                 )
             )
             Result.success(true)

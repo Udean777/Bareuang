@@ -17,14 +17,14 @@ import javax.inject.Singleton
 @Singleton
 class WidgetPreferences @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : com.ssajudn.bareuang.domain.port.WidgetPreferencesPort {
     private val prefs = context.applicationContext
         .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     private val _hideBalance = MutableStateFlow(prefs.getBoolean(KEY_HIDE_BALANCE, false))
-    val hideBalance: StateFlow<Boolean> = _hideBalance.asStateFlow()
+    override val hideBalance: StateFlow<Boolean> = _hideBalance.asStateFlow()
 
-    fun setHideBalance(hidden: Boolean) {
+    override fun setHideBalance(hidden: Boolean) {
         prefs.edit { putBoolean(KEY_HIDE_BALANCE, hidden) }
         _hideBalance.value = hidden
     }

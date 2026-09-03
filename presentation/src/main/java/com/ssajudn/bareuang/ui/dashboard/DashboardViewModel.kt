@@ -2,7 +2,7 @@ package com.ssajudn.bareuang.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.data.local.ThemePreferences
+import com.ssajudn.bareuang.domain.port.ThemePreferencesPort
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import com.ssajudn.bareuang.domain.model.DashboardSummary
 import com.ssajudn.bareuang.domain.usecase.GetDashboardSummaryUseCase
@@ -24,7 +24,7 @@ sealed interface DashboardUiState {
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getDashboardSummary: GetDashboardSummaryUseCase,
-    private val themePreferences: ThemePreferences
+    private val themePreferences: ThemePreferencesPort
 ) : ViewModel() {
 
     val darkMode get() = themePreferences.darkMode
