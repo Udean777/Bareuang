@@ -54,6 +54,7 @@ fun OcrScanScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val ocrEnabled = false
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { eff ->
@@ -139,6 +140,19 @@ fun OcrScanScreen(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_coming_soon),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+
             // Wallet selector
             var expanded by remember { mutableStateOf(false) }
             val selectedWallet = uiState.wallets.find { it.id == uiState.selectedWalletId }
@@ -180,7 +194,7 @@ fun OcrScanScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = { runAfterOcrConsent(::launchCamera) },
-                    enabled = uiState.isOnline && !uiState.isProcessing,
+                    enabled = ocrEnabled && uiState.isOnline && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.CameraAlt, null); Spacer(Modifier.width(8.dp)); Text("Kamera")
@@ -195,7 +209,7 @@ fun OcrScanScreen(
                             )
                         }
                     },
-                    enabled = uiState.isOnline && !uiState.isProcessing,
+                    enabled = ocrEnabled && uiState.isOnline && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text("Galeri")

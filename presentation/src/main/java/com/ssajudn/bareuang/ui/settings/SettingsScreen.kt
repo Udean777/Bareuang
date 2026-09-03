@@ -144,7 +144,8 @@ fun SettingsScreen(
                         title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_ocr_title),
                         description = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_ocr_desc),
                         icon = Icons.Default.DocumentScanner,
-                        onClick = onNavigateToOcr
+                        value = stringResource(com.ssajudn.bareuang.presentation.R.string.coming_soon),
+                        onClick = null
                     ),
                     com.ssajudn.bareuang.ui.components.Material3SettingsItem(
                         title = stringResource(com.ssajudn.bareuang.presentation.R.string.settings_export_title),

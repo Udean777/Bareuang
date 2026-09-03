@@ -8,7 +8,6 @@ import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.asString
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,7 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,6 +52,7 @@ fun BudgetScreen(
     val context = LocalContext.current
     val operation by viewModel.operation.collectAsStateWithLifecycle()
     val isOperationLoading = operation is OperationState.Loading
+    var pendingDailyMode by remember { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
@@ -133,10 +132,16 @@ fun BudgetScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentAlignment = Alignment.TopCenter
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 720.dp)
                 .padding(horizontal = Spacing.ScreenHorizontal)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -290,6 +295,15 @@ fun BudgetScreen(
 
             // CATEGORY BUDGETS SECTION — only shown after a budget has been saved
             if (uiState.currentLimit > 0) {
+                ElevatedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .crispBorder(shape = AppShapes.Squircle, color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.28f)),
+                    shape = AppShapes.Squircle,
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+                ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // Read-only daily pacing info: shows where the per-day number comes from.
                 val daysInMonth = java.time.YearMonth.now().lengthOfMonth()
                 val dailyAllowance = uiState.currentLimit / daysInMonth
@@ -326,30 +340,39 @@ fun BudgetScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = !uiState.isCustomDailyTarget,
-                        onClick = { viewModel.setAutomaticDailyTarget() },
+                        onClick = { if (uiState.isCustomDailyTarget) pendingDailyMode = false },
                         label = { Text(stringResource(R.string.budget_daily_target_auto)) }
                     )
                     FilterChip(
                         selected = uiState.isCustomDailyTarget,
-                        onClick = { viewModel.selectCustomDailyTarget() },
+                        onClick = { if (!uiState.isCustomDailyTarget) pendingDailyMode = true },
                         label = { Text(stringResource(R.string.budget_daily_target_custom)) }
                     )
                 }
                 if (uiState.isCustomDailyTarget) {
-                    OutlinedTextField(
+                    AmountTextField(
                         value = uiState.dailyTargetInput,
                         onValueChange = viewModel::onDailyTargetChange,
-                        label = { Text(stringResource(R.string.budget_daily_target_hint)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
+                        label = stringResource(R.string.budget_daily_target_hint),
+                        enabled = !uiState.isDailyTargetSaved,
                         modifier = Modifier.fillMaxWidth()
                     )
                     TextButton(
-                        onClick = { viewModel.saveCustomDailyTarget() },
-                        enabled = uiState.dailyTargetInput.toLongOrNull()?.let { it > 0L } == true
+                        onClick = {
+                            if (uiState.isDailyTargetSaved) viewModel.editCustomDailyTarget()
+                            else viewModel.saveCustomDailyTarget()
+                        },
+                        enabled = uiState.isDailyTargetSaved || uiState.dailyTargetInput.toLongOrNull()?.let { it > 0L } == true
                     ) {
-                        Text(stringResource(R.string.budget_daily_target_save))
+                        Text(
+                            stringResource(
+                                if (uiState.isDailyTargetSaved) R.string.budget_daily_target_edit
+                                else R.string.budget_daily_target_save
+                            )
+                        )
                     }
+                }
+                }
                 }
 
                 var showCategoryDialog by remember { mutableStateOf(false) }
@@ -509,6 +532,29 @@ fun BudgetScreen(
                 )
             }
         }
+        }
+    }
+
+    pendingDailyMode?.let { useCustom ->
+        com.ssajudn.bareuang.ui.components.AppConfirmDialog(
+            onDismissRequest = { pendingDailyMode = null },
+            onConfirm = {
+                if (useCustom) viewModel.selectCustomDailyTarget() else viewModel.setAutomaticDailyTarget()
+                pendingDailyMode = null
+            },
+            title = stringResource(
+                if (useCustom) R.string.budget_daily_mode_custom_confirm_title
+                else R.string.budget_daily_mode_auto_confirm_title
+            ),
+            message = stringResource(
+                if (useCustom) R.string.budget_daily_mode_custom_confirm_message
+                else R.string.budget_daily_mode_auto_confirm_message
+            ),
+            confirmButtonText = stringResource(R.string.budget_daily_mode_confirm),
+            dismissButtonText = stringResource(R.string.common_cancel),
+            icon = Icons.Default.Today,
+            isDestructive = false,
+        )
     }
 }
 

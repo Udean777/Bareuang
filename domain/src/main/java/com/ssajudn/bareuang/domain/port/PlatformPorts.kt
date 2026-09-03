@@ -37,6 +37,8 @@ interface BillReminderPreferencesPort {
 interface DailyPacingPreferencesPort {
     /** Null means automatic pacing derived from the monthly budget. */
     val customTarget: StateFlow<Long?>
+    /** Last saved custom value, retained when automatic mode is selected. */
+    val lastCustomTarget: StateFlow<Long?>
     fun setCustomTarget(amount: Long?)
     fun reset()
 }

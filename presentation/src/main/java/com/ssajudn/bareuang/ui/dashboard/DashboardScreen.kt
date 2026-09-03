@@ -257,11 +257,18 @@ fun DashboardContent(
                 daysInMonth = summary.daysInMonth,
                 message = summary.runwayMessage,
                 onSetBudgetClick = onSetBudgetClick,
-                dailyAllowance = summary.dailyAllowance,
-                todaySpent = summary.todaySpent,
-                remainingToday = summary.remainingToday,
-                remainingDays = summary.remainingDays
             )
+        }
+
+        item {
+            if (summary.monthlyBudget > 0) {
+                com.ssajudn.bareuang.ui.components.DailyPacingCard(
+                    dailyAllowance = summary.dailyAllowance,
+                    todaySpent = summary.todaySpent,
+                    remainingToday = summary.remainingToday,
+                    remainingDays = summary.remainingDays,
+                )
+            }
         }
 
         // 2. QUICK ACTION TILES (M3 Surface Containers)

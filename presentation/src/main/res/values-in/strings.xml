@@ -406,6 +406,13 @@
     <string name="budget_daily_target_custom">Custom</string>
     <string name="budget_daily_target_hint">Target custom per hari</string>
     <string name="budget_daily_target_save">Simpan target harian</string>
+    <string name="budget_daily_target_saved">Target harian berhasil disimpan</string>
+    <string name="budget_daily_target_edit">Edit target harian</string>
+    <string name="budget_daily_mode_custom_confirm_title">Gunakan target harian custom?</string>
+    <string name="budget_daily_mode_custom_confirm_message">Nominal yang kamu tentukan akan menjadi panduan pacing harian, menggantikan perhitungan otomatis dari budget bulanan.</string>
+    <string name="budget_daily_mode_auto_confirm_title">Gunakan pacing otomatis?</string>
+    <string name="budget_daily_mode_auto_confirm_message">Target akan dihitung ulang berdasarkan sisa budget bulanan dan jumlah hari yang tersisa.</string>
+    <string name="budget_daily_mode_confirm">Lanjutkan</string>
     <string name="tx_category_overspent_warning">Jumlah ini melebihi sisa %1$s untuk budget kategori %2$s.</string>
     <string name="split_person_me">Saya</string>
     <string name="bills_provider_custom">Lainnya (Custom)</string>
@@ -422,6 +429,7 @@
     <string name="state_error_title">Terjadi kesalahan</string>
     <string name="state_retry">Coba lagi</string>
     <string name="fab_menu_scan">Scan Struk</string>
+    <string name="coming_soon">Segera hadir</string>
     <string name="import_title">Impor Transaksi</string>
     <string name="import_wallet_label">Dompet Tujuan</string>
     <string name="import_pick_file">Pilih File CSV</string>
@@ -443,6 +451,7 @@
     <string name="import_chip_expense">Keluar</string>
     <string name="import_chip_income">Masuk</string>
     <string name="ocr_title">Scan Struk</string>
+    <string name="ocr_coming_soon">Fitur scan struk akan segera hadir.</string>
     <string name="ocr_wallet_label">Dompet</string>
     <string name="ocr_btn_camera">Kamera</string>
     <string name="ocr_btn_gallery">Galeri</string>
@@ -481,6 +490,10 @@
     <string name="dashboard_daily_title">Pacing Harian</string>
     <string name="dashboard_daily_auto_desc">Berdasarkan anggaran bulan ini</string>
     <string name="dashboard_daily_used">Terpakai %1$s / %2$s</string>
+    <string name="dashboard_daily_target">Target</string>
+    <string name="dashboard_daily_spent">Terpakai</string>
+    <string name="dashboard_daily_remaining_label">Sisa</string>
+    <string name="dashboard_daily_days_left">%1$d hari tersisa</string>
     <string name="dashboard_recurring_next">Berikutnya: %1$s</string>
     <string name="dashboard_recurring_schedule">Jadwal Berulang</string>
     <string name="day_fri">Jum</string>

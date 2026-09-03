@@ -18,7 +18,6 @@ import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Savings
@@ -61,7 +60,6 @@ import com.ssajudn.bareuang.ui.transaction.TransactionDetailScreen
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
-import androidx.compose.runtime.collectAsState
 import com.ssajudn.bareuang.presentation.R
 
 sealed class Screen(val route: String) {
@@ -258,18 +256,7 @@ fun AppNavigation(
                     isSpeedDialExpanded = false
                 }
 
-                val networkVm: com.ssajudn.bareuang.utils.NetworkMonitorViewModel = androidx.hilt.navigation.compose.hiltViewModel()
-                val isOnline by networkVm.observeIsOnline().collectAsState(initial = networkVm.isOnline())
-
                 val speedDialItems = listOf(
-                    SpeedDialItem(
-                        label = stringResource(R.string.fab_menu_scan),
-                        icon = Icons.Filled.DocumentScanner,
-                        enabled = isOnline,
-                        onClick = {
-                            navController.navigate(Screen.OcrScan.route)
-                        }
-                    ),
                     SpeedDialItem(
                         label = stringResource(R.string.fab_menu_transaction),
                         icon = Icons.Filled.Add,

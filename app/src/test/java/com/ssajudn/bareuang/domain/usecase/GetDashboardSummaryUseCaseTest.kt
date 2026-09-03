@@ -67,6 +67,7 @@ private class FakeDueBillRepo(var bills: List<DueBill> = emptyList()) : DueBillR
 
 private class FakeDailyPacingPrefs : DailyPacingPreferencesPort {
     override val customTarget = MutableStateFlow<Long?>(null)
+    override val lastCustomTarget = MutableStateFlow<Long?>(null)
     override fun setCustomTarget(amount: Long?) { customTarget.value = amount }
     override fun reset() { customTarget.value = null }
 }

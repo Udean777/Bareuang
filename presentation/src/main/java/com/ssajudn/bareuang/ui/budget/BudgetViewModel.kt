@@ -35,7 +35,8 @@ data class BudgetUiState(
     val error: UiText? = null,
     val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList(),
     val isCustomDailyTarget: Boolean = false,
-    val dailyTargetInput: String = ""
+    val dailyTargetInput: String = "",
+    val isDailyTargetSaved: Boolean = false
 ) {
     val isLocked: Boolean get() = currentLimit > 0
     val totalAllocatedCategory: Long get() = categoryBudgets.sumOf { it.limitAmount }
@@ -66,22 +67,40 @@ class BudgetViewModel @Inject constructor(
             dailyPacingPreferences.customTarget.collect { target ->
                 _uiState.value = _uiState.value.copy(
                     isCustomDailyTarget = target != null,
-                    dailyTargetInput = target?.toString() ?: ""
+                    dailyTargetInput = target?.toString() ?: dailyPacingPreferences.lastCustomTarget.value?.toString().orEmpty(),
+                    isDailyTargetSaved = target != null
                 )
             }
         }
     }
 
     fun onDailyTargetChange(input: String) {
-        _uiState.value = _uiState.value.copy(dailyTargetInput = input.filter { it.isDigit() }.take(12))
+        _uiState.value = _uiState.value.copy(
+            dailyTargetInput = input.filter { it.isDigit() }.take(12),
+            isDailyTargetSaved = false,
+        )
     }
 
     fun setAutomaticDailyTarget() {
+        _uiState.value = _uiState.value.copy(
+            isCustomDailyTarget = false,
+            isDailyTargetSaved = false,
+        )
         dailyPacingPreferences.setCustomTarget(null)
     }
 
     fun selectCustomDailyTarget() {
-        _uiState.value = _uiState.value.copy(isCustomDailyTarget = true)
+        val saved = dailyPacingPreferences.lastCustomTarget.value
+        if (saved != null) dailyPacingPreferences.setCustomTarget(saved)
+        _uiState.value = _uiState.value.copy(
+            isCustomDailyTarget = true,
+            dailyTargetInput = saved?.toString().orEmpty(),
+            isDailyTargetSaved = saved != null,
+        )
+    }
+
+    fun editCustomDailyTarget() {
+        _uiState.value = _uiState.value.copy(isDailyTargetSaved = false)
     }
 
     fun saveCustomDailyTarget() {
@@ -91,6 +110,10 @@ class BudgetViewModel @Inject constructor(
             return
         }
         dailyPacingPreferences.setCustomTarget(amount)
+        _uiState.value = _uiState.value.copy(isDailyTargetSaved = true)
+        viewModelScope.launch {
+            _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.budget_daily_target_saved)))
+        }
     }
 
     private fun loadCurrentBudget() {

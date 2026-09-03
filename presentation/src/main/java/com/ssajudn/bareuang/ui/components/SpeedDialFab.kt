@@ -46,6 +46,7 @@ data class SpeedDialItem(
     val containerColor: Color? = null,
     val contentColor: Color? = null,
     val enabled: Boolean = true,
+    val disabledLabel: String? = null,
 )
 
 @Composable
@@ -99,7 +100,7 @@ fun AppSpeedDialFab(
                             modifier = Modifier.padding(end = 10.dp)
                         ) {
                             Text(
-                                item.label + if (!item.enabled) " • offline" else "",
+                                item.label + if (!item.enabled) " • ${item.disabledLabel ?: "offline"}" else "",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                                 color = if (item.enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
