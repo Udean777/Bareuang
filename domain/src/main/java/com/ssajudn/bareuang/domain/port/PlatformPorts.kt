@@ -34,3 +34,9 @@ interface BillReminderPreferencesPort {
     fun reminderMinute(): Int
     fun setReminderTime(hour: Int, minute: Int)
 }
+interface DailyPacingPreferencesPort {
+    /** Null means automatic pacing derived from the monthly budget. */
+    val customTarget: StateFlow<Long?>
+    fun setCustomTarget(amount: Long?)
+    fun reset()
+}

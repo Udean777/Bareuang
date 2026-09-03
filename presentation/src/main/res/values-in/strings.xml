@@ -398,9 +398,14 @@
     <string name="tx_error_budget_required">Setup anggaran bulan ini terlebih dahulu</string>
     <string name="tx_error_save_failed">Gagal menyimpan transaksi</string>
     <!-- Soft nudge daily budget + pacing -->
-    <string name="tx_daily_override_title">Jatah harian terlampaui</string>
+    <string name="tx_daily_override_title">Target pacing hari ini terlampaui</string>
     <string name="tx_daily_override_confirm">Tetap simpan</string>
     <string name="budget_daily_pacing_desc">Pacing harian: %1$s per hari (budget bulanan ÷ jumlah hari).</string>
+    <string name="budget_daily_target_title">Mode target harian</string>
+    <string name="budget_daily_target_auto">Otomatis</string>
+    <string name="budget_daily_target_custom">Custom</string>
+    <string name="budget_daily_target_hint">Target custom per hari</string>
+    <string name="budget_daily_target_save">Simpan target harian</string>
     <string name="tx_category_overspent_warning">Jumlah ini melebihi sisa %1$s untuk budget kategori %2$s.</string>
     <string name="split_person_me">Saya</string>
     <string name="bills_provider_custom">Lainnya (Custom)</string>
@@ -473,7 +478,8 @@
     <string name="budget_category_subtitle">Alokasikan batas per kategori pengeluaran</string>
     <string name="budget_category_title">Anggaran Kategori</string>
     <string name="dashboard_daily_remaining">Sisa hari ini: %1$s</string>
-    <string name="dashboard_daily_title">Anggaran Harian</string>
+    <string name="dashboard_daily_title">Pacing Harian</string>
+    <string name="dashboard_daily_auto_desc">Berdasarkan anggaran bulan ini</string>
     <string name="dashboard_daily_used">Terpakai %1$s / %2$s</string>
     <string name="dashboard_recurring_next">Berikutnya: %1$s</string>
     <string name="dashboard_recurring_schedule">Jadwal Berulang</string>
@@ -514,7 +520,7 @@
     <string name="split_service_label">Layanan (%)</string>
     <string name="split_share_title">Detail pembagian tagihan:</string>
     <string name="tx_badge_recurring">Berulang</string>
-    <string name="tx_error_daily_exceeded">Anggaran harian terlampaui. Coba lagi besok.</string>
+    <string name="tx_error_daily_exceeded">Target pacing hari ini terlampaui. Transaksi tetap dapat disimpan.</string>
     <string name="tx_recurring_desc">Catat transaksi ini otomatis setiap siklus</string>
     <string name="tx_recurring_interval">Interval Pengulangan</string>
     <string name="tx_recurring_label">Transaksi Berulang</string>

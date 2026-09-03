@@ -7,6 +7,11 @@ import com.ssajudn.bareuang.domain.model.ImportDraft
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
+import com.ssajudn.bareuang.domain.model.TransactionCategory
+import com.ssajudn.bareuang.domain.model.TransactionType
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 class BulkCreateTransactionsUseCase @Inject constructor(
@@ -30,21 +35,35 @@ class BulkCreateTransactionsUseCase @Inject constructor(
         if (selected.any { it.amount <= 0 }) return Result.failure(AppException.DataException("Jumlah transaksi harus lebih dari 0"))
         // Budget gate — single check for all
         if (!hasMonthlyBudget()) return Result.failure(AppException.DataException("Budget bulan ini belum diatur"))
-        // Daily gate — cek per item yang tanggalnya hari ini dan bertipe EXPENSE
+        // Daily gate — check the complete today's batch once so each item cannot
+        // reuse the same remaining allowance independently.
         if (!force) {
-            for (d in selected) {
-                if (d.type == com.ssajudn.bareuang.domain.model.TransactionType.EXPENSE) {
-                    val dailyCheck = checkDailyBudget(d.amount, d.date, currency)
-                    if (dailyCheck.isFailure) {
-                        return Result.failure(
-                            AppException.DailyBudgetExceededException(dailyCheck.exceptionOrNull()?.message ?: "Jatah harian terlampaui")
-                        )
-                    }
+            val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val todayExpense = try {
+                selected.filter {
+                    it.type == TransactionType.EXPENSE &&
+                        it.category != TransactionCategory.BILLS &&
+                        it.date.take(10) == todayIso
+                }.fold(0L) { total, draft -> Math.addExact(total, draft.amount) }
+            } catch (e: ArithmeticException) {
+                return Result.failure(AppException.DataException("Nominal transaksi terlalu besar untuk dihitung", e))
+            }
+            if (todayExpense > 0L) {
+                val dailyCheck = checkDailyBudget(todayExpense, todayIso, currency)
+                if (dailyCheck.isFailure) {
+                    return Result.failure(
+                        AppException.DailyBudgetExceededException(dailyCheck.exceptionOrNull()?.message ?: "Target pacing hari ini terlampaui")
+                    )
                 }
             }
         }
         // Saldo check — sum of expenses vs wallet balance
-        val totalExpense = selected.filter { it.type != com.ssajudn.bareuang.domain.model.TransactionType.INCOME }.sumOf { it.amount }
+        val totalExpense = try {
+            selected.filter { it.type != TransactionType.INCOME }
+                .fold(0L) { total, draft -> Math.addExact(total, draft.amount) }
+        } catch (e: ArithmeticException) {
+            return Result.failure(AppException.DataException("Nominal transaksi terlalu besar untuk dihitung", e))
+        }
         if (totalExpense > 0) {
             val wallet = walletRepository.getWallets().getOrNull()?.find { it.id == walletId }
             if (wallet != null && wallet.balance < totalExpense) {
@@ -61,6 +80,10 @@ class BulkCreateTransactionsUseCase @Inject constructor(
                 walletId = walletId
             )
         }
-        return transactionRepository.bulkCreate(requests)
+        return try {
+            transactionRepository.bulkCreate(requests)
+        } catch (e: ArithmeticException) {
+            Result.failure(AppException.DataException("Nominal transaksi terlalu besar untuk dihitung", e))
+        }
     }
 }

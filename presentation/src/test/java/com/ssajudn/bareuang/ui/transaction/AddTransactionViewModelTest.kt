@@ -53,7 +53,7 @@ class AddTransactionViewModelTest {
         every { budgetRepository.getCategoryBudgets(any()) } returns kotlinx.coroutines.flow.flowOf(emptyList())
         val hasMonthlyBudget = com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase(budgetRepository)
         // Daily-budget gate defaults to allowed; individual tests override as needed.
-        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.success(Unit)
+        coEvery { checkDailyBudget(any(), any(), any(), any()) } returns Result.success(Unit)
         return AddTransactionViewModel(walletRepository, transactionRepository, budgetRepository, hasMonthlyBudget, checkDailyBudget)
     }
 
@@ -439,7 +439,7 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
 
         // Override the default pass-through stub: today's remaining allowance is less than 50000.
-        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.failure(
+        coEvery { checkDailyBudget(any(), any(), any(), any()) } returns Result.failure(
             AppException.DataException("Melebihi jatah harian. Sisa hari ini Rp 10.000.")
         )
 
@@ -469,7 +469,7 @@ class AddTransactionViewModelTest {
         val vm = createVm()
         advanceUntilIdle()
 
-        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.failure(
+        coEvery { checkDailyBudget(any(), any(), any(), any()) } returns Result.failure(
             AppException.DataException("Melebihi jatah harian. Sisa hari ini Rp 10.000.")
         )
         vm.onAmountChange("50000")
@@ -492,7 +492,7 @@ class AddTransactionViewModelTest {
         val vm = createVm()
         advanceUntilIdle()
 
-        coEvery { checkDailyBudget(any(), any(), any()) } returns Result.failure(
+        coEvery { checkDailyBudget(any(), any(), any(), any()) } returns Result.failure(
             AppException.DataException("Melebihi jatah harian. Sisa hari ini Rp 10.000.")
         )
         vm.onAmountChange("50000")

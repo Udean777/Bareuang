@@ -168,7 +168,7 @@ class OcrScanViewModel @Inject constructor(
                 _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_budget_required)))
                 return@launch
             }
-            val dailyCheck = checkDailyBudget(s.parsedAmount, s.date, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency())
+            val dailyCheck = checkDailyBudget(s.parsedAmount, s.date, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency(), s.category)
             if (dailyCheck.isFailure) {
                 val msg = dailyCheck.exceptionOrNull()?.message ?: ""
                 _uiState.value = _uiState.value.copy(

@@ -64,5 +64,6 @@ abstract class RepositoryModule {
     @Binds abstract fun bindReceiptAi(impl: ReceiptAiService): ReceiptAiPort
     @Binds abstract fun bindReminderScheduler(impl: BillReminderScheduler): BillReminderSchedulerPort
     @Binds abstract fun bindReminderPrefs(impl: BillReminderPrefs): BillReminderPreferencesPort
+    @Binds abstract fun bindDailyPacingPrefs(impl: DailyPacingPreferences): DailyPacingPreferencesPort
 
 }

@@ -64,3 +64,5 @@ app/google-services.json
 
 keystores/
 keystore.properties
+.vercel
+.env*

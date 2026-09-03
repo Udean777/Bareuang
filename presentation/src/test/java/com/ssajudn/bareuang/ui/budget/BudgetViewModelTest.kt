@@ -3,6 +3,7 @@ package com.ssajudn.bareuang.ui.budget
 import com.ssajudn.bareuang.domain.model.CategoryBudget
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
+import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import com.ssajudn.bareuang.testutil.MainDispatcherRule
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,11 +24,18 @@ class BudgetViewModelTest {
 
     private val repository: BudgetRepository = mockk(relaxed = true)
     private val categoryBudgetsFlow = MutableStateFlow<List<CategoryBudget>>(emptyList())
+    private val dailyTarget = MutableStateFlow<Long?>(null)
+
+    private val dailyPacing = object : DailyPacingPreferencesPort {
+        override val customTarget = dailyTarget
+        override fun setCustomTarget(amount: Long?) { dailyTarget.value = amount }
+        override fun reset() { dailyTarget.value = null }
+    }
 
     private fun createVm(existingBudget: Long = 0L): BudgetViewModel {
         coEvery { repository.getMonthlyBudget(any()) } returns Result.success(existingBudget)
         every { repository.getCategoryBudgets(any()) } returns categoryBudgetsFlow
-        return BudgetViewModel(repository)
+        return BudgetViewModel(repository, dailyPacing)
     }
 
     @Test

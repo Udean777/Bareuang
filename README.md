@@ -25,6 +25,17 @@ Satu pertanyaan sederhana jadi fondasinya: **"Dengan pola pengeluaranku sekarang
 
 Data keuangan utama **tersimpan lokal** di perangkat. Fitur Scan Struk bersifat opsional
 dan mengirim foto ke proxy Bareuang lalu Google Gemini untuk ekstraksi, setelah consent.
+Bareuang tidak memiliki akun, login, cloud sync, atau profil multi-user: aplikasi ini
+sepenuhnya **guest-only**. Reset Data di Pengaturan menghapus data lokal aplikasi.
+
+### Privasi OCR
+
+- Foto struk hanya dikirim setelah consent eksplisit dan koneksi internet tersedia.
+- Proxy meneruskan gambar terkompresi ke Google Gemini dan mengembalikan draft transaksi.
+- Bareuang tidak menyimpan gambar, base64, isi struk, merchant, atau item pada log.
+- Metadata operasional proxy memiliki retensi maksimum 14 hari.
+- Input manual selalu tersedia jika pengguna tidak menyetujui OCR atau sedang offline.
+- Kebijakan lengkap: [Privacy Policy](https://bareuang.app/privacy.html).
 
 ---
 
@@ -102,7 +113,7 @@ Bareuang/
     └── assets/         # Logo & screenshots (reuse dari art/)
 ```
 
-**Stack Android:** Kotlin 2.0 · Jetpack Compose · Room (index `date/amount/merchant`) · Hilt · WorkManager · Glance Widget · Gson · Gemini receipt proxy
+**Stack Android:** Kotlin 2.0 · Jetpack Compose · Room v16 (migration historis dan guest-only schema) · Hilt · WorkManager · Glance Widget · Gson · Gemini receipt proxy
 
 **Stack Web:** Pure HTML/CSS/JS — tanpa framework, tanpa build step, tanpa `node_modules`. Deploy ke GitHub Pages / Cloudflare Pages. SEO: canonical, hreflang ID/EN, OG/Twitter, JSON-LD (SoftwareApplication, FAQPage, Organization, Breadcrumb), sitemap.xml, robots.txt.
 
@@ -121,7 +132,15 @@ Fitur inti tidak memerlukan akun. Build aplikasi memakai konfigurasi lokal; endp
 
 # AAB untuk Play Store
 ./gradlew :app:bundleRelease
+
+# Validasi lokal
+./gradlew test
+./gradlew lint
+./gradlew :data:compileDebugAndroidTestKotlin
 ```
+
+`connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. Migration
+Room dan perilaku widget/notification harus diuji pada perangkat sebelum release.
 
 ### 🌐 Web — Landing Page
 

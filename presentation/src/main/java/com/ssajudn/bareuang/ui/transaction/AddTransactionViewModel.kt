@@ -293,7 +293,7 @@ class AddTransactionViewModel @Inject constructor(
             }
 
             if (state.transactionType == TransactionType.EXPENSE) {
-                val dailyCheck = checkDailyBudget(state.parsedAmount, state.date, CurrencyFormatter.getActiveCurrency())
+                val dailyCheck = checkDailyBudget(state.parsedAmount, state.date, CurrencyFormatter.getActiveCurrency(), state.selectedCategory)
                 if (dailyCheck.isFailure) {
                     val msg = dailyCheck.exceptionOrNull()?.message ?: ""
                     // Soft nudge: prompt the user for confirmation instead of blocking outright.

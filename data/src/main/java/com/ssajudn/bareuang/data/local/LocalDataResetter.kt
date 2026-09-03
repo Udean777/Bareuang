@@ -10,9 +10,11 @@ import javax.inject.Singleton
  */
 @Singleton
 class LocalDataResetter @Inject constructor(
-    private val db: AppDatabase
+    private val db: AppDatabase,
+    private val dailyPacingPreferences: DailyPacingPreferences
 ) : com.ssajudn.bareuang.domain.port.LocalDataResetPort {
     override suspend fun wipe() {
         db.clearAllTables()
+        dailyPacingPreferences.reset()
     }
 }

@@ -6,6 +6,8 @@ const MAX_BODY_BYTES = 3 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_TOTAL = 1_000_000_000_000;
 const WINDOW_SECONDS = 24 * 60 * 60;
+const kvRestUrl = process.env.bareuang_KV_REST_API_URL;
+const kvRestToken = process.env.bareuang_KV_REST_API_TOKEN;
 const INSTALLATION_LIMIT = Number(process.env.RATE_LIMIT_RPD || 20);
 const IP_LIMIT = Number(process.env.RATE_LIMIT_IP_RPD || 60);
 const GLOBAL_LIMIT = Number(process.env.GLOBAL_LIMIT_RPD || 5000);
@@ -24,12 +26,12 @@ function clientIp(req) {
   return String(value).replace(/^::ffff:/i, "").slice(0, 64) || "unknown";
 }
 function validInstallation(value) { return typeof value === "string" && /^[a-f0-9-]{16,80}$/i.test(value); }
-function quotaConfigured() { return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN); }
+function quotaConfigured() { return Boolean(kvRestUrl && kvRestToken); }
 
 async function pipeline(commands) {
-  const response = await fetch(`${process.env.KV_REST_API_URL}/pipeline`, {
+  const response = await fetch(`${kvRestUrl}/pipeline`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${kvRestToken}`, "Content-Type": "application/json" },
     body: JSON.stringify(commands),
   });
   if (!response.ok) throw new Error("quota store unavailable");

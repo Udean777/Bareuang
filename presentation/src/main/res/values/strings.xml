@@ -454,15 +454,21 @@
     <string name="tx_error_same_wallet">Source and destination wallet must not be the same</string>
     <string name="tx_error_insufficient_balance">Insufficient wallet balance (%1$s)</string>
     <string name="tx_error_budget_required">Please set this month\'s budget first</string>
-    <string name="tx_error_daily_exceeded">Daily budget exceeded. Try again tomorrow.</string>
+    <string name="tx_error_daily_exceeded">Today\'s pacing target was exceeded. You can still save this transaction.</string>
     <string name="tx_error_save_failed">Failed to save transaction</string>
     <!-- Daily budget soft nudge + pacing -->
-    <string name="tx_daily_override_title">Daily budget exceeded</string>
+    <string name="tx_daily_override_title">Daily pacing target exceeded</string>
     <string name="tx_daily_override_confirm">Save anyway</string>
     <string name="budget_daily_pacing_desc">Daily pacing: %1$s per day (monthly budget ÷ days in month).</string>
+    <string name="budget_daily_target_title">Daily target mode</string>
+    <string name="budget_daily_target_auto">Automatic</string>
+    <string name="budget_daily_target_custom">Custom</string>
+    <string name="budget_daily_target_hint">Custom target per day</string>
+    <string name="budget_daily_target_save">Save daily target</string>
     <string name="tx_category_overspent_warning">This amount exceeds the %1$s left in the %2$s budget.</string>
     <!-- Daily budget -->
-    <string name="dashboard_daily_title">Daily Budget</string>
+    <string name="dashboard_daily_title">Daily Pacing</string>
+    <string name="dashboard_daily_auto_desc">Based on this month\'s budget</string>
     <string name="dashboard_daily_remaining">Remaining today: %1$s</string>
     <string name="dashboard_daily_used">Used %1$s / %2$s</string>
     <string name="bills_error_insufficient">Insufficient balance to pay this bill</string>

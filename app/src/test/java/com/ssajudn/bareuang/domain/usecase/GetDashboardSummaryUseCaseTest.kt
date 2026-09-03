@@ -16,6 +16,8 @@ import com.ssajudn.bareuang.domain.repository.BudgetRepository
 import com.ssajudn.bareuang.domain.repository.DueBillRepository
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
+import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -63,6 +65,12 @@ private class FakeDueBillRepo(var bills: List<DueBill> = emptyList()) : DueBillR
     override fun observeDueBills(): Flow<List<DueBill>> = flowOf(bills)
 }
 
+private class FakeDailyPacingPrefs : DailyPacingPreferencesPort {
+    override val customTarget = MutableStateFlow<Long?>(null)
+    override fun setCustomTarget(amount: Long?) { customTarget.value = amount }
+    override fun reset() { customTarget.value = null }
+}
+
 class GetDashboardSummaryUseCaseTest {
 
     @Test
@@ -85,7 +93,8 @@ class GetDashboardSummaryUseCaseTest {
             budgetRepository = FakeBudgetRepo(budget = 1_000_000L),
             transactionRepository = txRepo,
             walletRepository = FakeWalletRepo(wallets),
-            dueBillRepository = FakeDueBillRepo(bills)
+            dueBillRepository = FakeDueBillRepo(bills),
+            dailyPacingPreferences = FakeDailyPacingPrefs()
         )
 
         val res = useCase()

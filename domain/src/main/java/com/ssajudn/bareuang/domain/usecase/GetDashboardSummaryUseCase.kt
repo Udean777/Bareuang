@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import javax.inject.Inject
 
 /**
@@ -23,7 +24,8 @@ class GetDashboardSummaryUseCase @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val transactionRepository: TransactionRepository,
     private val walletRepository: WalletRepository,
-    private val dueBillRepository: DueBillRepository
+    private val dueBillRepository: DueBillRepository,
+    private val dailyPacingPreferences: DailyPacingPreferencesPort
 ) {
     suspend operator fun invoke(): Result<DashboardSummary> {
         return try {
@@ -40,19 +42,22 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val currentMonthTx = executedTx.filter { it.date.startsWith(monthYear) }
 
             val expensesTx = currentMonthTx.filter { it.type == TransactionType.EXPENSE && it.category != com.ssajudn.bareuang.domain.model.TransactionCategory.BILLS }
-            val totalSpent = expensesTx.sumOf { it.amount }
+            val totalSpent = expensesTx.sumTransactionAmountsOrThrow()
 
-            val remainingBudget = monthlyBudget - totalSpent
+            val remainingBudget = Math.subtractExact(monthlyBudget, totalSpent)
             val avgDaily = if (daysPassed > 0) totalSpent / daysPassed else 0L
 
             val remainingDays = (daysInMonth - daysPassed + 1).coerceAtLeast(1)
-            val dailyAllowance = if (monthlyBudget > 0) monthlyBudget / daysInMonth else 0L
+            val automaticDailyAllowance = if (monthlyBudget > 0) {
+                remainingBudget.coerceAtLeast(0L) / remainingDays
+            } else 0L
+            val dailyAllowance = dailyPacingPreferences.customTarget.value ?: automaticDailyAllowance
             val todayIso = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now.time)
-            val todaySpent = currentMonthTx.filter { it.date.take(10) == todayIso }.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
-            val remainingToday = dailyAllowance - todaySpent
+            val todaySpent = expensesTx.filter { it.date.take(10) == todayIso }.sumTransactionAmountsOrThrow()
+            val remainingToday = Math.subtractExact(dailyAllowance, todaySpent)
 
             val wallets = walletRepository.getWallets().getOrElse { return Result.failure(it) }
-            val currentNetWorth = wallets.sumOf { it.balance }
+            val currentNetWorth = wallets.map { it.balance }.sumLongsOrThrow()
 
             var estimatedDeathDay = daysInMonth
             var runwayMsg: String
@@ -80,13 +85,14 @@ class GetDashboardSummaryUseCase @Inject constructor(
             val topCategories = catMap.map { (cat, list) ->
                 CategorySummary(
                     category = cat,
-                    total = list.sumOf { it.amount },
+                    total = list.map { it.amount }.sumLongsOrThrow(),
                     count = list.size.toLong()
                 )
             }.sortedByDescending { it.total }
 
             val allBills = dueBillRepository.getDueBills().getOrElse { return Result.failure(it) }
-            val unpaidSum = allBills.filter { it.status == DueBillStatus.UNPAID }.sumOf { it.totalAmount }
+            val unpaidSum = allBills.filter { it.status == DueBillStatus.UNPAID }
+                .map { it.totalAmount }.sumLongsOrThrow()
 
             val summary = DashboardSummary(
                 monthlyBudget = monthlyBudget,
@@ -111,8 +117,16 @@ class GetDashboardSummaryUseCase @Inject constructor(
                 remainingDays = remainingDays
             )
             Result.success(summary)
+        } catch (e: ArithmeticException) {
+            Result.failure(AppException.DataException("Nominal transaksi terlalu besar untuk dihitung", e))
         } catch (e: Exception) {
             Result.failure(AppException.UnknownError(cause = e))
         }
     }
+
+    private fun List<com.ssajudn.bareuang.domain.model.Transaction>.sumTransactionAmountsOrThrow(): Long =
+        fold(0L) { total, transaction -> Math.addExact(total, transaction.amount) }
+
+    private fun List<Long>.sumLongsOrThrow(): Long =
+        fold(0L) { total, amount -> Math.addExact(total, amount) }
 }

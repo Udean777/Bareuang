@@ -318,6 +318,40 @@ fun BudgetScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
 
+                Text(
+                    text = stringResource(R.string.budget_daily_target_title),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = !uiState.isCustomDailyTarget,
+                        onClick = { viewModel.setAutomaticDailyTarget() },
+                        label = { Text(stringResource(R.string.budget_daily_target_auto)) }
+                    )
+                    FilterChip(
+                        selected = uiState.isCustomDailyTarget,
+                        onClick = { viewModel.selectCustomDailyTarget() },
+                        label = { Text(stringResource(R.string.budget_daily_target_custom)) }
+                    )
+                }
+                if (uiState.isCustomDailyTarget) {
+                    OutlinedTextField(
+                        value = uiState.dailyTargetInput,
+                        onValueChange = viewModel::onDailyTargetChange,
+                        label = { Text(stringResource(R.string.budget_daily_target_hint)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    TextButton(
+                        onClick = { viewModel.saveCustomDailyTarget() },
+                        enabled = uiState.dailyTargetInput.toLongOrNull()?.let { it > 0L } == true
+                    ) {
+                        Text(stringResource(R.string.budget_daily_target_save))
+                    }
+                }
+
                 var showCategoryDialog by remember { mutableStateOf(false) }
                 var editingCategoryBudget by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }
                 var categoryToDelete by remember { mutableStateOf<com.ssajudn.bareuang.domain.model.CategoryBudget?>(null) }

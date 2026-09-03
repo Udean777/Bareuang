@@ -3,6 +3,7 @@ package com.ssajudn.bareuang.ui.budget
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
+import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import com.ssajudn.bareuang.domain.error.AppException
 import com.ssajudn.bareuang.domain.error.userMessage
 import com.ssajudn.bareuang.presentation.R
@@ -32,7 +33,9 @@ data class BudgetUiState(
     val isSuccess: Boolean = false,
     val errorMessage: String? = null,
     val error: UiText? = null,
-    val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList()
+    val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList(),
+    val isCustomDailyTarget: Boolean = false,
+    val dailyTargetInput: String = ""
 ) {
     val isLocked: Boolean get() = currentLimit > 0
     val totalAllocatedCategory: Long get() = categoryBudgets.sumOf { it.limitAmount }
@@ -41,7 +44,8 @@ data class BudgetUiState(
 
 @HiltViewModel
 class BudgetViewModel @Inject constructor(
-    private val repository: BudgetRepository
+    private val repository: BudgetRepository,
+    private val dailyPacingPreferences: DailyPacingPreferencesPort
 ) : ViewModel() {
     private val _operation = kotlinx.coroutines.flow.MutableStateFlow<OperationState>(OperationState.Idle)
     val operation: kotlinx.coroutines.flow.StateFlow<OperationState> = _operation.asStateFlow()
@@ -54,6 +58,39 @@ class BudgetViewModel @Inject constructor(
     init {
         loadCurrentBudget()
         observeCategoryBudgets()
+        observeDailyTarget()
+    }
+
+    private fun observeDailyTarget() {
+        viewModelScope.launch {
+            dailyPacingPreferences.customTarget.collect { target ->
+                _uiState.value = _uiState.value.copy(
+                    isCustomDailyTarget = target != null,
+                    dailyTargetInput = target?.toString() ?: ""
+                )
+            }
+        }
+    }
+
+    fun onDailyTargetChange(input: String) {
+        _uiState.value = _uiState.value.copy(dailyTargetInput = input.filter { it.isDigit() }.take(12))
+    }
+
+    fun setAutomaticDailyTarget() {
+        dailyPacingPreferences.setCustomTarget(null)
+    }
+
+    fun selectCustomDailyTarget() {
+        _uiState.value = _uiState.value.copy(isCustomDailyTarget = true)
+    }
+
+    fun saveCustomDailyTarget() {
+        val amount = _uiState.value.dailyTargetInput.toLongOrNull()
+        if (amount == null || amount <= 0L) {
+            _uiState.value = _uiState.value.copy(error = UiText.Res(BudgetError.INVALID_AMOUNT.resId))
+            return
+        }
+        dailyPacingPreferences.setCustomTarget(amount)
     }
 
     private fun loadCurrentBudget() {
