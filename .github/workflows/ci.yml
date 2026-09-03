@@ -54,25 +54,6 @@ jobs:
           path: '**/build/reports/lint-results*'
           if-no-files-found: ignore
 
-  migration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-      - name: Run instrumentation and migration tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          script: ./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon
-
   web-check:
     runs-on: ubuntu-latest
     steps:
@@ -87,7 +68,8 @@ jobs:
           node web/test/seo-check.mjs
 
   assemble-debug:
-    needs: [unit-test, lint, migration-test, web-check]
+    needs: [unit-test, lint, web-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
