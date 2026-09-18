@@ -4,7 +4,7 @@
   # Bareuang
   **Teman cozy buat uangmu · Your cozy money companion**
 
-  *Tahu sampai kapan uangmu tahan, kelola banyak dompet, pantau tagihan, dan wujudkan target tabungan — bersama si beruang madu.*
+  *Tahu sampai kapan uangmu tahan, kelola banyak dompet, pantau tagihan, dan wujudkan target tabungan - bersama si beruang madu.*
 
   ---
 
@@ -19,22 +19,21 @@
 
 ## Mengapa Bareuang?
 
-Kebanyakan aplikasi keuangan terasa seperti spreadsheet — dingin dan membebani. Bareuang hadir untuk membalikkan itu.
+Kebanyakan aplikasi keuangan terasa seperti spreadsheet - dingin dan membebani. Bareuang hadir untuk membalikkan itu.
 
-Satu pertanyaan sederhana jadi fondasinya: **"Dengan pola pengeluaranku sekarang, sampai kapan uangku tahan?"** — dan beruang madu akan menjawabnya lewat fitur **Financial Runway**.
+Satu pertanyaan sederhana jadi fondasinya: **"Dengan pola pengeluaranku sekarang, sampai kapan uangku tahan?"** - dan beruang madu akan menjawabnya lewat fitur **Financial Runway**.
 
-Data keuangan utama **tersimpan lokal** di perangkat. Fitur Scan Struk bersifat opsional
-dan mengirim foto ke proxy Bareuang lalu Google Gemini untuk ekstraksi, setelah consent.
+Data keuangan utama **tersimpan lokal** di perangkat. Fitur Scan Struk lokal bersifat
+opsional dan memproses foto di perangkat menggunakan ML Kit.
 Bareuang tidak memiliki akun, login, cloud sync, atau profil multi-user: aplikasi ini
 sepenuhnya **guest-only**. Reset Data di Pengaturan menghapus data lokal aplikasi.
 
 ### Privasi OCR
 
-- Foto struk hanya dikirim setelah consent eksplisit dan koneksi internet tersedia.
-- Proxy meneruskan gambar terkompresi ke Google Gemini dan mengembalikan draft transaksi.
-- Bareuang tidak menyimpan gambar, base64, isi struk, merchant, atau item pada log.
-- Metadata operasional proxy memiliki retensi maksimum 14 hari.
-- Input manual selalu tersedia jika pengguna tidak menyetujui OCR atau sedang offline.
+- Foto struk diproses lokal di perangkat menggunakan ML Kit pada build debug/local.
+- Tidak ada foto struk yang dikirim ke server atau provider AI.
+- Build release dan production menonaktifkan OCR.
+- Input manual selalu tersedia jika OCR tidak tersedia atau gagal.
 - Kebijakan lengkap: [Privacy Policy](https://bareuang.app/privacy.html).
 
 ---
@@ -45,23 +44,23 @@ sepenuhnya **guest-only**. Reset Data di Pengaturan menghapus data lokal aplikas
 |---|---|---|
 | 📊 | **Financial Runway** | Hitung *burn rate* harian & prediksi kapan saldo habis (*Estimated Death Day*) |
 | 🏷️ | **Monthly & Category Budget** | Kunci anggaran bulanan + atur limit per kategori pos pengeluaran (*Food, Transport, dll*) |
-| 💰 | **Multi-Wallet** | Kelola Tunai, BCA, GoPay, OVO, dll — kalkulasi total *net worth* real-time |
+| 💰 | **Multi-Wallet** | Kelola Tunai, BCA, GoPay, OVO, dll - kalkulasi total *net worth* real-time |
 | 🔄 | **Transfer Antar Dompet** | Smart switch anti-duplikasi + 1-tap swap dompet dari bar navigasi cepat |
 | 📥 | **Import Mutasi CSV** | Impor transaksi dari BCA / e-wallet (delimiter `,`/`;`, debit-kredit terpisah, 8 format tanggal, dedup, guard saldo & budget, index DB) |
-| 🧾 | **Scan Struk Belanja (OCR)** | Foto struk → AI Gemini via proxy (butuh internet dan consent), preview kertas termal, edit merchant/total/category, currency `Rp` real-time |
+| 🧾 | **Scan Struk Belanja (OCR)** | Foto struk → ML Kit lokal, preview sebelum OCR, edit merchant/total/category, currency `Rp` real-time |
 | 🎯 | **Savings Goals** | Target tabungan dengan kalkulator nominal cerdas, alokasi setor (*deposit*) & tarik (*withdraw*) |
 | 📋 | **Bill Reminder** | Pengingat tagihan rutin, notifikasi jatuh tempo H-3, auto-rollover, & auto-refund jika batal bayar |
 | 🤝 | **Split Bill** | Hitung patungan makan/belanja bareng teman (pajak & service charge) + 1-klik share ke WhatsApp |
-| 💱 | **Currency (IDR / USD)** | Pilih mata uang utama (Rupiah / Dollar) sejak Onboarding — dapat diubah kapan saja di Pengaturan, format `Rp`/`$` konsisten di seluruh input |
-| 🌓 | **Theme Mode** | Pilihan tema Terang, Gelap, atau Ikuti Sistem — dapat disetel sejak Onboarding |
+| 💱 | **Currency (IDR / USD)** | Pilih mata uang utama (Rupiah / Dollar) sejak Onboarding - dapat diubah kapan saja di Pengaturan, format `Rp`/`$` konsisten di seluruh input |
+| 🌓 | **Theme Mode** | Pilihan tema Terang, Gelap, atau Ikuti Sistem - dapat disetel sejak Onboarding |
 | 📦 | **Backup & Restore** | Cadangkan dan pulihkan seluruh data keuangan secara offline via file `.json` |
 | 🌐 | **Bilingual (ID / EN)** | Pilihan Bahasa Indonesia & English yang berganti seketika tanpa jeda (*zero-blink*) |
 | 📈 | **Financial Analytics** | Visualisasi tren *Cashflow*, riwayat *Net Worth*, dan distribusi pengeluaran per kategori |
 | 🏠 | **Home Widget** | Widget beruang interaktif di layar utama: pantau sisa runway, saldo, & tagihan harian |
 
-> **Budget Gate** — pencatatan transaksi baru aktif setelah budget bulan berjalan diatur. Hal ini memastikan Financial Runway dan estimasi hari bertahan selalu memiliki data acuan yang akurat. Import CSV & Scan Struk juga melewati gate + cek saldo (fail-fast) via `BulkCreateTransactionsUseCase` dan `OcrScanViewModel`.
+> **Budget Gate** - pencatatan transaksi baru aktif setelah budget bulan berjalan diatur. Hal ini memastikan Financial Runway dan estimasi hari bertahan selalu memiliki data acuan yang akurat. Import CSV & Scan Struk juga melewati gate + cek saldo (fail-fast) via `BulkCreateTransactionsUseCase` dan `OcrScanViewModel`.
 
-**Import offline, OCR online opsional:** CSV `5MB` guard + `DocumentFile` name, `parseWithStats` + `getByDates` dedup, bulk insert 1 transaksi DB (`bulkCreate`), `ImportPreferences` counter. Scan struk membutuhkan internet dan consent; gambar dikirim melalui proxy Bareuang ke Google Gemini, lalu hasilnya dapat diedit sebelum disimpan lokal.
+**Import offline, OCR offline opsional:** CSV `5MB` guard + `DocumentFile` name, `parseWithStats` + `getByDates` dedup, bulk insert 1 transaksi DB (`bulkCreate`), `ImportPreferences` counter. Scan struk memakai ML Kit di perangkat; hasilnya dapat diedit sebelum disimpan lokal.
 
 ---
 
@@ -101,27 +100,27 @@ sepenuhnya **guest-only**. Reset Data di Pengaturan menghapus data lokal aplikas
 ```
 Bareuang/
 ├── app/           # Composition root, Application entry
-├── domain/        # Pure Kotlin — entities, repository ports, use-cases
+├── domain/        # Pure Kotlin - entities, repository ports, use-cases
 ├── data/          # Room DB, Backup JSON, WorkManager notifications
 ├── presentation/  # Jetpack Compose UI, ViewModels, Hilt Navigation
 └── web/           # Landing page + Privacy/Terms (static, no build)
     ├── index.html      # Landing 1 halaman (ID/EN, responsive, SEO)
-    ├── privacy.html    # Privacy Policy — local data + optional online OCR
+    ├── privacy.html    # Privacy Policy - local data + local OCR pada debug
     ├── terms.html      # Terms of Service + Disclaimer
     ├── css/style.css   # Single stylesheet, no framework
     ├── js/main.js      # ~30 lines + i18n dict
     └── assets/         # Logo & screenshots (reuse dari art/)
 ```
 
-**Stack Android:** Kotlin 2.0 · Jetpack Compose · Room v16 (migration historis dan guest-only schema) · Hilt · WorkManager · Glance Widget · Gson · Gemini receipt proxy
+**Stack Android:** Kotlin 2.0 · Jetpack Compose · Room v16 (migration historis dan guest-only schema) · Hilt · WorkManager · Glance Widget · Gson · ML Kit Text Recognition (debug)
 
-**Stack Web:** Pure HTML/CSS/JS — tanpa framework, tanpa build step, tanpa `node_modules`. Deploy ke GitHub Pages / Cloudflare Pages. SEO: canonical, hreflang ID/EN, OG/Twitter, JSON-LD (SoftwareApplication, FAQPage, Organization, Breadcrumb), sitemap.xml, robots.txt.
+**Stack Web:** Pure HTML/CSS/JS - tanpa framework, tanpa build step, tanpa `node_modules`. Deploy ke GitHub Pages / Cloudflare Pages. SEO: canonical, hreflang ID/EN, OG/Twitter, JSON-LD (SoftwareApplication, FAQPage, Organization, Breadcrumb), sitemap.xml, robots.txt.
 
 ---
 
 ## 🚀 Menjalankan Project
 
-Fitur inti tidak memerlukan akun. Build aplikasi memakai konfigurasi lokal; endpoint OCR produksi membutuhkan konfigurasi server Gemini dan koneksi internet.
+Fitur inti tidak memerlukan akun. Build debug dapat menjalankan OCR lokal tanpa koneksi internet; build release menonaktifkan OCR.
 
 ```bash
 # Debug
@@ -142,7 +141,7 @@ Fitur inti tidak memerlukan akun. Build aplikasi memakai konfigurasi lokal; endp
 `connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. Migration
 Room dan perilaku widget/notification harus diuji pada perangkat sebelum release.
 
-### 🌐 Web — Landing Page
+### 🌐 Web - Landing Page
 
 ```bash
 # Preview lokal (tanpa build)
@@ -151,7 +150,7 @@ python3 -m http.server --directory web 8000
 
 # Struktur
 # web/index.html    → landing 1 halaman (bilingual ID/EN toggle, responsive, smooth reveal)
-# web/privacy.html  → Privacy Policy (local data + consent-gated online OCR)
+# web/privacy.html  → Privacy Policy (local data + local OCR)
 # web/terms.html    → Terms + Disclaimer keuangan
 # web/sitemap.xml + robots.txt → SEO
 ```
@@ -184,7 +183,7 @@ Untuk CI/CD GitHub Actions, tambahkan 4 secret: `SIGNING_KEYSTORE_BASE64`, `KEYS
 
 ## 📄 Lisensi
 
-MIT License — lihat file [`LICENSE`](LICENSE) untuk detail.
+MIT License - lihat file [`LICENSE`](LICENSE) untuk detail.
 
 <div align="center">
   <sub>Dibuat dengan ❤️ oleh <a href="https://github.com/Udean777">Udean777</a></sub>

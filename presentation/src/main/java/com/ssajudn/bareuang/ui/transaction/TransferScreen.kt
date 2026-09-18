@@ -110,7 +110,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.ui.components.AppDatePickerDialog
 import androidx.compose.ui.res.stringResource
@@ -344,7 +344,7 @@ fun TransferScreen(
                                 shape = androidx.compose.foundation.shape.CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(48.dp)
                                     .clickable { viewModel.swapWallets() }
                             ) {
                                 Box(contentAlignment = Alignment.Center) {

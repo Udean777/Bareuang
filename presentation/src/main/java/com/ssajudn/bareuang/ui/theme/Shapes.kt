@@ -38,6 +38,9 @@ object AppShapes {
     )
     val Squircle = RoundedCornerShape(20.dp)
     val Pill = RoundedCornerShape(50)
+    /** Physical receipt edge: restrained radius keeps the paper metaphor legible. */
+    val ReceiptPaper = RoundedCornerShape(8.dp)
+    val ReceiptTotal = RoundedCornerShape(6.dp)
     val CardTopRounded = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 8.dp, bottomEnd = 8.dp)
 }
 

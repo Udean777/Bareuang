@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Privacy Policy — Bareuang</title>
+    <title>Privacy Policy - Bareuang</title>
     <meta
       name="description"
-      content="Privacy Policy Bareuang — data keuangan utama lokal; Scan Struk AI online opsional dengan consent."
+      content="Privacy Policy Bareuang, data keuangan utama dan OCR struk diproses lokal di perangkat."
     />
     <meta name="author" content="Bareuang" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -15,10 +15,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bareuang" />
     <meta property="og:url" content="https://bareuang.app/privacy" />
-    <meta property="og:title" content="Privacy Policy — Bareuang" />
+    <meta property="og:title" content="Privacy Policy - Bareuang" />
     <meta
       property="og:description"
-      content="Privacy Policy Bareuang — data keuangan utama lokal; Scan Struk AI online opsional dengan consent."
+      content="Privacy Policy Bareuang, data keuangan utama dan OCR struk diproses lokal di perangkat."
     />
     <meta
       property="og:image"
@@ -31,19 +31,19 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Bareuang — Privacy Policy" />
+    <meta property="og:image:alt" content="Bareuang - Privacy Policy" />
     <meta property="og:locale" content="id_ID" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Privacy Policy — Bareuang" />
+    <meta name="twitter:title" content="Privacy Policy - Bareuang" />
     <meta
       name="twitter:description"
-      content="Privacy Policy Bareuang — data keuangan utama lokal; Scan Struk AI online opsional dengan consent."
+      content="Privacy Policy Bareuang, data keuangan utama dan OCR struk diproses lokal di perangkat."
     />
     <meta
       name="twitter:image"
       content="https://bareuang.app/assets/og-image.png"
     />
-    <meta name="twitter:image:alt" content="Bareuang — Privacy Policy" />
+    <meta name="twitter:image:alt" content="Bareuang - Privacy Policy" />
     <link rel="icon" href="/assets/logo.png" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -79,7 +79,7 @@
         <strong class="toc-title">Daftar isi</strong><br />
         <a href="#ringkas">1. Ringkasnya</a> ·
         <a href="#data">2. Data yang diproses</a> ·
-        <a href="#ocr-online">3. OCR Online Opsional</a> ·
+        <a href="#ocr-local">3. OCR Lokal</a> ·
         <a href="#permission">4. Izin</a> · <a href="#anak">5. Anak</a> ·
         <a href="#retensi">6. Retensi & Hapus</a> ·
         <a href="#cookies">7. Cookies</a> ·
@@ -98,10 +98,10 @@
         <h2 id="data">2. Data yang Diproses</h2>
         <p>
           Data yang kamu input seperti nominal, kategori, merchant, dan catatan
-          disimpan lokal. Jika kamu memilih Scan Struk, foto diproses melalui
-          proxy Bareuang dan dikirim ke <strong>Google Gemini</strong> untuk
-          mengekstrak merchant, tanggal, total, kategori, item, dan teks struk.
-          Hasilnya dapat kamu edit sebelum disimpan lokal.
+          disimpan lokal. Jika kamu memilih Scan Struk pada build pengembangan
+          lokal, foto diproses di perangkat menggunakan ML Kit untuk membaca
+          merchant, tanggal, total, kategori, item, dan teks struk. Hasilnya
+          dapat kamu edit sebelum disimpan lokal.
         </p>
         <ul>
           <li>
@@ -113,28 +113,15 @@
           <li>Import CSV dan backup/restore dilakukan melalui file yang kamu pilih sendiri.</li>
         </ul>
         <p>
-          Deklarasi Google Play Data Safety harus mengikuti pemrosesan OCR online
-          pada versi aplikasi yang dirilis.
+          Aplikasi tidak mengirim foto struk atau hasil OCR ke server.
         </p>
 
-        <h2 id="ocr-online">3. Scan Struk Online dan Consent</h2>
+        <h2 id="ocr-local">3. Scan Struk Lokal</h2>
         <p>
-          Scan Struk adalah fitur online opsional dan membutuhkan permission
-          <code>INTERNET</code>. Sebelum foto pertama dikirim, aplikasi
-          menampilkan disclosure dan meminta persetujuan eksplisit. Jika kamu
-          menolak atau sedang offline, kamu tetap dapat mencatat transaksi
-          secara manual dan menggunakan import CSV.
-        </p>
-        <p>
-          Foto dikirim melalui koneksi terenkripsi ke proxy Bareuang, kemudian
-          ke Google Gemini. Bareuang tidak menyimpan foto, base64, merchant,
-          item, atau teks struk pada server setelah pemrosesan. Log operasional
-          hanya memuat request ID, waktu, status, ukuran payload, dan identifier
-          rate-limit pseudonim, dengan retensi maksimal 14 hari. Provider pihak
-          ketiga dapat memiliki kebijakan log dan retensi sendiri. Jangan scan
-          dokumen yang memuat data sensitif jika
-          kamu tidak menyetujui pemrosesan tersebut. Lihat kebijakan Google
-          Gemini untuk ketentuan provider.
+          Scan Struk hanya tersedia pada build pengembangan lokal. ML Kit
+          memproses foto di perangkat, sehingga fitur dapat digunakan tanpa
+          koneksi internet dan foto tidak dikirim ke Bareuang atau provider
+          pihak ketiga. Pada build release dan production, OCR dinonaktifkan.
         </p>
         <p>
           Backup &amp; Restore tetap dilakukan melalui file <code>.json</code>
@@ -144,17 +131,16 @@
         <h2 id="permission">4. Izin yang Diminta</h2>
         <ul>
           <li>
-            <strong>CAMERA</strong> — hanya untuk foto struk (OCR). Dipakai saat
+            <strong>CAMERA</strong> - hanya untuk foto struk (OCR). Dipakai saat
             kamu menekan "Scan Struk". Tidak dipakai di background.
           </li>
           <li>
-            <strong>POST_NOTIFICATIONS</strong> (Android 13+) — hanya untuk
-            pengingat tagihan H-3 (WorkManager lokal). Tidak ada push dari
-            server untuk pengingat tagihan; hanya Scan Struk yang memakai koneksi
-            online saat kamu memilih dan menyetujuinya.
+            <strong>POST_NOTIFICATIONS</strong> (Android 13+) - hanya untuk
+            pengingat tagihan H-3 melalui WorkManager lokal. Tidak ada push dari
+            server.
           </li>
           <li>
-            <strong>Storage (via SAF)</strong> — hanya saat kamu memilih file
+            <strong>Storage (via SAF)</strong> - hanya saat kamu memilih file
             CSV untuk impor atau memilih lokasi backup/restore.
           </li>
         </ul>
@@ -163,8 +149,7 @@
         <h2 id="anak">5. Anak di Bawah Umur</h2>
         <p>
           Bareuang tidak ditujukan untuk anak di bawah 13 tahun. Kami tidak
-          sengaja meminta data anak; jika Scan Struk digunakan, foto tetap
-          diproses sesuai disclosure dan consent yang berlaku.
+          sengaja meminta data anak.
         </p>
 
         <h2 id="retensi">6. Retensi & Cara Hapus Data</h2>
@@ -175,15 +160,14 @@
           <li>Di aplikasi: Pengaturan → Hapus Data</li>
           <li>Di Android: Settings → Apps → Bareuang → Storage → Clear Data</li>
           <li>
-            Uninstall aplikasi — semua data lokal terhapus permanen (kecuali
+            Uninstall aplikasi - semua data lokal terhapus permanen (kecuali
             file backup .json yang kamu ekspor manual).
           </li>
         </ul>
         <p>
           Data lokal dapat dihapus dari aplikasi, Android Clear Data, atau
-          uninstall. Foto OCR yang sudah dikirim tidak dapat ditarik kembali
-          dari provider; permintaan terkait pemrosesan provider mengikuti
-          kebijakan dan kontak provider tersebut.
+          uninstall. Foto OCR diproses sementara di perangkat dan tidak
+          dikirim ke provider eksternal.
         </p>
 
         <h2 id="cookies">7. Cookies (Situs Web)</h2>
@@ -224,11 +208,10 @@
         </p>
 
         <p class="callout">
-          <strong>Play Store Data Safety — ringkas:</strong> Data keuangan utama
-          disimpan lokal. Foto struk dikirim ke Bareuang/Google Gemini hanya
-          setelah consent untuk ekstraksi OCR, melalui koneksi terenkripsi.
-          Data deletion lokal: via app / Clear Data / uninstall. Detail final
-          mengikuti deklarasi Play Console untuk versi rilis.
+          <strong>Play Store Data Safety, ringkas:</strong> Data keuangan utama
+          dan pemrosesan OCR struk dilakukan lokal di perangkat. Tidak ada foto
+          struk yang dikirim ke server. Data lokal dapat dihapus melalui aplikasi,
+          Clear Data, atau uninstall.
         </p>
       </div>
     </main>

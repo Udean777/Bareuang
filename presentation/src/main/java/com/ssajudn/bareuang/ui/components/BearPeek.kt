@@ -1,13 +1,8 @@
 package com.ssajudn.bareuang.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -30,7 +25,6 @@ fun BearPeek(
     visible: Boolean,
     modifier: Modifier = Modifier,
     size: Dp = 44.dp,
-    wiggle: Boolean = true
 ) {
     val offsetY by animateDpAsState(
         targetValue = if (visible) 0.dp else 36.dp,
@@ -42,22 +36,14 @@ fun BearPeek(
         animationSpec = tween(250),
         label = "bearPeekAlpha"
     )
-    val infiniteTransition = rememberInfiniteTransition(label = "bearWiggle")
-    val infiniteWiggle by infiniteTransition.animateFloat(
-        initialValue = -6f, targetValue = 6f,
-        animationSpec = infiniteRepeatable(tween(600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "wiggle"
-    )
-
     Box(modifier = modifier.graphicsLayer { this.alpha = alpha }) {
         Image(
-            painter = painterResource(id = R.drawable.ic_bear_head),
+            painter = painterResource(id = R.drawable.ic_app_logo),
             contentDescription = null,
             modifier = Modifier
                 .size(size)
-                .offset(y = offsetY)
+                .offset { androidx.compose.ui.unit.IntOffset(0, offsetY.roundToPx()) }
                 .clip(MaterialTheme.shapes.medium)
-                .graphicsLayer { rotationZ = if (visible && wiggle) infiniteWiggle else 0f }
         )
     }
 }

@@ -125,7 +125,7 @@ internal val DarkCategoryColors = CategoryColors(
 
 // -----------------------------------------------------------------------------
 // Semantic income/expense accents — shared by analytics, charts, and lists.
-// Aligned with DESIGN.MD color roles:
+// Aligned with the warm-honey color roles defined by the current visual direction:
 //   Income   → secondary (Soft Forest Green)
 //   Expense  → error (Berry Red)
 //   Warning  → primary-container (Honey Yellow)
@@ -139,3 +139,21 @@ val ExpenseAccent = Color(0xFFBA1A1A)
 
 /** Budget warning, approaching limit — primary-container Honey */
 val BudgetWarningAccent = Color(0xFFF4A216)
+
+/**
+ * Colors for the receipt-paper metaphor. These are intentionally light in both
+ * themes: the preview represents a physical receipt, while its ink remains
+ * dark enough to stay readable on that paper.
+ */
+object ReceiptPaperColors {
+    val Surface = Color(0xFFFFFEF8)
+    val Perforation = Color(0xFFE0E0E0)
+    val Skeleton = Color(0xFFF1EDE7)
+    val StrongInk = Color(0xFF1A1A1A)
+    val BodyInk = Color(0xFF2B2B2B)
+    val TotalSurface = Color(0xFFFFDDB5)
+    val TotalInk = Color(0xFF5D4037)
+    val FooterInk = Color(0xFF5A5148)
+    val MetadataInk = Color(0xFF5A5148)
+    val Divider = Color(0xFF857461)
+}

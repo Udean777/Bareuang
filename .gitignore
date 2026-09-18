@@ -15,6 +15,7 @@ gen/
 out/
 /build
 app/build/
+.scratch/
 
 # Gradle files
 .gradle/

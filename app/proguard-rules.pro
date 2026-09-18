@@ -22,7 +22,6 @@
 -keepattributes Signature, InnerClasses, EnclosingMethod, *Annotation*, RuntimeVisibleAnnotations
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
 
--dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn javax.annotation.**
 

@@ -2,14 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Used only when the user chooses receipt scanning. -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-
-    <!-- Receipt AI OCR is optional, consent-gated, and requires internet. -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
     <!-- Local bill due-date reminders (no network involved) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -23,6 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:localeConfig="@xml/locales_config"
+        tools:targetApi="33"
         android:theme="@style/Theme.Bareuang">
         <activity
             android:name=".MainActivity"
@@ -54,7 +47,8 @@
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true"
+            tools:ignore="ExportedContentProvider">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
@@ -63,7 +57,8 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            tools:node="merge">
+            tools:node="merge"
+            tools:ignore="ExportedContentProvider">
             <meta-data
                 android:name="androidx.work.WorkManagerInitializer"
                 tools:node="remove" />

@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless — proxy APK dari GitHub Releases dengan header yang benar.
+ * Vercel Serverless - proxy APK dari GitHub Releases dengan header yang benar.
  * Mengatasi: chunked/302 tanpa Content-Length + rate-limit api.github.com di client.
  * Same-origin /api/download → Chrome anggap download, tidak stuck 100%.
  */

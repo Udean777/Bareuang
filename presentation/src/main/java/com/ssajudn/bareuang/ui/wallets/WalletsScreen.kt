@@ -1,4 +1,5 @@
 package com.ssajudn.bareuang.ui.wallets
+import androidx.core.graphics.toColorInt
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.TopAppBar
@@ -72,7 +73,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.ui.components.AppConfirmDialog
 import com.ssajudn.bareuang.ui.components.AppFormDialog
@@ -258,7 +259,7 @@ fun WalletItem(
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val parsedColor = try {
-        Color(android.graphics.Color.parseColor(wallet.colorHex))
+        Color(wallet.colorHex.toColorInt())
     } catch (e: Exception) {
         MaterialTheme.colorScheme.primary
     }
@@ -332,24 +333,24 @@ fun WalletItem(
 
                     AppIconButton(
                         onClick = onEdit,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = stringResource(R.string.wallets_edit_desc),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
 
                     AppIconButton(
                         onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = stringResource(R.string.wallets_delete_desc),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                            tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -455,10 +456,10 @@ fun WalletFormDialog(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             colors.forEach { hex ->
-                val color = Color(android.graphics.Color.parseColor(hex))
+                val color = Color(hex.toColorInt())
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(color)
                         .border(

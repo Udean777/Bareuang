@@ -3,8 +3,8 @@ package com.ssajudn.bareuang.domain.port
 import com.ssajudn.bareuang.domain.model.AppCurrency
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import com.ssajudn.bareuang.domain.model.ImportDraft
+import com.ssajudn.bareuang.domain.model.ParsedReceipt
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Platform ports intentionally remain small domain-owned boundaries. Their
@@ -17,23 +17,23 @@ interface ThemePreferencesPort { val darkMode: StateFlow<AppThemeDarkMode>; fun 
 interface CurrencyPreferencesPort { val currency: StateFlow<AppCurrency>; fun setCurrency(currency: AppCurrency); fun getCurrency(): AppCurrency }
 interface WidgetPreferencesPort { val hideBalance: StateFlow<Boolean>; fun setHideBalance(hidden: Boolean) }
 interface TourPreferencesPort { val isTourCompleted: Boolean; fun markTourCompleted(); fun resetTour() }
-interface ImportPreferencesPort { val importCount: StateFlow<Int>; fun increment(count: Int); fun lastImportAt(): Long }
-interface OcrConsentPort { val hasCurrentConsent: Boolean; fun grantCurrentConsent(); fun revokeConsent() }
+interface ImportPreferencesPort { val importCount: StateFlow<Int>; fun increment(count: Int) }
 interface OnboardingStatePort {
     var isOnboardingCompleted: Boolean
     fun completeOnboarding()
     fun resetOnboarding()
 }
 interface BackupRestorePort {
-    suspend fun createBackupJson(): String
     suspend fun exportBackup(uri: String): Result<Unit>
     suspend fun importBackup(uri: String): Result<Int>
 }
 interface LocalDataResetPort { suspend fun wipe() }
 interface CsvParserPort { fun parseWithStats(csvText: String): Pair<List<ImportDraft>, Int> }
-interface ReceiptAiPort { suspend fun parseReceiptImage(uri: String): Result<AiParsedReceipt> }
-data class AiParsedReceipt(val merchant: String, val date: String, val total: Long, val category: String, val items: List<String>, val rawText: String)
-interface NetworkMonitorPort { fun isOnline(): Boolean; fun observeIsOnline(): Flow<Boolean> }
+interface ReceiptOcrPort {
+    val isAvailable: Boolean
+    suspend fun parseReceiptImage(uri: String): Result<ParsedReceipt>
+}
+
 interface BillReminderSchedulerPort { fun scheduleDailyAt(hour: Int, minute: Int); fun runNow() }
 interface BillReminderPreferencesPort {
     fun notificationsEnabled(): Boolean

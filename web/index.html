@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Bareuang — Teman cozy buat uangmu</title>
+    <title>Bareuang - Teman cozy buat uangmu</title>
     <meta
       name="description"
-      content="Tahu sampai kapan uangmu tahan. Data keuangan utama lokal, dengan Scan Struk AI online opsional setelah consent."
+      content="Tahu sampai kapan uangmu tahan. Data keuangan utama lokal, dengan OCR struk lokal pada build debug."
     />
     <meta name="author" content="Bareuang" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -18,10 +18,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bareuang" />
     <meta property="og:url" content="https://bareuang.app/" />
-    <meta property="og:title" content="Bareuang — Teman cozy buat uangmu" />
+    <meta property="og:title" content="Bareuang - Teman cozy buat uangmu" />
     <meta
       property="og:description"
-      content="Financial Runway, multi-wallet, budget per kategori, dan Scan Struk AI online opsional dengan consent."
+      content="Financial Runway, multi-wallet, budget per kategori, dan OCR struk lokal pada build debug."
     />
     <meta
       property="og:image"
@@ -34,20 +34,20 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Bareuang — Teman cozy buat uangmu" />
+    <meta property="og:image:alt" content="Bareuang - Teman cozy buat uangmu" />
     <meta property="og:locale" content="id_ID" />
     <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bareuang — Teman cozy buat uangmu" />
+    <meta name="twitter:title" content="Bareuang - Teman cozy buat uangmu" />
     <meta
       name="twitter:description"
-      content="Tahu sampai kapan uangmu tahan — data keuangan utama lokal, Scan Struk AI online opsional."
+      content="Tahu sampai kapan uangmu tahan - data keuangan utama lokal, dengan OCR struk lokal pada build debug."
     />
     <meta
       name="twitter:image"
       content="https://bareuang.app/assets/og-image.png"
     />
-    <meta name="twitter:image:alt" content="Bareuang — Teman cozy buat uangmu" />
+    <meta name="twitter:image:alt" content="Bareuang - Teman cozy buat uangmu" />
     <link rel="icon" href="/assets/logo.png" type="image/png" />
     <link rel="apple-touch-icon" href="/assets/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -62,7 +62,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Bareuang",
-        "description": "Teman cozy buat uangmu — Financial Runway, multi-wallet, budget, dan Scan Struk AI online opsional.",
+        "description": "Teman cozy buat uangmu - Financial Runway, multi-wallet, budget, dan OCR struk lokal pada build debug.",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Android",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
@@ -86,7 +86,7 @@
             "name": "Apakah data saya dikirim ke server?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Data keuangan utama tersimpan di Room DB lokal. Scan struk adalah fitur online opsional: setelah consent, foto dikirim melalui proxy Bareuang ke Google Gemini untuk diekstrak."
+              "text": "Data keuangan utama tersimpan di Room DB lokal. Pada build debug, foto struk diproses di perangkat dengan ML Kit dan tidak dikirim ke server."
             }
           },
           {
@@ -94,7 +94,7 @@
             "name": "Kenapa harus atur budget dulu sebelum catat transaksi?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Budget Gate — biar Financial Runway punya acuan yang akurat."
+              "text": "Budget Gate - biar Financial Runway punya acuan yang akurat."
             }
           },
           {
@@ -110,7 +110,7 @@
             "name": "Scan struk butuh internet?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Ya. Scan struk membutuhkan internet dan consent karena foto dikirim ke proxy Bareuang dan Google Gemini. Hasilnya dapat diedit sebelum disimpan lokal."
+              "text": "Pada build debug, tidak. Scan struk memakai ML Kit di perangkat dan dapat diproses tanpa internet. Build release menonaktifkan OCR."
             }
           },
           {
@@ -218,7 +218,13 @@
             </button>
             <button data-lang="en" aria-pressed="false">EN</button>
           </div>
-          <button class="hamburger" id="hamburger" aria-label="Menu">
+          <button
+            class="hamburger"
+            id="hamburger"
+            aria-label="Menu"
+            aria-controls="navLinks"
+            aria-expanded="false"
+          >
             <svg
               width="18"
               height="18"
@@ -243,7 +249,7 @@
         <div class="container hero-grid">
           <div>
             <span class="eyebrow" data-i18n="hero.eyebrow"
-              ><i></i> Offline-first · Data utama lokal · OCR online opsional</span
+              >Offline-first · Data utama lokal · OCR lokal di debug</span
             >
             <h1 data-i18n="hero.title">
               Tahu sampai <em>kapan uangmu tahan</em>, tanpa spreadsheet dingin.
@@ -254,7 +260,7 @@
                 >"dengan pola pengeluaranku sekarang, sampai kapan uangku
                 tahan?"</strong
               >
-              — lewat Financial Runway, multi-wallet, dan budget yang menjaga
+              - lewat Financial Runway, multi-wallet, dan budget yang menjaga
               pengeluaran tetap waras.
             </p>
             <div class="hero-ctas">
@@ -337,7 +343,7 @@
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                OCR online, dengan consent</span
+                OCR lokal di debug</span
               >
               <span class="badge" data-i18n="hero.badge2"
                 ><svg
@@ -482,7 +488,7 @@
                   <path d="M5 13l4 4L19 7" />
                 </svg>
                 <span data-i18n="trust.ocr"
-                  >Scan struk AI opsional (dengan consent)</span
+                  >Scan struk lokal di debug</span
                 ></span
               >
               <span class="badge"
@@ -519,7 +525,7 @@
               >
             </div>
             <p data-i18n="trust.note">
-              Transaksi baru aktif setelah budget bulanan diatur — biar runway
+              Transaksi baru aktif setelah budget bulanan diatur - biar runway
               selalu akurat.
             </p>
           </div>
@@ -534,12 +540,12 @@
               Semua yang kamu butuh, tanpa yang bikin pusing
             </h2>
             <p data-i18n="features.sub">
-              Dirancang untuk pemakaian harian — cepat, lokal, dan tidak
+              Dirancang untuk pemakaian harian - cepat, lokal, dan tidak
               menggurui.
             </p>
           </div>
           <div class="grid-features">
-            <div class="card reveal">
+            <div class="card feature-card--primary reveal">
               <div class="card-icon">
                 <svg
                   width="16"
@@ -621,7 +627,7 @@
               </div>
               <h3>Multi-Wallet</h3>
               <p data-i18n="features.c3d">
-                Tunai, BCA, GoPay, OVO — total net worth real-time dalam satu
+                Tunai, BCA, GoPay, OVO - total net worth real-time dalam satu
                 layar.
               </p>
             </div>
@@ -699,8 +705,8 @@
               </div>
               <h3 data-i18n="features.c6t">Scan Struk (OCR)</h3>
               <p data-i18n="features.c6d">
-                Foto struk → Google Gemini via proxy Bareuang. Butuh internet
-                dan consent; hasil dapat diedit sebelum disimpan lokal.
+                Foto struk diproses ML Kit di perangkat pada build debug. Hasil
+                dapat diedit sebelum disimpan lokal.
               </p>
             </div>
             <div class="card reveal">
@@ -927,10 +933,9 @@
                 ></span>
               </summary>
               <p data-i18n="faq.a1">
-                Data keuangan utama tersimpan di Room DB lokal. Scan struk
-                bersifat online dan opsional: setelah consent, foto dikirim ke
-                proxy Bareuang dan Google Gemini. Backup tetap berupa file JSON
-                yang kamu simpan sendiri.
+                Data keuangan utama tersimpan di Room DB lokal. Pada build debug,
+                foto struk diproses ML Kit di perangkat dan tidak dikirim ke
+                server. Backup tetap berupa file JSON yang kamu simpan sendiri.
               </p>
             </details>
             <details>
@@ -954,7 +959,7 @@
                 ></span>
               </summary>
               <p data-i18n="faq.a2">
-                Ini "Budget Gate" — biar Financial Runway punya acuan yang
+                Ini "Budget Gate" - biar Financial Runway punya acuan yang
                 akurat. Tanpa budget, estimasi hari bertahan tidak bisa dihitung
                 dengan benar.
               </p>
@@ -1004,9 +1009,8 @@
                 ></span>
               </summary>
               <p data-i18n="faq.a4">
-                Ya. Scan struk membutuhkan internet dan consent karena foto
-                dikirim ke proxy Bareuang dan Google Gemini. Hasilnya bisa
-                diedit sebelum disimpan ke database lokal.
+                Pada build debug, tidak. Scan struk memakai ML Kit di perangkat
+                dan dapat diproses tanpa internet. Build release menonaktifkan OCR.
               </p>
             </details>
             <details>
@@ -1031,7 +1035,7 @@
               </summary>
               <p data-i18n="faq.a5">
                 Tidak. Bareuang hanya alat pencatatan & estimasi. Bukan
-                penasihat keuangan — lihat Disclaimer di Terms.
+                penasihat keuangan - lihat Disclaimer di Terms.
               </p>
             </details>
             <details>
@@ -1067,7 +1071,7 @@
           <div class="cta">
             <div>
               <h3 data-i18n="cta.title">
-                Siap tahu kapan uangmu habis — sebelum benar-benar habis?
+                Siap tahu kapan uangmu habis - sebelum benar-benar habis?
               </h3>
               <p data-i18n="cta.sub">
                 Download Bareuang. Cozy, offline, dan jujur soal angka.
@@ -1094,7 +1098,7 @@
                   <path d="M7 11l5 5l5-5" />
                   <path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
                 </svg>
-                Play Store — Coming Soon</a
+                Play Store - Coming Soon</a
               >
               <a
                 class="btn btn-outline"
@@ -1130,8 +1134,8 @@
               ></a
             >
             <p class="footer-meta footer-desc" data-i18n="footer.desc">
-              Teman cozy buat uangmu. Data utama lokal, dengan OCR online
-              opsional setelah consent.
+              Teman cozy buat uangmu. Data utama lokal, dengan OCR lokal pada
+              build debug.
               Dibuat dengan
               <svg
                 width="12"

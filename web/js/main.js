@@ -8,11 +8,29 @@ if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 const hamburger = document.getElementById("hamburger");
 const navLinks = document.getElementById("navLinks");
 if (hamburger && navLinks) {
-  hamburger.addEventListener("click", () => navLinks.classList.toggle("open"));
+  const setMenuOpen = (open) => {
+    navLinks.classList.toggle("open", open);
+    hamburger.setAttribute("aria-expanded", String(open));
+  };
+  hamburger.addEventListener("click", () =>
+    setMenuOpen(!navLinks.classList.contains("open")),
+  );
+  hamburger.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setMenuOpen(false);
+      hamburger.focus();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && navLinks.classList.contains("open")) {
+      setMenuOpen(false);
+      hamburger.focus();
+    }
+  });
   navLinks
     .querySelectorAll("a")
     .forEach((a) =>
-      a.addEventListener("click", () => navLinks.classList.remove("open")),
+      a.addEventListener("click", () => setMenuOpen(false)),
     );
 }
 
@@ -24,26 +42,7 @@ if (nav) {
   onScroll();
 }
 
-// Reveal on scroll
-const reveals = document.querySelectorAll(".reveal");
-if ("IntersectionObserver" in window && reveals.length) {
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries)
-        if (e.isIntersecting) {
-          e.target.classList.add("in");
-          io.unobserve(e.target);
-        }
-    },
-    { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
-  );
-  reveals.forEach((el) => io.observe(el));
-} else {
-  reveals.forEach((el) => el.classList.add("in"));
-}
-
-
-// Download — via same-origin /api/download proxy (fix stuck 100% & rate-limit)
+// Download - via same-origin /api/download proxy (fix stuck 100% & rate-limit)
 const DL_URL = "/api/download";
 const GH_FALLBACK = "https://github.com/Udean777/Bareuang/releases/latest";
 const toastEl = document.getElementById("toast");
@@ -59,11 +58,11 @@ for(const a of document.querySelectorAll("a.js-download")){
   a.setAttribute("href", DL_URL);
   a.setAttribute("download", "Bareuang-latest.apk");
   a.addEventListener("click", ()=>{
-    // fire-and-forget HEAD check — tidak block download, hanya toast jika 404
+    // fire-and-forget HEAD check - tidak block download, hanya toast jika 404
     fetch(DL_URL, {method:"HEAD"}).then(r=>{
       if(!r.ok) {
         const lang = document.documentElement.lang === "en" ? "en" : "id";
-        showToast(lang==="en" ? "Download unavailable — try GitHub Releases." : "Download belum tersedia — coba di GitHub Releases.");
+        showToast(lang==="en" ? "Download unavailable - try GitHub Releases." : "Download belum tersedia - coba di GitHub Releases.");
         // fallback buka releases page
         setTimeout(()=> window.open(GH_FALLBACK, "_blank", "noopener"), 800);
       }
@@ -71,7 +70,7 @@ for(const a of document.querySelectorAll("a.js-download")){
   });
 }
 
-// i18n — lightweight, no dependencies
+// i18n - lightweight, no dependencies
 // dict loaded from i18n.js (window.dict)
 
 function applyLang(lang) {
@@ -104,14 +103,14 @@ function applyLang(lang) {
   } catch {}
   document.title =
     lang === "en"
-      ? "Bareuang — Your cozy money companion"
-      : "Bareuang — Teman cozy buat uangmu";
+      ? "Bareuang - Your cozy money companion"
+      : "Bareuang - Teman cozy buat uangmu";
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) {
     metaDesc.content =
       lang === "en"
-        ? "Know how long your money lasts. Core financial data stays local; optional receipt OCR is online and consent-gated."
-        : "Tahu sampai kapan uangmu tahan. Data keuangan utama tersimpan lokal; OCR struk online bersifat opsional dan membutuhkan consent.";
+        ? "Know how long your money lasts. Core financial data stays local; receipt OCR runs locally in debug builds."
+        : "Tahu sampai kapan uangmu tahan. Data keuangan utama tersimpan lokal; OCR struk berjalan lokal pada build debug.";
   }
 }
 

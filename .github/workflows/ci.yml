@@ -64,7 +64,6 @@ jobs:
           node --check web/js/main.js
           node --check web/js/i18n.js
           node --check web/api/download.js
-          node --check web/api/parse-receipt.js
           node web/test/seo-check.mjs
 
   assemble-debug:
