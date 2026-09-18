@@ -276,7 +276,7 @@ fun GoalColorRow(
                 val isSelected = selectedColorHex.equals(colorHex, ignoreCase = true)
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(color)
                         .clickable { onSelectColor(colorHex) },

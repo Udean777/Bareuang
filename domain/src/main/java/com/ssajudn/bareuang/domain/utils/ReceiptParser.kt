@@ -14,12 +14,14 @@ object ReceiptParser {
         val merchantName = extractMerchant(lines)
         val totalAmount = extractTotalAmount(lines)
         val suggestedCategory = guessCategory(rawText, merchantName)
+        val date = extractDate(rawText)
 
         return ParsedReceipt(
             merchantName = merchantName,
             totalAmount = totalAmount,
             suggestedCategory = suggestedCategory,
             rawText = rawText,
+            date = date,
         )
     }
 
@@ -54,7 +56,7 @@ object ReceiptParser {
 
         for (line in lines) {
             val upper = line.uppercase()
-            if (totalKeywords.any { upper.contains(it) }) {
+            if (totalKeywords.any { upper.containsWord(it) }) {
                 extractAmountFromLine(line).takeIf { it > 0 }?.let(amountsFound::add)
             }
         }
@@ -74,7 +76,7 @@ object ReceiptParser {
         val pattern = Pattern.compile(
             "(?i)(?:rp\\.?[\\s]*)?([0-9]{1,3}(?:[.,][0-9]{3})+|[0-9]{4,8})",
         )
-        val matcher = pattern.matcher(line)
+        val matcher = pattern.matcher(line.replace('O', '0').replace('o', '0'))
         var maxAmount = 0L
 
         while (matcher.find()) {
@@ -87,6 +89,26 @@ object ReceiptParser {
             if (parsed > maxAmount) maxAmount = parsed
         }
         return maxAmount
+    }
+
+    private fun extractDate(rawText: String): String? {
+        val numeric = Regex("\\b(\\d{1,2})[/-](\\d{1,2})[/-](\\d{2,4})\\b")
+            .find(rawText)
+            ?.let { match ->
+                val day = match.groupValues[1].toIntOrNull() ?: return@let null
+                val month = match.groupValues[2].toIntOrNull() ?: return@let null
+                val year = match.groupValues[3].toIntOrNull() ?: return@let null
+                val normalizedYear = if (year < 100) 2000 + year else year
+                runCatching { java.time.LocalDate.of(normalizedYear, month, day).toString() }.getOrNull()
+            }
+        if (numeric != null) return numeric
+
+        val iso = Regex("\\b(\\d{4})[/-](\\d{1,2})[/-](\\d{1,2})\\b").find(rawText)
+            ?: return null
+        val year = iso.groupValues[1].toIntOrNull() ?: return null
+        val month = iso.groupValues[2].toIntOrNull() ?: return null
+        val day = iso.groupValues[3].toIntOrNull() ?: return null
+        return runCatching { java.time.LocalDate.of(year, month, day).toString() }.getOrNull()
     }
 
     private fun guessCategory(rawText: String, merchant: String): TransactionCategory {
@@ -104,10 +126,15 @@ object ReceiptParser {
                 TransactionCategory.ENTERTAINMENT
             lower.containsAny("arisan", "kondangan", "sumbangan", "donasi", "infaq") ->
                 TransactionCategory.SOCIAL
-            else -> TransactionCategory.FOOD
+            else -> TransactionCategory.OTHER
         }
     }
 
     private fun String.containsAny(vararg keywords: String): Boolean =
         keywords.any { contains(it) }
+
+    private fun String.containsWord(keyword: String): Boolean {
+        val pattern = keyword.split(' ').joinToString("\\s+") { Regex.escape(it) }
+        return Regex("(?i)(?<![A-Z0-9])$pattern(?![A-Z0-9])").containsMatchIn(this)
+    }
 }

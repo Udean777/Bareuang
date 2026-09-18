@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +34,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +49,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
@@ -56,6 +61,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -76,7 +82,112 @@ import com.ssajudn.bareuang.ui.components.AppDatePickerDialog
 import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.domain.utils.DateUtils
 import com.ssajudn.bareuang.ui.common.DateFormatter
+import com.ssajudn.bareuang.ui.theme.AppElevation
+import com.ssajudn.bareuang.ui.theme.AppShapes
+import com.ssajudn.bareuang.ui.theme.ReceiptPaperColors
+import com.ssajudn.bareuang.ui.theme.Spacing
 import java.io.File
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+@Composable
+fun ImagePreviewCard(
+    uri: Uri,
+    isProcessing: Boolean,
+    hasError: Boolean,
+    onUsePhoto: () -> Unit,
+    onRetake: () -> Unit,
+    onChooseGallery: () -> Unit,
+) {
+    val context = LocalContext.current
+    val bitmap by produceState<Bitmap?>(initialValue = null, uri) {
+        value = withContext(Dispatchers.IO) { decodePreviewBitmap(context, uri) }
+    }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.ocr_preview_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap!!.asImageBitmap(),
+                    contentDescription = stringResource(R.string.ocr_preview_content_description),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Inside,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(stringResource(R.string.ocr_preview_unavailable))
+                }
+            }
+            Text(
+                text = stringResource(R.string.ocr_preview_caption),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (!hasError) {
+                Button(
+                    onClick = onUsePhoto,
+                    enabled = !isProcessing,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.ocr_use_photo))
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+            ) {
+                OutlinedButton(
+                    onClick = onRetake,
+                    enabled = !isProcessing,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.ocr_retake))
+                }
+                OutlinedButton(
+                    onClick = onChooseGallery,
+                    enabled = !isProcessing,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.ocr_choose_gallery))
+                }
+            }
+        }
+    }
+}
+
+private fun decodePreviewBitmap(context: android.content.Context, uri: Uri): Bitmap? {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, bounds)
+    } ?: return null
+
+    val longestSide = maxOf(bounds.outWidth, bounds.outHeight)
+    var sampleSize = 1
+    while (longestSide / sampleSize > 1200) sampleSize *= 2
+    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+    return context.contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, options)
+    }
+}
 
 @Composable
 fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
@@ -93,9 +204,9 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(6.dp, RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFFFFEF8))
+            .shadow(AppElevation.ReceiptPaper, AppShapes.ReceiptPaper)
+            .clip(AppShapes.ReceiptPaper)
+            .background(ReceiptPaperColors.Surface)
             .padding(0.dp)
     ) {
         // Top perforation
@@ -103,7 +214,7 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
             val r = 6.dp.toPx()
             var x = r
             while (x < size.width) {
-                drawCircle(Color(0xFFE0E0E0), radius = r, center = Offset(x, r / 2))
+                drawCircle(ReceiptPaperColors.Perforation, radius = r, center = Offset(x, r / 2))
                 x += r * 2
             }
         }
@@ -117,7 +228,7 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
                     fontFamily = FontFamily.Monospace,
                     fontSize = if (idx == 0) 16.sp else 11.sp,
                     fontWeight = if (idx == 0) FontWeight.ExtraBold else FontWeight.Normal,
-                    color = Color(0xFF1A1A1A),
+                    color = ReceiptPaperColors.StrongInk,
                     lineHeight = 14.sp
                 )
             }
@@ -133,13 +244,13 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
                         // try to align price right: split at last number
                         val m = Regex("""(.+?)(\s+Rp?\.?\s*\d[\d.,]*)${'$'}""").find(line)
                         if (m != null) {
-                            Text(m.groupValues[1].trim(), fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = if (isTotal) Color(0xFF111111) else Color(0xFF2B2B2B), fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.weight(1f))
-                            Text(m.groupValues[2].trim(), fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal, color = if (isTotal) Color(0xFF111111) else Color(0xFF2B2B2B))
+                            Text(m.groupValues[1].trim(), fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = if (isTotal) ReceiptPaperColors.StrongInk else ReceiptPaperColors.BodyInk, fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.weight(1f))
+                            Text(m.groupValues[2].trim(), fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal, color = if (isTotal) ReceiptPaperColors.StrongInk else ReceiptPaperColors.BodyInk)
                         } else {
-                            Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF2B2B2B))
+                            Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = ReceiptPaperColors.BodyInk)
                         }
                     } else {
-                        Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = if (isTotal) Color(0xFF111111) else Color(0xFF2B2B2B), fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal)
+                        Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = if (isTotal) ReceiptPaperColors.StrongInk else ReceiptPaperColors.BodyInk, fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
             }
@@ -152,14 +263,14 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFFFF3CD))
+                        .clip(AppShapes.ReceiptTotal)
+                        .background(ReceiptPaperColors.TotalSurface)
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.ocr_total), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF5D4037))
-                    Text(CurrencyFormatter.formatRupiah(total), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF5D4037))
+                    Text(stringResource(R.string.ocr_total), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = ReceiptPaperColors.TotalInk)
+                    Text(CurrencyFormatter.formatRupiah(total), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = ReceiptPaperColors.TotalInk)
                 }
                 Spacer(Modifier.height(6.dp))
                 DashedDivider()
@@ -172,7 +283,7 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
-                    color = Color(0xFF6D6D6D)
+                    color = ReceiptPaperColors.FooterInk
                 )
             }
             Spacer(Modifier.height(4.dp))
@@ -182,7 +293,7 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
                 textAlign = TextAlign.Center,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 9.sp,
-                color = Color(0xFF9E9E9E)
+                color = ReceiptPaperColors.MetadataInk
             )
         }
         // Bottom zigzag
@@ -200,7 +311,7 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
                 lineTo(size.width, 0f)
                 close()
             }
-            drawPath(path, Color(0xFFFFFEF8))
+            drawPath(path, ReceiptPaperColors.Surface)
         }
         // Caption outside paper
         Text(
@@ -208,7 +319,7 @@ fun ReceiptPaperCard(rawText: String, merchant: String, total: Long) {
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -219,7 +330,7 @@ fun DashedDivider() {
         val dash = 6.dp.toPx()
         val gap = 4.dp.toPx()
         drawLine(
-            color = Color(0xFFBDBDBD),
+            color = ReceiptPaperColors.Divider,
             start = Offset(0f, size.height / 2),
             end = Offset(size.width, size.height / 2),
             strokeWidth = 1.dp.toPx(),

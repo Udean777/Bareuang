@@ -25,7 +25,6 @@ import com.ssajudn.bareuang.data.local.CurrencyPreferences
 import com.ssajudn.bareuang.data.local.DailyPacingPreferences
 import com.ssajudn.bareuang.data.local.ImportPreferences
 import com.ssajudn.bareuang.data.local.LocalDataResetter
-import com.ssajudn.bareuang.data.local.OcrConsentPreferences
 import com.ssajudn.bareuang.data.local.OnboardingStatePreferences
 import com.ssajudn.bareuang.data.local.ThemePreferences
 import com.ssajudn.bareuang.data.local.TourPreferences
@@ -41,7 +40,6 @@ import com.ssajudn.bareuang.domain.port.CurrencyPreferencesPort
 import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import com.ssajudn.bareuang.domain.port.ImportPreferencesPort
 import com.ssajudn.bareuang.domain.port.LocalDataResetPort
-import com.ssajudn.bareuang.domain.port.OcrConsentPort
 import com.ssajudn.bareuang.domain.port.OnboardingStatePort
 import com.ssajudn.bareuang.domain.port.ThemePreferencesPort
 import com.ssajudn.bareuang.domain.port.TourPreferencesPort
@@ -80,7 +78,6 @@ abstract class RepositoryModule {
     @Binds abstract fun bindWidgetPreferences(impl: WidgetPreferences): WidgetPreferencesPort
     @Binds abstract fun bindTourPreferences(impl: TourPreferences): TourPreferencesPort
     @Binds abstract fun bindImportPreferences(impl: ImportPreferences): ImportPreferencesPort
-    @Binds abstract fun bindOcrConsent(impl: OcrConsentPreferences): OcrConsentPort
     @Binds abstract fun bindOnboardingState(impl: OnboardingStatePreferences): OnboardingStatePort
     @Binds abstract fun bindBackup(impl: BackupRestoreManager): BackupRestorePort
     @Binds abstract fun bindResetter(impl: LocalDataResetter): LocalDataResetPort

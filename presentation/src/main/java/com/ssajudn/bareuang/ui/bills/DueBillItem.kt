@@ -136,7 +136,7 @@ fun DueBillItem(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 ),
                 shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Icon(
                     Icons.Default.Check,

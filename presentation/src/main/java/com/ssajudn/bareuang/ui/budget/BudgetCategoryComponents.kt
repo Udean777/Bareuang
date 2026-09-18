@@ -131,11 +131,11 @@ fun CategoryBudgetCard(
                         color = progressColor,
                         modifier = Modifier.padding(end = 4.dp)
                     )
-                    AppIconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    AppIconButton(onClick = onEdit, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.budget_category_edit), modifier = Modifier.size(16.dp))
                     }
-                    AppIconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                    AppIconButton(onClick = onDelete, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Default.DeleteOutline, contentDescription = stringResource(R.string.budget_category_delete), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
                     }
                 }
             }

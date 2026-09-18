@@ -7,7 +7,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -78,6 +77,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -96,9 +98,9 @@ import com.ssajudn.bareuang.ui.components.AppDatePickerDialog
 import com.ssajudn.bareuang.utils.CurrencyFormatter
 import com.ssajudn.bareuang.domain.utils.DateUtils
 import com.ssajudn.bareuang.ui.common.DateFormatter
+import com.ssajudn.bareuang.ui.theme.AppShapes
+import com.ssajudn.bareuang.ui.theme.ReceiptPaperColors
 import java.io.File
-
-private const val PRIVACY_POLICY_URL = "https://bareuang.vercel.app/privacy"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +111,6 @@ fun OcrScanScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val ocrEnabled = uiState.isOcrAvailable
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { eff ->
@@ -122,30 +123,11 @@ fun OcrScanScreen(
     }
 
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
-    var pendingScanAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-
-    fun openPrivacyPolicy() {
-        context.startActivity(
-            android.content.Intent(
-                android.content.Intent.ACTION_VIEW,
-                PRIVACY_POLICY_URL.toUri()
-            )
-        )
-    }
-
-    fun runAfterOcrConsent(action: () -> Unit) {
-        if (uiState.hasOcrConsent) {
-            action()
-        } else {
-            pendingScanAction = action
-            viewModel.requestOcrConsent()
-        }
-    }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) cameraUri?.let { viewModel.processImage(it) }
+        if (success) cameraUri?.let { viewModel.selectImage(it) }
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let { viewModel.processImage(it) }
+        uri?.let { viewModel.selectImage(it) }
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
@@ -201,7 +183,10 @@ fun OcrScanScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_coming_soon),
+                    text = stringResource(
+                        if (uiState.isOcrAvailable) R.string.ocr_local_info
+                        else R.string.ocr_disabled_release,
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.padding(12.dp)
@@ -226,45 +211,23 @@ fun OcrScanScreen(
                 }
             }
 
-            if (!uiState.isOnline) {
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.ocr_offline_message),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = { runAfterOcrConsent(::launchCamera) },
-                    enabled = ocrEnabled && !uiState.isProcessing,
+                    onClick = ::launchCamera,
+                    enabled = uiState.isOcrAvailable && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.CameraAlt, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.ocr_btn_camera))
                 }
                 OutlinedButton(
                     onClick = {
-                        runAfterOcrConsent {
-                            galleryLauncher.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                )
+                        galleryLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
                             )
-                        }
+                        )
                     },
-                    enabled = ocrEnabled && !uiState.isProcessing,
+                    enabled = uiState.isOcrAvailable && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.ocr_btn_gallery))
@@ -273,10 +236,36 @@ fun OcrScanScreen(
 
             if (uiState.isProcessing) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text(stringResource(R.string.ocr_processing), style = MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(R.string.ocr_processing),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
             }
 
-            if (uiState.rawText == null && !uiState.isProcessing) {
+            val previewUri = uiState.selectedImageUri
+            if (uiState.showImagePreview && previewUri != null) {
+                ImagePreviewCard(
+                    uri = previewUri,
+                    isProcessing = uiState.isProcessing,
+                    hasError = uiState.ocrError,
+                    onUsePhoto = viewModel::processSelectedImage,
+                    onRetake = {
+                        viewModel.clearSelectedImage()
+                        launchCamera()
+                    },
+                    onChooseGallery = {
+                        viewModel.clearSelectedImage()
+                        galleryLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    },
+                )
+            }
+
+            if (uiState.rawText == null && !uiState.isProcessing && !uiState.showImagePreview) {
                 // Empty state with mini receipt illustration
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -285,18 +274,18 @@ fun OcrScanScreen(
                             modifier = Modifier
                                 .width(180.dp)
                                 .height(140.dp)
-                                .shadow(4.dp, RoundedCornerShape(4.dp))
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFFFFFEF8))
+                                .shadow(4.dp, AppShapes.ReceiptPaper)
+                                .clip(AppShapes.ReceiptPaper)
+                                .background(ReceiptPaperColors.Surface)
                                 .padding(12.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxSize()) {
-                                Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFE0E0E0)))
-                                Box(modifier = Modifier.fillMaxWidth(0.7f).height(6.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFEEEEEE)))
+                                Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(AppShapes.ReceiptTotal).background(ReceiptPaperColors.Perforation))
+                                Box(modifier = Modifier.fillMaxWidth(0.7f).height(6.dp).clip(AppShapes.ReceiptTotal).background(ReceiptPaperColors.Skeleton))
                                 DashedDivider()
-                                repeat(3) { Box(modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFF5F5F5))) }
+                                repeat(3) { Box(modifier = Modifier.fillMaxWidth().height(6.dp).clip(AppShapes.ReceiptTotal).background(ReceiptPaperColors.Skeleton)) }
                                 DashedDivider()
-                                Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(2.dp)).background(Color(0xFFFFECB3)))
+                                Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(AppShapes.ReceiptTotal).background(ReceiptPaperColors.TotalSurface))
                             }
                         }
                         Card(modifier = Modifier.fillMaxWidth()) {
@@ -305,7 +294,46 @@ fun OcrScanScreen(
                                 Text(stringResource(R.string.ocr_tip_lighting), style = MaterialTheme.typography.bodySmall)
                                 Text(stringResource(R.string.ocr_tip_total), style = MaterialTheme.typography.bodySmall)
                                 Text(stringResource(R.string.ocr_tip_editable), style = MaterialTheme.typography.bodySmall)
-                                Text(stringResource(R.string.ocr_tip_internet), style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.ocr_tip_local), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = viewModel::startManualEntry,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.ocr_manual_entry))
+                        }
+                    }
+                }
+            }
+
+            if (uiState.ocrError) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { liveRegion = LiveRegionMode.Polite },
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(text = stringResource(R.string.ocr_error_generic), style = MaterialTheme.typography.bodyMedium)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Button(
+                                onClick = viewModel::retryOcr,
+                                enabled = !uiState.isProcessing,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(stringResource(R.string.ocr_retry))
+                            }
+                            OutlinedButton(
+                                onClick = viewModel::startManualEntry,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text(stringResource(R.string.ocr_manual_entry))
                             }
                         }
                     }
@@ -363,11 +391,13 @@ fun OcrScanScreen(
                 )
                 OutlinedButton(onClick = { viewModel.reset() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.ocr_rescan)) }
 
-                ReceiptPaperCard(
-                    rawText = uiState.rawText!!,
-                    merchant = uiState.merchant,
-                    total = uiState.parsedAmount
-                )
+                if (!uiState.isManualEntry && uiState.rawText!!.isNotBlank()) {
+                    ReceiptPaperCard(
+                        rawText = uiState.rawText!!,
+                        merchant = uiState.merchant,
+                        total = uiState.parsedAmount
+                    )
+                }
             }
         }
     }
@@ -391,39 +421,4 @@ fun OcrScanScreen(
         )
     }
 
-    if (uiState.showOcrConsent) {
-        AlertDialog(
-            onDismissRequest = {
-                pendingScanAction = null
-                viewModel.dismissOcrConsent()
-            },
-            title = { Text(stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_consent_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_consent_message))
-                    TextButton(onClick = ::openPrivacyPolicy) {
-                        Text(stringResource(com.ssajudn.bareuang.presentation.R.string.privacy_policy_link))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.acceptOcrConsent()
-                    val action = pendingScanAction
-                    pendingScanAction = null
-                    action?.invoke()
-                }) {
-                    Text(stringResource(com.ssajudn.bareuang.presentation.R.string.ocr_consent_accept))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    pendingScanAction = null
-                    viewModel.dismissOcrConsent()
-                }) {
-                    Text(stringResource(com.ssajudn.bareuang.presentation.R.string.common_cancel))
-                }
-            }
-        )
-    }
 }

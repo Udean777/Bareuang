@@ -333,24 +333,24 @@ fun WalletItem(
 
                     AppIconButton(
                         onClick = onEdit,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = stringResource(R.string.wallets_edit_desc),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
 
                     AppIconButton(
                         onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = stringResource(R.string.wallets_delete_desc),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                            tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -459,7 +459,7 @@ fun WalletFormDialog(
                 val color = Color(hex.toColorInt())
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(color)
                         .border(

@@ -11,7 +11,6 @@ kotlin = "2.2.10"
 composeBom = "2026.08.00"
 navigationCompose = "2.10.0"
 lifecycleViewmodelCompose = "2.11.0"
-okhttp = "4.12.0"
 kotlinxCoroutines = "1.11.0"
 room = "2.8.4"
 ksp = "2.2.10-2.0.2"
@@ -52,9 +51,6 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 
-# Networking (OkHttp)
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
-
 # Room Database (Local Offline Storage)
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
@@ -66,7 +62,6 @@ androidx-test-runner = { group = "androidx.test", name = "runner", version.ref =
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 
 # Hilt (Dependency Injection)
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }

@@ -1,14 +1,9 @@
 package com.ssajudn.bareuang.ui.components
 
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -42,10 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.center
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -57,10 +48,6 @@ import com.ssajudn.bareuang.ui.theme.AppShapes
 import com.ssajudn.bareuang.ui.theme.PriceDisplayStyle
 import com.ssajudn.bareuang.ui.theme.crispBorder
 import com.ssajudn.bareuang.utils.CurrencyFormatter
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.sin
 
 @Composable
 fun FinancialRunwayCard(
@@ -130,36 +117,7 @@ fun FinancialRunwayCard(
         // DESIGN.MD §6: soft ambient shadow, bear-brown tint, 5-8% opacity
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp)
     ) {
-        // Aurora sheen — a soft light band sweeping across the hero card forever
-        val aurora = rememberInfiniteTransition(label = "aurora")
-        val sweep by aurora.animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(7000, easing = LinearEasing)),
-            label = "auroraSweep",
-        )
-        Box {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .drawBehind {
-                        val angle = sweep * 2f * PI.toFloat()
-                        val radius = max(size.width, size.height)
-                        val dir = Offset(cos(angle), sin(angle))
-                        drawRect(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    accentColor.copy(alpha = 0.16f),
-                                    Color.Transparent,
-                                ),
-                                start = size.center - dir * radius,
-                                end = size.center + dir * radius,
-                            )
-                        )
-                    }
-            )
-            Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -172,17 +130,11 @@ fun FinancialRunwayCard(
                         .background(contentColor.copy(alpha = 0.12f))
                         .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
-                    // Pulsing status dot indicator with infinite alpha animation
-                    val pulse by rememberInfiniteTransition(label = "runwayDot").animateFloat(
-                        initialValue = 0.6f, targetValue = 1f,
-                        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
-                        label = "dotAlpha"
-                    )
                     Box(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(accentColor.copy(alpha = pulse)),
+                            .background(accentColor),
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
@@ -283,7 +235,6 @@ fun FinancialRunwayCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-            }
             }
         }
     }

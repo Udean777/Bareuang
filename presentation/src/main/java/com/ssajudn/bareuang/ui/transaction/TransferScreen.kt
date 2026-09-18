@@ -344,7 +344,7 @@ fun TransferScreen(
                                 shape = androidx.compose.foundation.shape.CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(48.dp)
                                     .clickable { viewModel.swapWallets() }
                             ) {
                                 Box(contentAlignment = Alignment.Center) {

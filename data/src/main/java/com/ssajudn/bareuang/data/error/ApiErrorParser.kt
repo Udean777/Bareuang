@@ -5,8 +5,8 @@ import java.io.IOException
 
 /**
  * Data-layer error mapper — jangan bocorkan IOException mentah ke domain/ui.
- * Core app tetap offline-first; sumber error juga dapat berasal dari OCR online
- * opsional dan pengecualian I/O lokal.
+ * Core app tetap offline-first; sumber error berasal dari operasi lokal dan
+ * pengecualian I/O.
  */
 object ApiErrorParser {
 

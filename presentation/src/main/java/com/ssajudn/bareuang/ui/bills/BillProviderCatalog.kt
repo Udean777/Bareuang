@@ -60,7 +60,7 @@ object BillProviderCatalog {
             return null
         }
         if (providerIconUrl != null && providerIconUrl.startsWith("/")) {
-            // Path file lokal yang didukung; OCR online adalah fitur terpisah.
+            // Path file lokal yang didukung untuk ikon provider.
             return java.io.File(providerIconUrl)
         }
         return when {

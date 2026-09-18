@@ -1,12 +1,7 @@
 package com.ssajudn.bareuang.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -92,11 +87,10 @@ fun BearProgressIndicator(
             val maxOffset = (totalWidth - bearSize).coerceAtLeast(0.dp)
             val bearOffset = maxOffset * animatedProgress
             val shouldWiggle = clampedProgress > 0.9f
-            val transition = rememberInfiniteTransition(label = "bearWiggle")
-            val wiggle by transition.animateFloat(
-                initialValue = -7f, targetValue = 7f,
-                animationSpec = infiniteRepeatable(animation = tween(durationMillis = 380, easing = FastOutSlowInEasing), repeatMode = RepeatMode.Reverse),
-                label = "wiggle"
+            val wiggle by animateFloatAsState(
+                targetValue = if (shouldWiggle) 3f else 0f,
+                animationSpec = tween(durationMillis = 220),
+                label = "wiggleOnce",
             )
 
             Image(

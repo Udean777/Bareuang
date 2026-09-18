@@ -13,16 +13,6 @@ android {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    buildTypes {
-        debug {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-            buildConfigField("String", "PARSE_RECEIPT_URL", "\"http://10.0.2.2:3000/api/parse-receipt\"")
-        }
-        release {
-            buildConfigField("String", "BASE_URL", "\"https://api.bareuang.app/\"")
-            buildConfigField("String", "PARSE_RECEIPT_URL", "\"https://bareuang.vercel.app/api/parse-receipt\"")
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -51,7 +41,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.okhttp)
     implementation(libs.google.gson)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.work)
@@ -63,7 +52,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     debugImplementation(libs.mlkit.text.recognition)
     testImplementation(libs.junit)
-    testImplementation(libs.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)

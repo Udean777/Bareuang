@@ -20,13 +20,14 @@ class OnDeviceReceiptOcrService @Inject constructor(
 
     override val isAvailable: Boolean = true
 
-    private val recognizer = TextRecognition.getClient(
-        TextRecognizerOptions.DEFAULT_OPTIONS,
-    )
-
     override suspend fun parseReceiptImage(uri: String): Result<ParsedReceipt> = runCatching {
-        val image = InputImage.fromFilePath(context, uri.toUri())
-        val text = recognizer.process(image).await().text
-        ReceiptParser.parse(text)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        try {
+            val image = InputImage.fromFilePath(context, uri.toUri())
+            val text = recognizer.process(image).await().text
+            ReceiptParser.parse(text)
+        } finally {
+            recognizer.close()
+        }
     }
 }
