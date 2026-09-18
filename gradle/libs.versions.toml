@@ -25,6 +25,7 @@ appcompat = "1.8.0"
 gson = "2.14.0"
 showcase = "2.0.2"
 playServicesCoroutines = "1.11.0"
+mlkitTextRecognition = "16.0.1"
 glance = "1.2.0"
 
 [libraries]
@@ -80,6 +81,7 @@ androidx-glance-material3 = { group = "androidx.glance", name = "glance-material
 
 # Translation & ML Kit
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "playServicesCoroutines" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 
 # DataStore (Language & Tour Preferences)
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }

@@ -109,7 +109,7 @@ fun OcrScanScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val ocrEnabled = false
+    val ocrEnabled = uiState.isOcrAvailable
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { eff ->
@@ -249,7 +249,7 @@ fun OcrScanScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = { runAfterOcrConsent(::launchCamera) },
-                    enabled = ocrEnabled && uiState.isOnline && !uiState.isProcessing,
+                    enabled = ocrEnabled && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.CameraAlt, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.ocr_btn_camera))
@@ -264,7 +264,7 @@ fun OcrScanScreen(
                             )
                         }
                     },
-                    enabled = ocrEnabled && uiState.isOnline && !uiState.isProcessing,
+                    enabled = ocrEnabled && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.ocr_btn_gallery))

@@ -3,6 +3,7 @@ package com.ssajudn.bareuang.domain.port
 import com.ssajudn.bareuang.domain.model.AppCurrency
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import com.ssajudn.bareuang.domain.model.ImportDraft
+import com.ssajudn.bareuang.domain.model.ParsedReceipt
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.Flow
 
@@ -30,8 +31,29 @@ interface BackupRestorePort {
 }
 interface LocalDataResetPort { suspend fun wipe() }
 interface CsvParserPort { fun parseWithStats(csvText: String): Pair<List<ImportDraft>, Int> }
+interface ReceiptOcrPort {
+    val isAvailable: Boolean
+    suspend fun parseReceiptImage(uri: String): Result<ParsedReceipt>
+}
+
+/**
+ * Temporary compatibility boundary for the legacy cloud adapter.
+ *
+ * It is intentionally not bound in Hilt. Remove this boundary together with
+ * ReceiptAiService when the cloud OCR cleanup milestone is approved.
+ */
+@Deprecated("Legacy cloud OCR boundary; use ReceiptOcrPort")
 interface ReceiptAiPort { suspend fun parseReceiptImage(uri: String): Result<AiParsedReceipt> }
-data class AiParsedReceipt(val merchant: String, val date: String, val total: Long, val category: String, val items: List<String>, val rawText: String)
+
+@Deprecated("Legacy cloud OCR model; use ParsedReceipt")
+data class AiParsedReceipt(
+    val merchant: String,
+    val date: String,
+    val total: Long,
+    val category: String,
+    val items: List<String>,
+    val rawText: String,
+)
 interface NetworkMonitorPort { fun isOnline(): Boolean; fun observeIsOnline(): Flow<Boolean> }
 interface BillReminderSchedulerPort { fun scheduleDailyAt(hour: Int, minute: Int); fun runNow() }
 interface BillReminderPreferencesPort {

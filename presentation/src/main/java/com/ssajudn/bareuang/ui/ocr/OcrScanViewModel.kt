@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssajudn.bareuang.domain.port.OcrConsentPort
-import com.ssajudn.bareuang.domain.port.ReceiptAiPort
+import com.ssajudn.bareuang.domain.port.ReceiptOcrPort
 import com.ssajudn.bareuang.domain.model.CreateTransactionRequest
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
@@ -16,7 +16,6 @@ import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.domain.utils.DateUtils
-import com.ssajudn.bareuang.domain.port.NetworkMonitorPort
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +40,7 @@ data class OcrUiState(
     val pendingDailyOverride: Boolean = false,
     val pendingDailyMessage: String? = null,
     val isOnline: Boolean = true,
+    val isOcrAvailable: Boolean = false,
     val hasOcrConsent: Boolean = false,
     val showOcrConsent: Boolean = false,
 )
@@ -49,16 +49,16 @@ data class OcrUiState(
 class OcrScanViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
-    private val receiptAiService: ReceiptAiPort,
+    private val receiptOcr: ReceiptOcrPort,
     private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
     private val checkDailyBudget: CheckDailyBudgetUseCase,
-    private val networkMonitor: NetworkMonitorPort,
     private val ocrConsentPreferences: OcrConsentPort,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         OcrUiState(
-            isOnline = networkMonitor.isOnline(),
+            isOnline = true,
+            isOcrAvailable = receiptOcr.isAvailable,
             hasOcrConsent = ocrConsentPreferences.hasCurrentConsent,
         )
     )
@@ -68,11 +68,6 @@ class OcrScanViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
-        viewModelScope.launch {
-            networkMonitor.observeIsOnline().collect { online ->
-                _uiState.value = _uiState.value.copy(isOnline = online)
-            }
-        }
         viewModelScope.launch {
             val wallets = walletRepository.getWallets().getOrDefault(emptyList())
             _uiState.value = _uiState.value.copy(
@@ -117,40 +112,30 @@ class OcrScanViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(hasOcrConsent = false, showOcrConsent = true)
             return
         }
-        if (!networkMonitor.isOnline()) {
-            viewModelScope.launch {
-                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)))
-            }
-            return
-        }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isProcessing = true, rawText = null)
-            val result = receiptAiService.parseReceiptImage(uri.toString())
-            result.onSuccess { ai ->
-                val cat = runCatching { TransactionCategory.valueOf(ai.category) }.getOrDefault(TransactionCategory.SHOPPING)
-                val aiDate = ai.date.takeIf {
+            val result = receiptOcr.parseReceiptImage(uri.toString())
+            result.onSuccess { parsed ->
+                val parsedDate = parsed.date?.takeIf {
                     runCatching { java.time.LocalDate.parse(it) }.isSuccess
                 } ?: _uiState.value.date
                 _uiState.value = _uiState.value.copy(
                     isProcessing = false,
-                    rawText = ai.rawText.ifBlank { ai.items.joinToString("\n") },
-                    merchant = ai.merchant,
-                    amount = if (ai.total > 0) ai.total.toString() else "",
-                    parsedAmount = ai.total,
-                    category = cat,
-                    date = aiDate,
+                    rawText = parsed.rawText,
+                    merchant = parsed.merchantName,
+                    amount = if (parsed.totalAmount > 0) parsed.totalAmount.toString() else "",
+                    parsedAmount = parsed.totalAmount,
+                    category = parsed.suggestedCategory,
+                    date = parsedDate,
                 )
             }.onFailure { e ->
-                android.util.Log.e("Ocr", "AI parse failed", e)
+                android.util.Log.e("Ocr", "OCR failed", e)
                 _uiState.value = _uiState.value.copy(isProcessing = false)
-                val res = when (e) {
-                    is com.ssajudn.bareuang.domain.error.AppException.NetworkException ->
-                        UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_no_internet)
-                    is com.ssajudn.bareuang.domain.error.AppException ->
-                        UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_generic)
-                    else -> UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_generic)
-                }
-                _effect.send(UiEffect.ShowSnackbarRes(res))
+                _effect.send(
+                    UiEffect.ShowSnackbarRes(
+                        UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_generic),
+                    ),
+                )
             }
         }
     }
