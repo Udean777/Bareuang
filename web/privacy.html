@@ -98,8 +98,8 @@
         <h2 id="data">2. Data yang Diproses</h2>
         <p>
           Data yang kamu input seperti nominal, kategori, merchant, dan catatan
-          disimpan lokal. Jika kamu memilih Scan Struk pada build pengembangan
-          lokal, foto diproses di perangkat menggunakan ML Kit untuk membaca
+          disimpan lokal. Jika kamu memilih Scan Struk, foto diproses di
+          perangkat menggunakan ML Kit untuk membaca
           merchant, tanggal, total, kategori, item, dan teks struk. Hasilnya
           dapat kamu edit sebelum disimpan lokal.
         </p>
@@ -118,10 +118,11 @@
 
         <h2 id="ocr-local">3. Scan Struk Lokal</h2>
         <p>
-          Scan Struk hanya tersedia pada build pengembangan lokal. ML Kit
-          memproses foto di perangkat, sehingga fitur dapat digunakan tanpa
-          koneksi internet dan foto tidak dikirim ke Bareuang atau provider
-          pihak ketiga. Pada build release dan production, OCR dinonaktifkan.
+          Scan Struk tersedia pada build debug dan release. ML Kit bundled
+          memproses foto di perangkat tanpa unduhan model pertama kali, sehingga
+          fitur dapat digunakan tanpa koneksi internet. Foto tidak dikirim ke
+          Bareuang atau provider pihak ketiga. Hasil OCR hanya menjadi transaksi
+          setelah kamu meninjau dan menyimpannya.
         </p>
         <p>
           Backup &amp; Restore tetap dilakukan melalui file <code>.json</code>
@@ -131,9 +132,11 @@
         <h2 id="permission">4. Izin yang Diminta</h2>
         <ul>
           <li>
-            Kamera - saat kamu memilih "Scan Struk", aplikasi membuka aplikasi
-            kamera sistem untuk mengambil foto. Bareuang tidak meminta izin
-            CAMERA sendiri dan tidak mengakses kamera di background.
+            Kamera - saat kamu memilih "Scan Struk" lalu "Kamera", Bareuang
+            meminta izin CAMERA untuk membuka aplikasi kamera sistem. Izin ini
+            hanya digunakan saat kamu memulai pemindaian; Bareuang tidak
+            mengakses kamera di background. Kamu tetap dapat memilih foto dari
+            galeri atau mencatat manual jika izin ditolak.
           </li>
           <li>
             <strong>POST_NOTIFICATIONS</strong> (Android 13+) - hanya untuk

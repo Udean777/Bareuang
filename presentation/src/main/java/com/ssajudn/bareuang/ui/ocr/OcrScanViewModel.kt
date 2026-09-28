@@ -8,10 +8,11 @@ import com.ssajudn.bareuang.domain.model.CreateTransactionRequest
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.Wallet
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
-import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
+import com.ssajudn.bareuang.domain.usecase.CreateTransactionUseCase
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.ui.common.toUiText
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.domain.utils.DateUtils
@@ -39,7 +40,7 @@ data class OcrUiState(
     val date: String = DateUtils.getCurrentDateISO(),
     val isSaving: Boolean = false,
     val pendingDailyOverride: Boolean = false,
-    val pendingDailyMessage: String? = null,
+    val pendingDailyMessage: UiText? = null,
     val isOcrAvailable: Boolean = false,
     val selectedImageUri: Uri? = null,
     val showImagePreview: Boolean = false,
@@ -50,9 +51,8 @@ data class OcrUiState(
 @HiltViewModel
 class OcrScanViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
-    private val transactionRepository: TransactionRepository,
+    private val createTransaction: CreateTransactionUseCase,
     private val receiptOcr: ReceiptOcrPort,
-    private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
     private val checkDailyBudget: CheckDailyBudgetUseCase,
 ) : ViewModel() {
 
@@ -190,18 +190,19 @@ class OcrScanViewModel @Inject constructor(
             viewModelScope.launch { _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_invalid_amount))) }; return
         }
         viewModelScope.launch {
-            if (!hasMonthlyBudget()) {
-                _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_budget_required)))
-                return@launch
-            }
-            val dailyCheck = checkDailyBudget(s.parsedAmount, s.date, com.ssajudn.bareuang.utils.CurrencyFormatter.getActiveCurrency(), s.category)
-            if (dailyCheck.isFailure) {
-                val msg = dailyCheck.exceptionOrNull()?.message ?: ""
+            val dailyCheck = checkDailyBudget(s.parsedAmount, s.date, s.category)
+            val dailyError = dailyCheck.exceptionOrNull() as? AppException.DailyBudgetExceededException
+            if (dailyError != null) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     pendingDailyOverride = true,
-                    pendingDailyMessage = msg.ifBlank { null }
+                    pendingDailyMessage = dailyError.toUiText()
                 )
+                return@launch
+            } else if (dailyCheck.isFailure) {
+                val ui = (dailyCheck.exceptionOrNull() as? AppException)?.toUiText()
+                    ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
                 return@launch
             }
             performCreate(onSuccess)
@@ -219,12 +220,6 @@ class OcrScanViewModel @Inject constructor(
 
     private suspend fun performCreate(onSuccess: () -> Unit) {
         val s = _uiState.value
-        val wallet = walletRepository.getWallets().getOrNull()?.find { it.id == s.selectedWalletId }
-        if (wallet != null && wallet.balance < s.parsedAmount) {
-            _uiState.value = _uiState.value.copy(isSaving = false)
-            _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.tx_error_insufficient_balance, listOf(com.ssajudn.bareuang.utils.CurrencyFormatter.formatRupiah(wallet.balance)))))
-            return
-        }
         _uiState.value = _uiState.value.copy(isSaving = true)
         val req = CreateTransactionRequest(
             amount = s.parsedAmount,
@@ -234,7 +229,7 @@ class OcrScanViewModel @Inject constructor(
             date = s.date,
             walletId = s.selectedWalletId
         )
-        val res = transactionRepository.createTransaction(req)
+        val res = createTransaction(req)
         res.onSuccess {
             _uiState.value = _uiState.value.copy(isSaving = false)
             _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_save_success)))
@@ -242,7 +237,9 @@ class OcrScanViewModel @Inject constructor(
         }.onFailure { e ->
             android.util.Log.e("Ocr", "save failed", e)
             _uiState.value = _uiState.value.copy(isSaving = false)
-            _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_save)))
+            val message = (e as? AppException)?.toUiText()
+                ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.ocr_error_save)
+            _effect.send(UiEffect.ShowSnackbarRes(message))
         }
     }
 

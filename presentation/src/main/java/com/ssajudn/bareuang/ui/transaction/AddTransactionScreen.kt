@@ -266,6 +266,14 @@ fun AddTransactionScreen(
                 onWalletSelected = viewModel::onWalletChange,
                 onDestinationWalletSelected = viewModel::onToWalletChange
             )
+            TransactionQuickReuseSection(
+                templates = uiState.favoriteTemplates,
+                recentTransactions = uiState.recentTransactions,
+                recurringIntervalsById = uiState.recurringIntervalsById,
+                onUseTemplate = viewModel::onUseFavoriteTemplate,
+                onUseTransaction = viewModel::onUseRecentTransaction,
+                onDeleteTemplate = viewModel::deleteFavoriteTemplate
+            )
 
             // 1. AMOUNT INPUT (Prominent M3 Display Card with Quick Presets)
             ElevatedCard(
@@ -558,6 +566,13 @@ fun AddTransactionScreen(
                 )
             }
 
+            TransactionFavoriteOptions(
+                saveAsFavorite = uiState.saveAsFavorite,
+                includeAmount = uiState.includeFavoriteAmount,
+                onSaveAsFavoriteChange = viewModel::onSaveAsFavoriteChange,
+                onIncludeAmountChange = viewModel::onIncludeFavoriteAmountChange,
+            )
+
             // 4.5. RECURRING TRANSACTION SECTION (Hanya untuk Income & Expense)
             if (uiState.transactionType != TransactionType.TRANSFER) {
                 Surface(
@@ -754,7 +769,7 @@ fun AddTransactionScreen(
             title = { Text(stringResource(R.string.tx_daily_override_title)) },
             text = {
                 Text(
-                    uiState.pendingDailyMessage ?: stringResource(R.string.tx_error_daily_exceeded)
+                    uiState.pendingDailyMessage?.asString() ?: stringResource(R.string.tx_error_daily_exceeded)
                 )
             },
             confirmButton = {

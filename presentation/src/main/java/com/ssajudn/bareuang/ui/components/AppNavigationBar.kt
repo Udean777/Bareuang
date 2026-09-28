@@ -16,10 +16,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,6 +32,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,10 +51,7 @@ data class NavigationBarItemData(
 )
 
 /**
- * Bareuang Floating Pill Bottom Navigation — Modern Bubbly Minimalism.
- * - Lebih gemuk: height 72dp, icon 24dp, pill lebih lebar
- * - Tombol Transfer menonjol ke atas (raised) dengan style Primary Action per DESIGN.MD:
- *   Honey Yellow (#F4A216) + 3D bottom border + Bear Brown text
+ * Bottom navigation for the five primary sections, with equal-width destinations.
  */
 @Composable
 fun AppNavigationBar(
@@ -62,12 +60,6 @@ fun AppNavigationBar(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val transferItem = items.find { it.route == "transfer" }
-    val otherItems = items.filter { it.route != "transfer" }
-    // Split others to left/right of center for balanced layout
-    val leftItems = otherItems.take(2)
-    val rightItems = otherItems.drop(2)
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -99,79 +91,11 @@ fun AppNavigationBar(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left side
-                leftItems.forEach { item ->
+                items.forEach { item ->
                     val selected = currentRoute == item.route
                     val navInteractionSource = remember { MutableInteractionSource() }
                     NavPill(item, selected, navInteractionSource, onNavigate)
                 }
-                // Spacer for raised center button — keeps bar gemuk & balanced
-                Box(modifier = Modifier.weight(1f))
-                // Right side
-                rightItems.forEach { item ->
-                    val selected = currentRoute == item.route
-                    val navInteractionSource = remember { MutableInteractionSource() }
-                    NavPill(item, selected, navInteractionSource, onNavigate)
-                }
-            }
-        }
-        // Raised Transfer — overlayed above bar so it is not clipped by Pill shape
-        if (transferItem != null) {
-            val selected = currentRoute == transferItem.route
-            val navInteractionSource = remember { MutableInteractionSource() }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-14).dp)
-                    .pressScale(navInteractionSource, pressedScale = 0.90f)
-                    .clickable(
-                        interactionSource = navInteractionSource,
-                        indication = null
-                    ) { onNavigate(transferItem.route) }
-                    .then(
-                        if (transferItem.tourAnchorKey != null) Modifier.tourAnchor(transferItem.tourAnchorKey)
-                        else Modifier
-                    ),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .shadow(
-                            elevation = if (selected) 10.dp else 8.dp,
-                            shape = CircleShape,
-                            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
-                        )
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .border(
-                            width = 2.5.dp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = transferItem.icon,
-                        contentDescription = transferItem.label,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Text(
-                    text = transferItem.label,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.5.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold
-                    ),
-                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
             }
         }
     }
@@ -180,22 +104,22 @@ fun AppNavigationBar(
 @Composable
 private fun RowScope.NavPill(
     item: NavigationBarItemData,
-    selected: Boolean,
+    isSelected: Boolean,
     navInteractionSource: MutableInteractionSource,
     onNavigate: (String) -> Unit,
 ) {
                     val animatedContainerColor by animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
                         label = "navItemBg"
                     )
                      val animatedContentColor by animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy),
                         label = "navItemContent"
                     )
                     val popScale by animateFloatAsState(
-                        targetValue = if (selected) 1.08f else 1f,
+                        targetValue = if (isSelected) 1.08f else 1f,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
                         label = "navPop"
                     )
@@ -211,8 +135,12 @@ private fun RowScope.NavPill(
                             .clip(AppShapes.Pill)
                             .clickable(
                                 interactionSource = navInteractionSource,
-                                indication = null
+                                indication = null,
+                                role = Role.Tab,
                             ) { onNavigate(item.route) }
+                            .semantics {
+                                selected = isSelected
+                            }
                             .padding(vertical = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -226,7 +154,7 @@ private fun RowScope.NavPill(
                                     .clip(AppShapes.Pill)
                                     .background(animatedContainerColor)
                                     .then(
-                                        if (selected) Modifier.border(
+                                        if (isSelected) Modifier.border(
                                             1.dp,
                                             MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                                             AppShapes.Pill
@@ -236,7 +164,7 @@ private fun RowScope.NavPill(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = if (selected) item.selectedIcon ?: item.icon else item.icon,
+                                    imageVector = if (isSelected) item.selectedIcon ?: item.icon else item.icon,
                                     contentDescription = null,
                                     tint = animatedContentColor,
                                     modifier = Modifier.size(24.dp)
@@ -245,10 +173,13 @@ private fun RowScope.NavPill(
                             Text(
                                 text = item.label,
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.5.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     }

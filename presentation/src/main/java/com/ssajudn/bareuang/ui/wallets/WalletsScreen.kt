@@ -39,9 +39,11 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -94,6 +96,7 @@ import com.ssajudn.bareuang.ui.components.pressScale
 @Composable
 fun WalletsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToTransfer: () -> Unit,
     viewModel: WalletsViewModel = hiltViewModel()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -199,6 +202,17 @@ fun WalletsScreen(
                         )
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+
+            FilledTonalButton(
+                onClick = onNavigateToTransfer,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.SwapHoriz, contentDescription = null)
+                Spacer(modifier = Modifier.width(Spacing.Small))
+                Text(stringResource(R.string.wallets_transfer_action))
             }
 
             Spacer(modifier = Modifier.height(Spacing.Large))

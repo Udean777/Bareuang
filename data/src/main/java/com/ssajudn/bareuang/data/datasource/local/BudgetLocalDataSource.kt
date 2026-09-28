@@ -5,6 +5,8 @@ import com.ssajudn.bareuang.data.local.room.LocalBudgetEntity
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.data.mapper.PersistenceMappers
 import com.ssajudn.bareuang.data.error.ApiErrorParser
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.error.BudgetOperationReason
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
@@ -20,16 +22,16 @@ class BudgetLocalDataSource @Inject constructor(private val db: AppDatabase) {
     suspend fun setBudget(monthlyLimit: Long, monthYear: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                if (monthlyLimit <= 0) return@withContext Result.failure(IllegalArgumentException("Budget harus lebih dari 0"))
+                if (monthlyLimit <= 0) return@withContext Result.failure(
+                    AppException.BudgetOperationException(BudgetOperationReason.INVALID_MONTHLY_AMOUNT)
+                )
                 val my = if (monthYear.isBlank()) {
                     SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(java.util.Calendar.getInstance().time)
                 } else monthYear
                 val existing = db.budgetDao().getBudget(my)
                 if (existing != null) {
                     return@withContext Result.failure(
-                        com.ssajudn.bareuang.domain.error.AppException.DataException(
-                            "Budget bulan $my sudah diatur. Hanya bisa diubah bulan depan."
-                        )
+                        AppException.BudgetOperationException(BudgetOperationReason.MONTH_ALREADY_CONFIGURED)
                     )
                 }
                 db.budgetDao().insertBudget(LocalBudgetEntity(monthYear = my, monthlyLimit = monthlyLimit, isSynced = false))
@@ -90,7 +92,9 @@ class BudgetLocalDataSource @Inject constructor(private val db: AppDatabase) {
         monthYear: String
     ): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            if (limitAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Batas kategori harus lebih dari 0"))
+            if (limitAmount <= 0) return@withContext Result.failure(
+                AppException.BudgetOperationException(BudgetOperationReason.INVALID_CATEGORY_AMOUNT)
+            )
             val my = if (monthYear.isBlank()) {
                 SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
             } else monthYear
@@ -120,6 +124,8 @@ class BudgetLocalDataSource @Inject constructor(private val db: AppDatabase) {
             } else monthYear
             db.budgetDao().deleteCategoryBudget(my, category.name)
             Result.success(true)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(ApiErrorParser.fromThrowable(e))
         }

@@ -4,7 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ssajudn.bareuang.domain.model.Transaction
 import com.ssajudn.bareuang.domain.error.AppException
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
+import com.ssajudn.bareuang.domain.repository.TransactionQueryRepository
+import com.ssajudn.bareuang.domain.usecase.DeleteTransactionUseCase
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,8 @@ data class TransactionDetailUiState(
 
 @HiltViewModel
 class TransactionDetailViewModel @Inject constructor(
-    private val transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionQueryRepository,
+    private val deleteTransactionUseCase: DeleteTransactionUseCase,
     private val walletRepository: WalletRepository
 ) : ViewModel() {
     private val _operation =
@@ -83,7 +85,7 @@ class TransactionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             _operation.value = OperationState.Loading
-            transactionRepository.deleteTransaction(transactionId)
+            deleteTransactionUseCase(transactionId)
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(isLoading = false, isDeleted = true)
                     _operation.value = OperationState.Success()

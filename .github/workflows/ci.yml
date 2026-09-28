@@ -22,6 +22,8 @@ jobs:
           java-version: '21'
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Verify architecture boundaries
+        run: ./gradlew verifyArchitectureBoundaries --no-daemon
       - name: Run unit tests
         run: ./gradlew test --no-daemon
       - name: Upload test results

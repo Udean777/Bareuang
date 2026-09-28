@@ -74,11 +74,6 @@ android {
         compose = true
         buildConfig = true
     }
-    testOptions {
-        unitTests.all { it.jvmArgs("-Dnet.bytebuddy.experimental=true") }
-        // android.util.Log (used by data-layer mappers) returns defaults in JVM tests.
-        unitTests.isReturnDefaultValues = true
-    }
 }
 
 val validateReleaseInputs = tasks.register("validateReleaseInputs") {
@@ -154,14 +149,6 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
 
-    testImplementation(libs.junit)
-    // Required only by repository integration fakes in app unit tests; production
-    // Room implementation remains encapsulated by :data.
-    testImplementation(libs.androidx.room.runtime)
-    testImplementation(libs.androidx.room.ktx)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
-    testImplementation(libs.mockk)
     // The BOM must be applied to the androidTest configuration too, otherwise the
     // versionless Compose test artifacts below cannot resolve — which failed the
     // build for `lint` and any instrumented test run.

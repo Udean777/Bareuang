@@ -3,9 +3,10 @@ package com.ssajudn.bareuang
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.ssajudn.bareuang.data.notification.BillReminderPrefs
-import com.ssajudn.bareuang.data.notification.BillReminderScheduler
-import com.ssajudn.bareuang.data.local.WidgetPreferences
+import com.ssajudn.bareuang.domain.port.BillReminderPreferencesPort
+import com.ssajudn.bareuang.domain.port.BillReminderSchedulerPort
+import com.ssajudn.bareuang.domain.port.RecurringTransactionSchedulerPort
+import com.ssajudn.bareuang.domain.port.WidgetPreferencesPort
 import com.ssajudn.bareuang.widget.BudgetWidgetWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -18,9 +19,10 @@ import javax.inject.Inject
 @HiltAndroidApp
 class BareuangApplication : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
-    @Inject lateinit var billReminderScheduler: BillReminderScheduler
-    @Inject lateinit var billReminderPrefs: BillReminderPrefs
-    @Inject lateinit var widgetPreferences: WidgetPreferences
+    @Inject lateinit var billReminderScheduler: BillReminderSchedulerPort
+    @Inject lateinit var billReminderPrefs: BillReminderPreferencesPort
+    @Inject lateinit var recurringTransactionScheduler: RecurringTransactionSchedulerPort
+    @Inject lateinit var widgetPreferences: WidgetPreferencesPort
 
     override val workManagerConfiguration: Configuration get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
@@ -29,8 +31,8 @@ class BareuangApplication : Application(), Configuration.Provider {
         // Pengingat harian pada jam pilihan user; pemeriksaan cepat juga dijalankan tiap app dibuka.
         billReminderScheduler.scheduleDailyAt(billReminderPrefs.reminderHour(), billReminderPrefs.reminderMinute())
         billReminderScheduler.runNow()
-        com.ssajudn.bareuang.data.service.RecurringTransactionWorker.ensureScheduled(this)
-        com.ssajudn.bareuang.data.service.RecurringTransactionWorker.runNow(this)
+        recurringTransactionScheduler.ensureScheduled()
+        recurringTransactionScheduler.runNow()
         BudgetWidgetWorker.ensureScheduled(this)
 
         // Re-render the widget immediately whenever the privacy toggle changes.

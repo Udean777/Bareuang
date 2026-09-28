@@ -7,7 +7,8 @@ import com.ssajudn.bareuang.domain.port.ReceiptOcrPort
 import com.ssajudn.bareuang.domain.repository.TransactionRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
-import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
+import com.ssajudn.bareuang.domain.usecase.CreateTransactionUseCase
+import com.ssajudn.bareuang.domain.usecase.ValidateTransactionUseCase
 import com.ssajudn.bareuang.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,7 +33,6 @@ class OcrScanViewModelTest {
     private val wallets = mockk<WalletRepository>(relaxed = true)
     private val transactions = mockk<TransactionRepository>(relaxed = true)
     private val receiptOcr = mockk<ReceiptOcrPort>(relaxed = true)
-    private val hasBudget = mockk<HasMonthlyBudgetUseCase>(relaxed = true)
     private val dailyBudget = mockk<CheckDailyBudgetUseCase>(relaxed = true)
 
     private fun createViewModel(ocrAvailable: Boolean = true): OcrScanViewModel {
@@ -41,9 +41,8 @@ class OcrScanViewModelTest {
         every { wallets.observeWallets() } returns flowOf(emptyList())
         return OcrScanViewModel(
             wallets,
-            transactions,
+            CreateTransactionUseCase(transactions, wallets, ValidateTransactionUseCase()),
             receiptOcr,
-            hasBudget,
             dailyBudget,
         )
     }
@@ -156,5 +155,17 @@ class OcrScanViewModelTest {
         assertEquals("Catatan manual", vm.uiState.value.merchant)
         assertEquals(25000L, vm.uiState.value.parsedAmount)
         assertEquals("", vm.uiState.value.rawText)
+    }
+
+    @Test
+    fun `zero amount is rejected without saving a transaction`() = runTest {
+        val vm = createViewModel()
+        vm.onWalletSelected("wallet-1")
+        vm.onAmountChange("0")
+
+        vm.save {}
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { transactions.createTransaction(any()) }
     }
 }

@@ -5,3 +5,10 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.hilt) apply false
 }
+
+tasks.register<Exec>("verifyArchitectureBoundaries") {
+    group = "verification"
+    description = "Checks source and Gradle dependency boundaries between Android architecture modules."
+    workingDir = rootProject.projectDir
+    commandLine("python3", "scripts/verify-architecture.py")
+}

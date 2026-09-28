@@ -1,6 +1,7 @@
 package com.ssajudn.bareuang.widget
 
-import com.ssajudn.bareuang.data.local.WidgetPreferences
+import com.ssajudn.bareuang.domain.port.CurrencyPreferencesPort
+import com.ssajudn.bareuang.domain.port.WidgetPreferencesPort
 import com.ssajudn.bareuang.domain.usecase.GetDashboardSummaryUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -14,6 +15,6 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface WidgetDataEntryPoint {
     fun getDashboardSummary(): GetDashboardSummaryUseCase
-    fun widgetPreferences(): WidgetPreferences
-    fun currencyPreferences(): com.ssajudn.bareuang.data.local.CurrencyPreferences
+    fun widgetPreferences(): WidgetPreferencesPort
+    fun currencyPreferences(): CurrencyPreferencesPort
 }

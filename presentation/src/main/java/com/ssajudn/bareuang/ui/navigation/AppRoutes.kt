@@ -2,6 +2,7 @@ package com.ssajudn.bareuang.ui.navigation
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
     data object Onboarding : Screen("onboarding")
+    data object QuickSetup : Screen("quick_setup")
     data object Dashboard : Screen("dashboard")
     data object AddTransaction : Screen("add_transaction")
     data object AllTransactions : Screen("all_transactions")

@@ -22,6 +22,8 @@ import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
+import com.ssajudn.bareuang.ui.common.toUiText
+import com.ssajudn.bareuang.domain.error.AppException
 import javax.inject.Inject
 import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.domain.model.UpdateGoalRequest
@@ -108,7 +110,8 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createGoal(CreateGoalRequest(name, targetAmount, targetDate, colorHex, notes))
-            val ui = UiText.Res(R.string.goals_error_create)
+            val ui = r.exceptionOrNull().let { (it as? AppException)?.toUiText() }
+                ?: UiText.Res(R.string.goals_error_create)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
@@ -118,7 +121,8 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateGoal(id, UpdateGoalRequest(name, targetAmount, targetDate, colorHex, notes))
-            val ui = UiText.Res(R.string.goals_error_update)
+            val ui = r.exceptionOrNull().let { (it as? AppException)?.toUiText() }
+                ?: UiText.Res(R.string.goals_error_update)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
@@ -128,7 +132,8 @@ class GoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.depositToGoal(id, amount, walletId)
-            val ui = UiText.Res(R.string.goals_error_deposit)
+            val ui = r.exceptionOrNull().let { (it as? AppException)?.toUiText() }
+                ?: UiText.Res(R.string.goals_error_deposit)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
@@ -137,7 +142,11 @@ class GoalsViewModel @Inject constructor(
     fun deleteGoal(id: String) {
         viewModelScope.launch {
             val r = repository.deleteGoal(id)
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.goals_error_delete)))
+            if (r.isFailure) {
+                val ui = (r.exceptionOrNull() as? AppException)?.toUiText()
+                    ?: UiText.Res(R.string.goals_error_delete)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
+            }
         }
     }
 }

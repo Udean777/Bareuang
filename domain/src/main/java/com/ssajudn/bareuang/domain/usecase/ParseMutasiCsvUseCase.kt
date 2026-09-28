@@ -1,11 +1,11 @@
 package com.ssajudn.bareuang.domain.usecase
 
 import com.ssajudn.bareuang.domain.model.ImportParseResult
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
+import com.ssajudn.bareuang.domain.repository.TransactionQueryRepository
 import javax.inject.Inject
 
 class ParseMutasiCsvUseCase @Inject constructor(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionQueryRepository
 ) {
     suspend fun markDuplicates(drafts: List<com.ssajudn.bareuang.domain.model.ImportDraft>, skippedRows: Int = 0): Result<ImportParseResult> {
         val existing = transactionRepository.getAllTransactions().getOrElse { return Result.failure(it) }

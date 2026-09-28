@@ -2,17 +2,16 @@ package com.ssajudn.bareuang.ui.transaction
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ssajudn.bareuang.domain.model.CreateTransactionRequest
+import com.ssajudn.bareuang.domain.model.RecurringInterval
+import com.ssajudn.bareuang.domain.model.Transaction
 import com.ssajudn.bareuang.domain.model.TransactionCategory
+import com.ssajudn.bareuang.domain.model.TransactionEntryTemplate
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.Wallet
-import com.ssajudn.bareuang.domain.repository.BudgetRepository
-import com.ssajudn.bareuang.domain.repository.WalletRepository
-import com.ssajudn.bareuang.domain.usecase.CheckDailyBudgetUseCase
-import com.ssajudn.bareuang.domain.usecase.HasMonthlyBudgetUseCase
-import com.ssajudn.bareuang.domain.usecase.CreateTransactionUseCase
-import com.ssajudn.bareuang.domain.usecase.ValidateTransactionUseCase
-import com.ssajudn.bareuang.domain.usecase.TransactionValidationError
+import com.ssajudn.bareuang.domain.usecase.SaveTransactionEntryUseCase
+import com.ssajudn.bareuang.domain.usecase.CheckTransactionEntryUseCase
+import com.ssajudn.bareuang.domain.usecase.TransactionEntryCheck
+import com.ssajudn.bareuang.domain.usecase.TransactionEntryPreferencesUseCase
 import com.ssajudn.bareuang.domain.utils.DateUtils
 import com.ssajudn.bareuang.domain.error.AppException
 import com.ssajudn.bareuang.utils.CurrencyFormatter
@@ -23,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.UiText
@@ -48,20 +48,23 @@ data class AddTransactionUiState(
     val isSuccess: Boolean = false,
     val isBudgetMissing: Boolean = false,
     val categoryBudgets: List<com.ssajudn.bareuang.domain.model.CategoryBudget> = emptyList(),
+    val favoriteTemplates: List<TransactionEntryTemplate> = emptyList(),
+    val recentTransactions: List<Transaction> = emptyList(),
+    val recurringIntervalsById: Map<String, RecurringInterval> = emptyMap(),
+    val saveAsFavorite: Boolean = false,
+    val includeFavoriteAmount: Boolean = false,
     // Soft daily-budget nudge: when today's allowance is exceeded we prompt the
     // user instead of silently blocking, letting them choose to save anyway.
     val pendingDailyOverride: Boolean = false,
-    val pendingDailyMessage: String? = null
+    val pendingDailyMessage: UiText? = null
 )
 
 @HiltViewModel
 class AddTransactionViewModel @Inject constructor(
-    private val walletRepository: WalletRepository,
-    private val budgetRepository: BudgetRepository,
-    private val hasMonthlyBudget: HasMonthlyBudgetUseCase,
-    private val checkDailyBudget: CheckDailyBudgetUseCase,
-    private val createTransaction: CreateTransactionUseCase,
-    private val validateTransaction: ValidateTransactionUseCase
+    private val saveEntry: SaveTransactionEntryUseCase,
+    private val checkTransactionEntry: CheckTransactionEntryUseCase,
+    private val transactionEntryData: TransactionEntryDataCoordinator,
+    private val entryPreferences: TransactionEntryPreferencesUseCase,
 ) : ViewModel() {
     private val _operation =
         kotlinx.coroutines.flow.MutableStateFlow<OperationState>(OperationState.Idle)
@@ -72,249 +75,221 @@ class AddTransactionViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AddTransactionUiState())
     val uiState: StateFlow<AddTransactionUiState> = _uiState.asStateFlow()
-
     init {
-        loadWallets()
-        loadBudgetStatus()
-        observeCategoryBudgets()
+        _uiState.value = _uiState.value.copy(
+            selectedCategory = entryPreferences.preferredCategory(TransactionType.EXPENSE),
+            favoriteTemplates = entryPreferences.favoriteTemplates(),
+        )
+        observeTransactionEntryData()
     }
 
-    private fun observeCategoryBudgets() {
+    private fun observeTransactionEntryData() {
         viewModelScope.launch {
-            budgetRepository.getCategoryBudgets("").collect { list ->
-                _uiState.value = _uiState.value.copy(categoryBudgets = list)
-            }
-        }
-    }
-
-    private fun loadBudgetStatus() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isBudgetMissing = !hasMonthlyBudget())
-        }
-    }
-
-    private fun loadWallets() {
-        viewModelScope.launch {
-            val initial = walletRepository.getWallets().getOrNull()
-            if (!initial.isNullOrEmpty()) {
-                val defaultWallet = initial.firstOrNull()?.id
-                val defaultToWallet = initial.getOrNull(1)?.id ?: defaultWallet
-                _uiState.value = _uiState.value.copy(
-                    wallets = initial,
-                    selectedWalletId = defaultWallet,
-                    selectedToWalletId = defaultToWallet
-                )
-            }
-            walletRepository.observeWallets().collect { wallets ->
-                if (wallets.isNotEmpty()) {
-                    val currentSelected = _uiState.value.selectedWalletId
-                    val defaultWallet =
-                        if (wallets.any { it.id == currentSelected }) currentSelected else wallets.firstOrNull()?.id
-                    val currentSelectedTo = _uiState.value.selectedToWalletId
-                    val defaultToWallet =
-                        if (wallets.any { it.id == currentSelectedTo }) currentSelectedTo else (wallets.getOrNull(
-                            1
-                        )?.id ?: defaultWallet)
-                    _uiState.value = _uiState.value.copy(
-                        wallets = wallets,
-                        selectedWalletId = defaultWallet,
-                        selectedToWalletId = defaultToWallet
-                    )
+            transactionEntryData.observe().collect { update ->
+                when (update) {
+                    is TransactionEntryDataUpdate.Wallets -> updateWallets(update.value)
+                    is TransactionEntryDataUpdate.CategoryBudgets -> {
+                        _uiState.value = _uiState.value.copy(categoryBudgets = update.value)
+                    }
+                    is TransactionEntryDataUpdate.RecentHistory -> {
+                        _uiState.value = _uiState.value.copy(
+                            recentTransactions = update.transactions,
+                            recurringIntervalsById = update.recurringIntervalsById,
+                        )
+                    }
+                    is TransactionEntryDataUpdate.MonthlyBudgetStatus -> {
+                        _uiState.value = _uiState.value.copy(isBudgetMissing = update.isMissing)
+                    }
+                    is TransactionEntryDataUpdate.Failure -> showOperationFailure(update.cause)
                 }
             }
         }
+    }
+
+    private fun updateWallets(wallets: List<Wallet>) {
+        if (wallets.isEmpty()) return
+
+        val current = _uiState.value
+        val defaultWallet =
+            if (wallets.any { it.id == current.selectedWalletId }) current.selectedWalletId
+            else entryPreferences.preferredWallet(wallets, current.transactionType)
+        val defaultToWallet =
+            if (wallets.any { it.id == current.selectedToWalletId && it.id != defaultWallet }) {
+                current.selectedToWalletId
+            } else {
+                entryPreferences.preferredDestinationWallet(wallets, defaultWallet)
+            }
+        _uiState.value = current.copy(
+            wallets = wallets,
+            selectedWalletId = defaultWallet,
+            selectedToWalletId = defaultToWallet,
+        )
     }
 
     fun onTransactionTypeChange(type: TransactionType) {
-        val newCategory = when (type) {
-            TransactionType.INCOME -> TransactionCategory.SALARY
-            TransactionType.TRANSFER -> TransactionCategory.TRANSFER
-            TransactionType.EXPENSE -> TransactionCategory.FOOD
-        }
         val currentState = _uiState.value
-        var targetWalletId = currentState.selectedToWalletId
+        val selectedWalletId = entryPreferences.preferredWallet(currentState.wallets, type)
+        val targetWalletId = entryPreferences.preferredDestinationWallet(currentState.wallets, selectedWalletId)
+        val newCategory = entryPreferences.preferredCategory(type)
 
-        // When switching to transfer, ensure destination is not identical to source if multiple wallets exist
-        if (type == TransactionType.TRANSFER && currentState.selectedWalletId != null) {
-            if (targetWalletId == null || targetWalletId == currentState.selectedWalletId) {
-                val alternate =
-                    currentState.wallets.firstOrNull { it.id != currentState.selectedWalletId }?.id
-                if (alternate != null) {
-                    targetWalletId = alternate
-                }
-            }
-        }
-
-        _uiState.value = currentState.copy(
-            transactionType = type,
-            selectedCategory = newCategory,
-            selectedToWalletId = targetWalletId
+        _uiState.value = TransactionEntryFormReducer.transactionType(
+            state = currentState,
+            type = type,
+            walletId = selectedWalletId,
+            destinationWalletId = targetWalletId,
+            category = newCategory,
         )
     }
 
-    fun onWalletChange(walletId: String) {
-        val currentState = _uiState.value
-        var newToWalletId = currentState.selectedToWalletId
-
-        // Smart switch: if selected source matches destination in transfer mode, switch destination
-        if (currentState.transactionType == TransactionType.TRANSFER && walletId == currentState.selectedToWalletId) {
-            val previousSource = currentState.selectedWalletId
-            val alternateWalletId =
-                if (previousSource != null && previousSource != walletId && currentState.wallets.any { it.id == previousSource }) {
-                    previousSource
-                } else {
-                    currentState.wallets.firstOrNull { it.id != walletId }?.id
-                }
-            if (alternateWalletId != null) {
-                newToWalletId = alternateWalletId
-            }
-        }
-
-        _uiState.value = currentState.copy(
-            selectedWalletId = walletId,
-            selectedToWalletId = newToWalletId
-        )
+    fun onWalletChange(walletId: String) = reduceForm {
+        TransactionEntryFormReducer.selectWallet(it, walletId)
     }
 
-    fun onToWalletChange(walletId: String) {
-        val currentState = _uiState.value
-        var newSourceWalletId = currentState.selectedWalletId
-
-        // Smart switch: if selected destination matches source in transfer mode, switch source
-        if (walletId == currentState.selectedWalletId) {
-            val previousDestination = currentState.selectedToWalletId
-            val alternateWalletId =
-                if (previousDestination != null && previousDestination != walletId && currentState.wallets.any { it.id == previousDestination }) {
-                    previousDestination
-                } else {
-                    currentState.wallets.firstOrNull { it.id != walletId }?.id
-                }
-            if (alternateWalletId != null) {
-                newSourceWalletId = alternateWalletId
-            }
-        }
-
-        _uiState.value = currentState.copy(
-            selectedWalletId = newSourceWalletId,
-            selectedToWalletId = walletId
-        )
+    fun onToWalletChange(walletId: String) = reduceForm {
+        TransactionEntryFormReducer.selectDestinationWallet(it, walletId)
     }
 
-    fun swapWallets() {
-        val currentState = _uiState.value
-        val source = currentState.selectedWalletId
-        val target = currentState.selectedToWalletId
-        if (source != null && target != null && source != target) {
-            _uiState.value = currentState.copy(
-                selectedWalletId = target,
-                selectedToWalletId = source
-            )
-        }
+    fun swapWallets() = reduceForm { TransactionEntryFormReducer.swapWallets(it) }
+
+    fun onAmountChange(input: String) = reduceForm {
+        TransactionEntryFormReducer.amount(it, input)
     }
 
-    fun onAmountChange(input: String) {
-        val digitsOnly = input.filter { it.isDigit() }.take(12) // Limit up to hundreds of billions
-        val parsed = digitsOnly.toLongOrNull() ?: 0L
+    fun onMerchantChange(merchant: String) = reduceForm {
+        TransactionEntryFormReducer.merchant(it, merchant)
+    }
+
+    fun onCategoryChange(category: TransactionCategory) = reduceForm {
+        TransactionEntryFormReducer.category(it, category)
+    }
+
+    fun onDateChange(date: String) = reduceForm { TransactionEntryFormReducer.date(it, date) }
+
+    fun onNotesChange(notes: String) = reduceForm {
+        TransactionEntryFormReducer.notes(it, notes)
+    }
+
+    fun onRecurringChange(isRecurring: Boolean) = reduceForm {
+        TransactionEntryFormReducer.recurring(it, isRecurring)
+    }
+
+    fun onRecurringIntervalChange(interval: RecurringInterval) = reduceForm {
+        TransactionEntryFormReducer.recurringInterval(it, interval)
+    }
+
+    fun onSaveAsFavoriteChange(enabled: Boolean) = reduceForm {
+        TransactionEntryFormReducer.saveAsFavorite(it, enabled)
+    }
+
+    fun onIncludeFavoriteAmountChange(enabled: Boolean) = reduceForm {
+        TransactionEntryFormReducer.includeFavoriteAmount(it, enabled)
+    }
+
+    private inline fun reduceForm(reducer: (AddTransactionUiState) -> AddTransactionUiState) {
+        _uiState.value = reducer(_uiState.value)
+    }
+
+    fun onUseFavoriteTemplate(template: TransactionEntryTemplate) {
+        val current = _uiState.value
+        val selection = TransactionEntryFormMapper.fromFavorite(current, template, entryPreferences)
+        _uiState.value = TransactionEntryFormMapper.applySelection(current, selection)
+    }
+
+    fun onUseRecentTransaction(transaction: Transaction) {
+        val current = _uiState.value
+        val selection = TransactionEntryFormMapper.fromRecent(current, transaction, entryPreferences)
+        _uiState.value = TransactionEntryFormMapper.applySelection(current, selection)
+    }
+
+    fun deleteFavoriteTemplate(templateId: String) {
+        entryPreferences.deleteFavoriteTemplate(templateId)
         _uiState.value = _uiState.value.copy(
-            rawAmount = digitsOnly,
-            parsedAmount = parsed
+            favoriteTemplates = _uiState.value.favoriteTemplates.filterNot { it.id == templateId }
         )
-    }
-
-    fun onMerchantChange(merchant: String) {
-        _uiState.value = _uiState.value.copy(merchant = merchant.take(100))
-    }
-
-    fun onCategoryChange(category: TransactionCategory) {
-        _uiState.value = _uiState.value.copy(selectedCategory = category)
-    }
-
-    fun onDateChange(date: String) {
-        _uiState.value = _uiState.value.copy(date = date)
-    }
-
-    fun onNotesChange(notes: String) {
-        _uiState.value = _uiState.value.copy(notes = notes.take(500))
-    }
-
-    fun onRecurringChange(isRecurring: Boolean) {
-        _uiState.value = _uiState.value.copy(isRecurring = isRecurring)
-    }
-
-    fun onRecurringIntervalChange(interval: com.ssajudn.bareuang.domain.model.RecurringInterval) {
-        _uiState.value = _uiState.value.copy(recurringInterval = interval)
     }
 
     fun saveTransaction() {
         val state = _uiState.value
         if (state.isLoading || _operation.value is OperationState.Loading) return
-        val validation = validateTransaction(
-            type = state.transactionType,
-            amount = state.parsedAmount,
-            sourceWalletId = state.selectedWalletId,
-            targetWalletId = state.selectedToWalletId,
-            wallets = state.wallets
-        )
-        if (validation != null) {
-            val error = validation.toUiError()
-            val sourceBalance =
-                state.wallets.firstOrNull { it.id == state.selectedWalletId }?.balance
-            val ui = error.toUiText(
-                if (error == AddTransactionError.INSUFFICIENT_BALANCE) sourceBalance?.let(
-                    CurrencyFormatter::formatRupiah
-                ) else null
-            )
-            _uiState.value = state.copy(errorMessage = null, validationError = error)
-            _operation.value = OperationState.Error("", ui)
-            _effect.trySend(UiEffect.ShowSnackbarRes(ui))
-            return
-        }
+
+        _uiState.value = state.copy(isLoading = true, errorMessage = null, validationError = null)
+        _operation.value = OperationState.Loading
 
         viewModelScope.launch {
-            _uiState.value =
-                state.copy(isLoading = true, errorMessage = null, validationError = null)
-            _operation.value = OperationState.Loading
-
-            if (state.transactionType != TransactionType.TRANSFER && !hasMonthlyBudget()) {
-                val e = AddTransactionError.BUDGET_REQUIRED
-                val ui = e.toUiText()
-                _uiState.value =
-                    _uiState.value.copy(isLoading = false, errorMessage = null, validationError = e)
-                _operation.value = OperationState.Error("", ui)
-                _effect.trySend(UiEffect.ShowSnackbarRes(ui))
-                _effect.trySend(UiEffect.Navigate(com.ssajudn.bareuang.ui.navigation.Screen.Budget.route))
+            val check = checkTransactionEntry(
+                type = state.transactionType,
+                amount = state.parsedAmount,
+                date = state.date,
+                category = state.selectedCategory,
+                sourceWalletId = state.selectedWalletId,
+                targetWalletId = state.selectedToWalletId,
+                wallets = state.wallets,
+            )
+            val result = check.getOrElse { error ->
+                showOperationFailure(error)
                 return@launch
             }
-
-            if (state.transactionType == TransactionType.EXPENSE) {
-                val dailyCheck = checkDailyBudget(
-                    state.parsedAmount,
-                    state.date,
-                    CurrencyFormatter.getActiveCurrency(),
-                    state.selectedCategory
-                )
-                if (dailyCheck.isFailure) {
-                    val msg = dailyCheck.exceptionOrNull()?.message ?: ""
-                    // Soft nudge: prompt the user for confirmation instead of blocking outright.
+            when (result) {
+                is TransactionEntryCheck.Rejected -> {
+                    showValidationFailure(result.reason, state)
+                    return@launch
+                }
+                is TransactionEntryCheck.RequiresDailyBudgetOverride -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = msg,
+                        errorMessage = null,
                         pendingDailyOverride = true,
-                        pendingDailyMessage = msg.ifBlank { null }
+                        pendingDailyMessage = result.error.toUiText(),
                     )
                     return@launch
                 }
+                TransactionEntryCheck.Ready -> Unit
             }
 
             performCreate()
         }
     }
 
+    private fun showValidationFailure(
+        reason: com.ssajudn.bareuang.domain.error.TransactionValidationReason,
+        state: AddTransactionUiState,
+    ) {
+        val error = reason.toUiError()
+        val sourceBalance = state.wallets.firstOrNull { it.id == state.selectedWalletId }?.balance
+        val ui = error.toUiText(
+            if (error == AddTransactionError.INSUFFICIENT_BALANCE) {
+                sourceBalance?.let(CurrencyFormatter::formatRupiah)
+            } else {
+                null
+            }
+        )
+        _uiState.value = state.copy(
+            isLoading = false,
+            errorMessage = null,
+            validationError = error,
+        )
+        _operation.value = OperationState.Error("", ui)
+        _effect.trySend(UiEffect.ShowSnackbarRes(ui))
+    }
+
+    private fun showOperationFailure(error: Throwable) {
+        val ui = (error as? AppException)?.toUiText()
+            ?: UiText.Res(com.ssajudn.bareuang.presentation.R.string.error_generic)
+        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
+        _operation.value = OperationState.Error("", ui)
+        _effect.trySend(UiEffect.ShowSnackbarRes(ui))
+    }
+
     /** Proceed after the user accepts a daily-budget override prompt. */
     fun confirmDailyOverride() {
-        if (_uiState.value.isLoading) return
-        _uiState.value =
-            _uiState.value.copy(pendingDailyOverride = false, pendingDailyMessage = null)
+        val current = _uiState.value
+        if (current.isLoading) return
+        _uiState.value = current.copy(
+            pendingDailyOverride = false,
+            pendingDailyMessage = null,
+            isLoading = true,
+        )
+        _operation.value = OperationState.Loading
         viewModelScope.launch { performCreate() }
     }
 
@@ -335,29 +310,21 @@ class AddTransactionViewModel @Inject constructor(
         _uiState.value = state.copy(isLoading = true)
         _operation.value = OperationState.Loading
 
-        val sourceWalletName = state.wallets.find { it.id == state.selectedWalletId }?.name ?: ""
-        val targetWalletName = state.wallets.find { it.id == state.selectedToWalletId }?.name ?: ""
+        val submission = TransactionEntryFormMapper.submission(state, UUID.randomUUID().toString())
+        val favoriteTemplate = submission.favoriteTemplate
 
-        val defaultMerchant = if (state.transactionType == TransactionType.TRANSFER) {
-            if (sourceWalletName.isNotBlank() && targetWalletName.isNotBlank()) "$sourceWalletName \u2192 $targetWalletName" else state.selectedCategory.name
-        } else {
-            state.selectedCategory.name
-        }
-
-        val request = CreateTransactionRequest(
-            amount = state.parsedAmount,
+        saveEntry(
+            request = submission.request,
             type = state.transactionType,
             walletId = state.selectedWalletId,
-            toWalletId = if (state.transactionType == TransactionType.TRANSFER) state.selectedToWalletId else null,
+            destinationWalletId = state.selectedToWalletId,
             category = state.selectedCategory,
-            merchant = state.merchant.ifBlank { defaultMerchant },
-            date = state.date,
-            notes = state.notes,
-            recurringInterval = if (state.isRecurring) state.recurringInterval else com.ssajudn.bareuang.domain.model.RecurringInterval.NONE
+            favoriteTemplate = favoriteTemplate,
         )
-
-        createTransaction(request)
-            .onSuccess {
+            .onSuccess { result ->
+                if (favoriteTemplate != null && result.favoriteSaved) _uiState.value = _uiState.value.copy(
+                    favoriteTemplates = (_uiState.value.favoriteTemplates + favoriteTemplate).takeLast(20)
+                )
                 _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
                 _operation.value = OperationState.Success()
             }

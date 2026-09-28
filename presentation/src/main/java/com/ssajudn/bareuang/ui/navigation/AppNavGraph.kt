@@ -20,6 +20,7 @@ import com.ssajudn.bareuang.ui.goals.GoalsScreen
 import com.ssajudn.bareuang.ui.imports.ImportMutasiScreen
 import com.ssajudn.bareuang.ui.ocr.OcrScanScreen
 import com.ssajudn.bareuang.ui.onboarding.OnboardingScreen
+import com.ssajudn.bareuang.ui.onboarding.QuickSetupScreen
 import com.ssajudn.bareuang.ui.settings.SettingsScreen
 import com.ssajudn.bareuang.ui.splash.SplashScreen
 import com.ssajudn.bareuang.ui.transaction.AddTransactionScreen
@@ -30,6 +31,15 @@ import com.ssajudn.bareuang.ui.wallets.WalletsScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController, innerPadding: PaddingValues) {
+    val returnFromTransfer = {
+        if (!navController.popBackStack(Screen.Wallets.route, inclusive = false)) {
+            navController.navigate(Screen.Dashboard.route) {
+                popUpTo(Screen.Transfer.route) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route,
@@ -51,8 +61,15 @@ fun AppNavGraph(navController: NavHostController, innerPadding: PaddingValues) {
         composable(Screen.Onboarding.route) {
             OnboardingScreen(onFinishOnboarding = {
                 navController.navigate(
-                    Screen.Dashboard.route
+                    Screen.QuickSetup.route
                 ) { popUpTo(Screen.Onboarding.route) { inclusive = true } }
+            })
+        }
+        composable(Screen.QuickSetup.route) {
+            QuickSetupScreen(onFinish = {
+                navController.navigate(Screen.Dashboard.route) {
+                    popUpTo(Screen.QuickSetup.route) { inclusive = true }
+                }
             })
         }
         composable(Screen.Dashboard.route) {
@@ -122,12 +139,20 @@ fun AppNavGraph(navController: NavHostController, innerPadding: PaddingValues) {
         composable(Screen.Analytics.route) { AnalyticsScreen() }
         composable(Screen.AllTransactions.route) {
             AllTransactionsScreen(
-                onNavigateBack = { navController.popBackStack() },
+                onNavigateBack = {
+                    if (!navController.popBackStack()) {
+                        navController.navigate(Screen.Dashboard.route) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
                 onNavigateToTransactionDetail = {
                     navController.navigate(
                         Screen.TransactionDetail.createRoute(it)
                     )
-                })
+                },
+                onNavigateToImport = { navController.navigate(Screen.ImportMutasi.route) },
+            )
         }
         composable(Screen.AddTransaction.route) {
             AddTransactionScreen(
@@ -137,23 +162,16 @@ fun AppNavGraph(navController: NavHostController, innerPadding: PaddingValues) {
         composable(Screen.DueBills.route) { DueBillsScreen(onNavigateBack = null) }
         composable(Screen.Transfer.route) {
             TransferScreen(
-                onNavigateBack = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Dashboard.route) {
-                            inclusive = false
-                        }; launchSingleTop = true
-                    }
-                },
-                onTransferSuccess = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(
-                            Screen.Dashboard.route
-                        ) { inclusive = true }
-                    }
-                },
+                onNavigateBack = { returnFromTransfer() },
+                onTransferSuccess = { returnFromTransfer() },
             )
         }
-        composable(Screen.Wallets.route) { WalletsScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable(Screen.Wallets.route) {
+            WalletsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTransfer = { navController.navigate(Screen.Transfer.route) },
+            )
+        }
         composable(Screen.ImportMutasi.route) { ImportMutasiScreen(onNavigateBack = { navController.popBackStack() }) }
         composable(Screen.OcrScan.route) { OcrScanScreen(onNavigateBack = { navController.popBackStack() }) }
         composable(Screen.Goals.route) { GoalsScreen() }

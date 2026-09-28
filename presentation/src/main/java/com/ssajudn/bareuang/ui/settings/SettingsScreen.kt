@@ -1,145 +1,42 @@
 package com.ssajudn.bareuang.ui.settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Switch
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.core.net.toUri
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.BrightnessAuto
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material.icons.filled.Redeem
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.ShowChart
-import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.filled.Today
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Update
-import androidx.compose.material.icons.filled.UploadFile
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.DocumentScanner
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Paid
-import androidx.compose.material.icons.filled.Tour
-import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.VolunteerActivism
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ssajudn.bareuang.ui.components.AppConfirmDialog
-import com.ssajudn.bareuang.ui.theme.AppShapes
-import com.ssajudn.bareuang.ui.theme.BudgetWarningAccent
-import com.ssajudn.bareuang.ui.theme.ExpenseAccent
-import com.ssajudn.bareuang.ui.theme.IncomeAccent
-import com.ssajudn.bareuang.ui.theme.PriceDisplayStyle
-import com.ssajudn.bareuang.ui.theme.Spacing
-import com.ssajudn.bareuang.ui.theme.categoryColors
-import com.ssajudn.bareuang.ui.theme.crispBorder
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.net.toUri
 import com.ssajudn.bareuang.presentation.R
-import com.ssajudn.bareuang.presentation.BuildConfig
-import com.ssajudn.bareuang.domain.AppConfig
-import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
 import com.ssajudn.bareuang.ui.common.asString
-import com.ssajudn.bareuang.ui.components.AppIconButton
+import com.ssajudn.bareuang.ui.components.AppConfirmDialog
 import com.ssajudn.bareuang.ui.components.FeatureTopAppBar
-import com.ssajudn.bareuang.ui.components.AppTextButton
+import com.ssajudn.bareuang.utils.LanguageManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -148,60 +45,78 @@ fun SettingsScreen(
     onReplayTour: () -> Unit = {},
     onNavigateToImport: () -> Unit = {},
     onNavigateToOcr: () -> Unit = {},
-    onLocalDataReset: () -> Unit
+    onLocalDataReset: () -> Unit,
 ) {
     val context = LocalContext.current
-    // viewModel { } rather than remember { }: a ViewModel created with remember is
-    // not lifecycle-scoped, so it was destroyed and recreated on every
-    // configuration change and its viewModelScope was not managed by the framework.
-    val viewModel: SettingsViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val operation by viewModel.operation.collectAsStateWithLifecycle()
-    val isOperationLoading = operation is OperationState.Loading
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val backupViewModel: SettingsBackupViewModel = hiltViewModel()
+    val backupState by backupViewModel.uiState.collectAsStateWithLifecycle()
+    val operation by backupViewModel.operation.collectAsStateWithLifecycle()
+    val isLoading = operation is com.ssajudn.bareuang.ui.common.OperationState.Loading
+    val darkMode by settingsViewModel.darkMode.collectAsStateWithLifecycle()
+    val widgetHideBalance by settingsViewModel.widgetHideBalance.collectAsStateWithLifecycle()
+    val currency by settingsViewModel.currency.collectAsStateWithLifecycle()
 
-    val darkMode by viewModel.darkMode.collectAsStateWithLifecycle()
+    var languageCode by remember(context) {
+        mutableStateOf(LanguageManager.getCurrentLanguageCode(context))
+    }
+    var reminderHour by remember(settingsViewModel) { mutableStateOf(settingsViewModel.reminderHour) }
+    var reminderMinute by remember(settingsViewModel) { mutableStateOf(settingsViewModel.reminderMinute) }
+    var showReminderTimeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showCurrencyDialog by remember { mutableStateOf(false) }
     var showResetConfirmDialog by remember { mutableStateOf(false) }
-
+    var showExportPasswordDialog by remember { mutableStateOf(false) }
+    var showImportPasswordDialog by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingExportPassword by remember { mutableStateOf<CharArray?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.errorMessage, uiState.successMessage) {
-        uiState.errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessages()
-        }
-        uiState.successMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessages()
-        }
-    }
-
-    LaunchedEffect(uiState.isLocalDataReset) {
-        if (uiState.isLocalDataReset) {
-            onLocalDataReset()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
-                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
-                is UiEffect.Navigate -> {}
-                is UiEffect.PopBackStack -> onLocalDataReset()
-            }
+    DisposableEffect(Unit) {
+        onDispose {
+            pendingExportPassword?.fill('\u0000')
         }
     }
 
     val exportBackupLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json")
-    ) { uri: android.net.Uri? ->
-        uri?.let { viewModel.exportBackup(it) }
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
+    ) { uri ->
+        val password = pendingExportPassword
+        pendingExportPassword = null
+        if (uri != null && password != null) {
+            backupViewModel.exportBackup(uri, password)
+        } else {
+            password?.fill('\u0000')
+        }
+    }
+    val importBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            pendingImportUri = uri
+            backupViewModel.clearRestoreError()
+            showImportPasswordDialog = true
+        }
     }
 
-    val importBackupLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: android.net.Uri? ->
-        uri?.let { viewModel.importBackup(it) }
+    LaunchedEffect(Unit) {
+        backupViewModel.effect.collect { effect ->
+            when (effect) {
+                is UiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is UiEffect.ShowSnackbarRes -> snackbarHostState.showSnackbar(effect.uiText.asString(context))
+                is UiEffect.Navigate -> Unit
+                is UiEffect.PopBackStack -> onLocalDataReset()
+            }
+        }
+    }
+    LaunchedEffect(backupState.isLocalDataReset) {
+        if (backupState.isLocalDataReset) onLocalDataReset()
+    }
+    LaunchedEffect(backupState.restorePreview?.id) {
+        if (backupState.restorePreview != null) {
+            showImportPasswordDialog = false
+            pendingImportUri = null
+        }
     }
 
     Scaffold(
@@ -210,10 +125,10 @@ fun SettingsScreen(
             FeatureTopAppBar(
                 titleRes = R.string.settings_title,
                 onNavigateBack = onNavigateBack,
-                backEnabled = !isOperationLoading
+                backEnabled = !isLoading,
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -221,299 +136,92 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-
+            Spacer(Modifier.height(4.dp))
             SettingsBackupSection(
-                viewModel = viewModel,
-                darkMode = darkMode,
-                onDarkModeChange = viewModel::setDarkMode,
                 onNavigateToImport = onNavigateToImport,
                 onNavigateToOcr = onNavigateToOcr,
-                onExportBackup = {
-                    val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
-                    exportBackupLauncher.launch("Bareuang_Backup_$timeStamp.json")
-                },
+                onExportBackup = { showExportPasswordDialog = true },
                 onImportBackup = {
-                    importBackupLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
-                }
-            )
-            // 3b. BILL REMINDER TIME
-            var reminderHour by remember { mutableIntStateOf(viewModel.reminderHour) }
-            var reminderMinute by remember { mutableIntStateOf(viewModel.reminderMinute) }
-            var showReminderTimeDialog by remember { mutableStateOf(false) }
-            com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
-                title = stringResource(R.string.settings_bill_reminder_title),
-                items = listOf(
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_bill_reminder_time),
-                        description = stringResource(R.string.settings_bill_reminder_time_desc),
-                        value = String.format(java.util.Locale.US, "%02d:%02d", reminderHour, reminderMinute),
-                        icon = Icons.Default.NotificationsActive,
-                        onClick = { showReminderTimeDialog = true }
+                    importBackupLauncher.launch(
+                        arrayOf(
+                            "application/vnd.bareuang.backup",
+                            "application/octet-stream",
+                            "application/json",
+                            "text/plain",
+                            "*/*",
+                        ),
                     )
-                )
+                },
             )
-
-            if (showReminderTimeDialog) {
-                val timeState = rememberTimePickerState(
-                    initialHour = reminderHour,
-                    initialMinute = reminderMinute,
-                    is24Hour = true
-                )
-                AlertDialog(
-                    onDismissRequest = { showReminderTimeDialog = false },
-                    title = {
-                        Text(text = stringResource(R.string.settings_bill_reminder_time))
-                    },
-                    text = { TimePicker(state = timeState) },
-                    confirmButton = {
-                        AppTextButton(onClick = {
-                            reminderHour = timeState.hour
-                            reminderMinute = timeState.minute
-                            viewModel.setReminderTime(timeState.hour, timeState.minute)
-                            showReminderTimeDialog = false
-                        }) {
-                            Text(stringResource(R.string.common_save))
-                        }
-                    },
-                    dismissButton = {
-                        AppTextButton(onClick = { showReminderTimeDialog = false }) {
-                            Text(stringResource(R.string.common_close))
-                        }
+            AppearanceSettingsGroup(darkMode, settingsViewModel::setDarkMode)
+            SettingsWidgetSection(widgetHideBalance, settingsViewModel::setHideBalance)
+            SettingsReminderSection(reminderHour, reminderMinute) { showReminderTimeDialog = true }
+            SettingsLanguageSection(languageCode) { showLanguageDialog = true }
+            SettingsCurrencySection(currency) { showCurrencyDialog = true }
+            SettingsSupportSection(
+                onReplayTour = {
+                    settingsViewModel.resetTour()
+                    onReplayTour()
+                },
+                onOpenPrivacy = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, "https://bareuang.app/privacy".toUri()))
+                },
+                onDonate = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, "https://trakteer.id/ssajudn".toUri()))
+                },
+                onRate = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, "https://github.com/Udean777/Bareuang".toUri()))
+                },
+                onShare = {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.settings_share_message))
                     }
-                )
-            }
-
-            // 4. LANGUAGE SETTINGS
-            var currentLanguage by remember { mutableStateOf(com.ssajudn.bareuang.utils.LanguageManager.getCurrentLanguageCode(context)) }
-            var showLanguageDialog by remember { mutableStateOf(false) }
-
-            com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
-                title = stringResource(R.string.language_settings),
-                items = listOf(
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.language_settings),
-                        description = if (currentLanguage == "id") {
-                            stringResource(R.string.language_indonesian)
-                        } else {
-                            stringResource(R.string.language_english)
-                        },
-                        icon = Icons.Default.Language,
-                        onClick = { showLanguageDialog = true }
-                    )
-                )
+                    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.settings_share_chooser)))
+                },
             )
-
-            if (showLanguageDialog) {
-                AlertDialog(
-                    onDismissRequest = { showLanguageDialog = false },
-                    title = {
-                        Text(text = stringResource(R.string.language_settings))
-                    },
-                    text = {
-                        Column {
-                            com.ssajudn.bareuang.utils.LanguageManager.SUPPORTED_LANGUAGES.forEach { (code, label) ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = (currentLanguage == code),
-                                        onClick = {
-                                            currentLanguage = code
-                                            com.ssajudn.bareuang.utils.LanguageManager.setLanguage(context, code)
-                                            showLanguageDialog = false
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {
-                        AppTextButton(onClick = { showLanguageDialog = false }) {
-                            Text(stringResource(R.string.common_close))
-                        }
-                    }
-                )
-            }
-
-            // 4b. CURRENCY SETTINGS
-            val activeCurrency by viewModel.currency.collectAsStateWithLifecycle()
-            var showCurrencyDialog by remember { mutableStateOf(false) }
-
-            com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
-                title = stringResource(R.string.currency_settings),
-                items = listOf(
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.currency_settings),
-                        description = if (activeCurrency == com.ssajudn.bareuang.domain.model.AppCurrency.IDR) {
-                            stringResource(R.string.currency_idr)
-                        } else {
-                            stringResource(R.string.currency_usd)
-                        },
-                        icon = Icons.Default.Paid,
-                        onClick = { showCurrencyDialog = true }
-                    )
-                )
-            )
-
-            if (showCurrencyDialog) {
-                AlertDialog(
-                    onDismissRequest = { showCurrencyDialog = false },
-                    title = {
-                        Text(text = stringResource(R.string.currency_settings))
-                    },
-                    text = {
-                        Column {
-                            com.ssajudn.bareuang.domain.model.AppCurrency.entries.forEach { curr ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = (activeCurrency == curr),
-                                        onClick = {
-                                            viewModel.setCurrency(curr)
-                                            showCurrencyDialog = false
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (curr == com.ssajudn.bareuang.domain.model.AppCurrency.IDR) {
-                                            stringResource(R.string.currency_idr)
-                                        } else {
-                                            stringResource(R.string.currency_usd)
-                                        },
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {
-                        AppTextButton(onClick = { showCurrencyDialog = false }) {
-                            Text(stringResource(R.string.common_close))
-                        }
-                    }
-                )
-            }
-
-            // 4. SUPPORT & APPRECIATION GROUP
-            val shareMessage = stringResource(R.string.settings_share_message)
-            val shareChooser = stringResource(R.string.settings_share_chooser)
-            com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
-                title = stringResource(R.string.settings_support_title),
-                items = listOf(
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_replay_tour_title),
-                        description = stringResource(R.string.settings_replay_tour_desc),
-                        icon = Icons.Default.Tour,
-                        onClick = {
-                            viewModel.resetTour()
-                            onReplayTour()
-                        }
-                    ),
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_privacy_title),
-                        description = stringResource(R.string.settings_privacy_desc),
-                        icon = Icons.Default.Policy,
-                        onClick = {
-                            context.startActivity(
-                                android.content.Intent(
-                                    android.content.Intent.ACTION_VIEW,
-                                    "https://bareuang.app/privacy".toUri()
-                                )
-                            )
-                        }
-                    ),
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_donate_title),
-                        description = stringResource(R.string.settings_donate_desc),
-                        icon = Icons.Default.VolunteerActivism,
-                        onClick = {
-                            val intent = android.content.Intent(
-                                android.content.Intent.ACTION_VIEW,
-                                    "https://trakteer.id/ssajudn".toUri()
-                            )
-                            context.startActivity(intent)
-                        }
-                    ),
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_star_title),
-                        description = stringResource(R.string.settings_star_desc),
-                        icon = Icons.Default.Star,
-                        onClick = {
-                            val intent = android.content.Intent(
-                                android.content.Intent.ACTION_VIEW,
-                                    "https://github.com/Udean777/Bareuang".toUri()
-                            )
-                            context.startActivity(intent)
-                        }
-                    ),
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_share_title),
-                        description = stringResource(R.string.settings_share_desc),
-                        icon = Icons.Default.Share,
-                        onClick = {
-                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(android.content.Intent.EXTRA_TEXT, shareMessage)
-                            }
-                            context.startActivity(android.content.Intent.createChooser(shareIntent, shareChooser))
-                        }
-                    )
-                )
-            )
-
-            // 5. DANGER ZONE GROUP
-            com.ssajudn.bareuang.ui.components.Material3SettingsGroup(
-                title = stringResource(R.string.settings_danger_title),
-                items = listOf(
-                    com.ssajudn.bareuang.ui.components.Material3SettingsItem(
-                        title = stringResource(R.string.settings_reset_local),
-                        description = stringResource(R.string.settings_danger_desc),
-                        icon = Icons.AutoMirrored.Filled.Logout,
-                        isDestructive = true,
-                        onClick = { showResetConfirmDialog = true }
-                    )
-                )
-            )
-
-            // Minimalist Footer Versioning
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Bareuang v${BuildConfig.VERSION_NAME}",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = stringResource(R.string.settings_footer_tagline),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            SettingsDangerSection { showResetConfirmDialog = true }
+            SettingsFooter()
+            Spacer(Modifier.height(16.dp))
         }
     }
 
+    if (showReminderTimeDialog) {
+        ReminderTimeDialog(
+            initialHour = reminderHour,
+            initialMinute = reminderMinute,
+            onDismiss = { showReminderTimeDialog = false },
+            onConfirm = { hour, minute ->
+                reminderHour = hour
+                reminderMinute = minute
+                settingsViewModel.setReminderTime(hour, minute)
+                showReminderTimeDialog = false
+            },
+        )
+    }
+    if (showLanguageDialog) {
+        LanguagePickerDialog(
+            currentLanguage = languageCode,
+            onSelect = { selected ->
+                languageCode = selected
+                LanguageManager.setLanguage(context, selected)
+                showLanguageDialog = false
+            },
+            onDismiss = { showLanguageDialog = false },
+        )
+    }
+    if (showCurrencyDialog) {
+        CurrencyPickerDialog(
+            current = currency,
+            onSelect = { selected ->
+                settingsViewModel.setCurrency(selected)
+                showCurrencyDialog = false
+            },
+            onDismiss = { showCurrencyDialog = false },
+        )
+    }
     if (showResetConfirmDialog) {
         AppConfirmDialog(
             title = stringResource(R.string.settings_dialog_reset_title),
@@ -522,8 +230,46 @@ fun SettingsScreen(
             onDismissRequest = { showResetConfirmDialog = false },
             onConfirm = {
                 showResetConfirmDialog = false
-                viewModel.resetLocalData()
-            }
+                backupViewModel.resetLocalData()
+            },
         )
+    }
+    if (showExportPasswordDialog) {
+        ExportPasswordDialog(
+            isLoading = isLoading,
+            onDismiss = { showExportPasswordDialog = false },
+            onContinue = { password ->
+                pendingExportPassword = password
+                showExportPasswordDialog = false
+                exportBackupLauncher.launch(
+                    "Bareuang_Backup_${java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())}.bareuang",
+                )
+            },
+        )
+    }
+    val importUri = pendingImportUri
+    if (showImportPasswordDialog && importUri != null) {
+        ImportPasswordDialog(
+            isLoading = isLoading,
+            error = backupState.restoreError,
+            onDismiss = {
+                showImportPasswordDialog = false
+                pendingImportUri = null
+                backupViewModel.clearRestoreError()
+            },
+            onPreview = { password -> backupViewModel.previewBackup(importUri, password) },
+        )
+    }
+    backupState.restorePreview?.let { preview ->
+        RestorePreviewDialog(
+            preview = preview,
+            error = backupState.restoreError,
+            isLoading = isLoading,
+            onConfirm = { backupViewModel.confirmRestore(preview.id) },
+            onDismiss = { backupViewModel.discardRestore(preview.id) },
+        )
+    }
+    backupState.restoreSummary?.let { summary ->
+        RestoreSummaryDialog(summary, backupViewModel::dismissRestoreSummary)
     }
 }

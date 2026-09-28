@@ -6,7 +6,7 @@ import com.ssajudn.bareuang.domain.model.Transaction
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.Wallet
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
+import com.ssajudn.bareuang.domain.repository.TransactionQueryRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +37,7 @@ sealed interface AllTransactionsUiState {
 
 @HiltViewModel
 class AllTransactionsViewModel @Inject constructor(
-    private val repository: TransactionRepository,
+    private val repository: TransactionQueryRepository,
     private val walletRepository: WalletRepository
 ) : ViewModel() {
 

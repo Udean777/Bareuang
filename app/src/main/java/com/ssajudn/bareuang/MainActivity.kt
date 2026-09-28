@@ -10,8 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ssajudn.bareuang.data.local.CurrencyPreferences
-import com.ssajudn.bareuang.data.local.ThemePreferences
+import com.ssajudn.bareuang.domain.port.CurrencyPreferencesPort
+import com.ssajudn.bareuang.domain.port.ThemePreferencesPort
 import com.ssajudn.bareuang.ui.navigation.AppNavigation
 import com.ssajudn.bareuang.domain.model.AppThemeDarkMode
 import com.ssajudn.bareuang.ui.theme.BareuangTheme
@@ -25,10 +25,10 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var themePrefs: ThemePreferences
+    lateinit var themePrefs: ThemePreferencesPort
 
     @Inject
-    lateinit var currencyPrefs: CurrencyPreferences
+    lateinit var currencyPrefs: CurrencyPreferencesPort
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

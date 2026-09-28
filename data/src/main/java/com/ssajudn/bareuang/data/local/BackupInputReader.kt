@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 
-internal class BackupTooLargeException : IOException("Backup exceeds the supported size limit")
+internal class BackupTooLargeException : IOException()
 
 /** Reads no more than [maxBytes] plus one byte from an untrusted document stream. */
 internal fun readBackupBytes(input: InputStream, maxBytes: Int): ByteArray {

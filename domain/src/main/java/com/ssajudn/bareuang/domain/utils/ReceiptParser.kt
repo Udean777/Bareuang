@@ -92,23 +92,47 @@ object ReceiptParser {
     }
 
     private fun extractDate(rawText: String): String? {
-        val numeric = Regex("\\b(\\d{1,2})[/-](\\d{1,2})[/-](\\d{2,4})\\b")
-            .find(rawText)
-            ?.let { match ->
-                val day = match.groupValues[1].toIntOrNull() ?: return@let null
-                val month = match.groupValues[2].toIntOrNull() ?: return@let null
-                val year = match.groupValues[3].toIntOrNull() ?: return@let null
-                val normalizedYear = if (year < 100) 2000 + year else year
-                runCatching { java.time.LocalDate.of(normalizedYear, month, day).toString() }.getOrNull()
-            }
-        if (numeric != null) return numeric
+        val lines = rawText.lines()
+        val excludedContext = Regex(
+            "(?i)\\b(jatuh\\s+tempo|due|expired|kadaluarsa|kedaluwarsa|berlaku|valid\\s+(?:until|through|thru)|promo|periode|period)\\b",
+        )
+        val transactionDateLabel = Regex("(?i)\\b(tanggal|tgl|date|transaksi|transaction)\\b")
 
-        val iso = Regex("\\b(\\d{4})[/-](\\d{1,2})[/-](\\d{1,2})\\b").find(rawText)
-            ?: return null
-        val year = iso.groupValues[1].toIntOrNull() ?: return null
-        val month = iso.groupValues[2].toIntOrNull() ?: return null
-        val day = iso.groupValues[3].toIntOrNull() ?: return null
-        return runCatching { java.time.LocalDate.of(year, month, day).toString() }.getOrNull()
+        lines.firstOrNull { line ->
+            transactionDateLabel.containsMatchIn(line) && !excludedContext.containsMatchIn(line)
+        }?.let(::parseDateFromText)?.let { return it }
+
+        // Unlabelled dates are safe to use only when there is a single unambiguous candidate.
+        val candidates = lines
+            .filterNot(excludedContext::containsMatchIn)
+            .flatMap(::findDatesInText)
+            .distinct()
+        return candidates.singleOrNull()
+    }
+
+    private fun parseDateFromText(text: String): String? = findDatesInText(text).firstOrNull()
+
+    private fun findDatesInText(text: String): List<String> {
+        val dates = mutableListOf<String>()
+        val numericPattern = Regex("\\b(\\d{1,2})[/-](\\d{1,2})[/-](\\d{2,4})\\b")
+        numericPattern.findAll(text).forEach { match ->
+            val day = match.groupValues[1].toIntOrNull() ?: return@forEach
+            val month = match.groupValues[2].toIntOrNull() ?: return@forEach
+            val year = match.groupValues[3].toIntOrNull() ?: return@forEach
+            val normalizedYear = if (year < 100) 2000 + year else year
+            runCatching { java.time.LocalDate.of(normalizedYear, month, day).toString() }
+                .getOrNull()?.let(dates::add)
+        }
+
+        val isoPattern = Regex("\\b(\\d{4})[/-](\\d{1,2})[/-](\\d{1,2})\\b")
+        isoPattern.findAll(text).forEach { match ->
+            val year = match.groupValues[1].toIntOrNull() ?: return@forEach
+            val month = match.groupValues[2].toIntOrNull() ?: return@forEach
+            val day = match.groupValues[3].toIntOrNull() ?: return@forEach
+            runCatching { java.time.LocalDate.of(year, month, day).toString() }
+                .getOrNull()?.let(dates::add)
+        }
+        return dates
     }
 
     private fun guessCategory(rawText: String, merchant: String): TransactionCategory {

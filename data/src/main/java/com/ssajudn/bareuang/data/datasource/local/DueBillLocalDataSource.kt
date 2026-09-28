@@ -11,9 +11,11 @@ import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.UpdateDueBillRequest
 import com.ssajudn.bareuang.data.service.WalletBalanceService
-import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import com.ssajudn.bareuang.domain.utils.DateUtils
 import com.ssajudn.bareuang.data.error.ApiErrorParser
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.error.DueBillOperationReason
+import com.ssajudn.bareuang.domain.error.WalletOperationReason
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
@@ -28,7 +30,6 @@ import javax.inject.Singleton
 class DueBillLocalDataSource @Inject constructor(
     private val db: AppDatabase,
     private val balanceService: WalletBalanceService,
-    private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
 ) {
 
     suspend fun getDueBills(status: String?): Result<List<DueBill>> = withContext(Dispatchers.IO) {
@@ -48,8 +49,8 @@ class DueBillLocalDataSource @Inject constructor(
 
     suspend fun createDueBill(request: CreateDueBillRequest): Result<DueBill> = withContext(Dispatchers.IO) {
         try {
-            if (request.providerName.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama provider tidak boleh kosong"))
-            if (request.totalAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Jumlah tagihan harus lebih dari 0"))
+            if (request.providerName.isBlank()) return@withContext Result.failure(AppException.DueBillOperationException(DueBillOperationReason.INVALID_PROVIDER))
+            if (request.totalAmount <= 0) return@withContext Result.failure(AppException.DueBillOperationException(DueBillOperationReason.INVALID_AMOUNT))
             val newBill = DueBill(
                 id = UUID.randomUUID().toString(),
                 providerName = request.providerName.trim(),
@@ -73,8 +74,8 @@ class DueBillLocalDataSource @Inject constructor(
     suspend fun updateDueBill(id: String, request: UpdateDueBillRequest): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                if (request.providerName.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama provider tidak boleh kosong"))
-                if (request.totalAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Jumlah tagihan harus lebih dari 0"))
+                if (request.providerName.isBlank()) return@withContext Result.failure(AppException.DueBillOperationException(DueBillOperationReason.INVALID_PROVIDER))
+                if (request.totalAmount <= 0) return@withContext Result.failure(AppException.DueBillOperationException(DueBillOperationReason.INVALID_AMOUNT))
                 db.dueBillDao().updateDueBill(
                     id = id,
                     providerName = request.providerName.trim(),
@@ -99,25 +100,21 @@ class DueBillLocalDataSource @Inject constructor(
             try {
                 val block: () -> Unit = {
                     val bill = db.dueBillDao().getDueBillById(id)
+                        ?: throw AppException.DueBillOperationException(DueBillOperationReason.BILL_NOT_FOUND)
                     var newPaidWalletId: String? = bill?.paidWalletId
                     if (status == DueBillStatus.PAID && walletId != null) {
-                        if (bill != null) {
-                            val wallet = db.walletDao().getWalletById(walletId)
-                                ?: throw IllegalArgumentException("Dompet tidak ditemukan")
-                            if (wallet.balance < bill.totalAmount) {
-                                val cur = currencyPreferences.getCurrency()
-                                throw IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(wallet.balance, cur)}, tagihan: ${DomainCurrencyFormatter.format(bill.totalAmount, cur)}")
-                            }
+                        val wallet = db.walletDao().getWalletById(walletId)
+                            ?: throw AppException.WalletOperationException(WalletOperationReason.NOT_FOUND)
+                        if (wallet.balance < bill.totalAmount) {
+                            throw AppException.InsufficientBalanceException(wallet.balance, bill.totalAmount)
                         }
                         newPaidWalletId = walletId
-                        if (bill != null) {
-                            val newTx = Transaction(id = UUID.randomUUID().toString(), amount = bill.totalAmount, type = TransactionType.EXPENSE, category = TransactionCategory.BILLS, merchant = bill.providerName, date = DateUtils.getCurrentDateISO(), notes = "Pembayaran tagihan: ${bill.providerName}", walletId = walletId)
-                            balanceService.add(walletId, -bill.totalAmount)
-                            db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(newTx, isSynced = false))
-                        }
+                        val newTx = Transaction(id = UUID.randomUUID().toString(), amount = bill.totalAmount, type = TransactionType.EXPENSE, category = TransactionCategory.BILLS, merchant = bill.providerName, date = DateUtils.getCurrentDateISO(), notes = "Pembayaran tagihan: ${bill.providerName}", walletId = walletId)
+                        balanceService.add(walletId, -bill.totalAmount)
+                        db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(newTx, isSynced = false))
                     } else if (status == DueBillStatus.UNPAID) {
-                        val previousPaidWalletId = bill?.paidWalletId
-                        if (bill != null && bill.status == DueBillStatus.PAID.name && !previousPaidWalletId.isNullOrBlank()) {
+                        val previousPaidWalletId = bill.paidWalletId
+                        if (bill.status == DueBillStatus.PAID.name && !previousPaidWalletId.isNullOrBlank()) {
                             balanceService.add(previousPaidWalletId, bill.totalAmount)
                             val refundTx = Transaction(id = UUID.randomUUID().toString(), amount = bill.totalAmount, type = TransactionType.INCOME, category = TransactionCategory.BILLS, merchant = "Refund: ${bill.providerName}", date = DateUtils.getCurrentDateISO(), notes = "Pembatalan pembayaran tagihan ${bill.providerName}", walletId = previousPaidWalletId)
                             db.transactionDao().insertTransaction(LocalTransactionEntity.fromTransaction(refundTx, isSynced = false))

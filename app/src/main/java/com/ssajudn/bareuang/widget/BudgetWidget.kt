@@ -146,7 +146,11 @@ class BudgetWidget : GlanceAppWidget() {
                     // Price display — honey primary, bear brown context
                     Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = mask(DomainCurrencyFormatter.format(summary.remainingBudget, currency), hideBalance, currency),
+                            text = if (summary.monthlyBudget > 0L) {
+                                mask(DomainCurrencyFormatter.format(summary.remainingBudget, currency), hideBalance, currency)
+                            } else {
+                                context.getString(com.ssajudn.bareuang.presentation.R.string.widget_budget_not_set_value)
+                            },
                             style = TextStyle(color = GlanceTheme.colors.primary, fontSize = if (isWide) 22.sp else 19.sp, fontWeight = FontWeight.Bold),
                             maxLines = 1,
                         )
@@ -157,18 +161,22 @@ class BudgetWidget : GlanceAppWidget() {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (summary.remainingBudget <= 0) "🐻‍❄️" else "🐻",
+                                text = if (summary.monthlyBudget > 0L && summary.remainingBudget <= 0) "🐻‍❄️" else "🐻",
                                 style = TextStyle(fontSize = 13.sp),
                             )
                         }
                     }
                     Text(
-                        text = if (summary.remainingBudget <= 0) context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bear_worried) else context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bear_happy),
+                        text = when {
+                            summary.monthlyBudget <= 0L -> context.getString(com.ssajudn.bareuang.presentation.R.string.widget_budget_not_set_mood)
+                            summary.remainingBudget <= 0 -> context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bear_worried)
+                            else -> context.getString(com.ssajudn.bareuang.presentation.R.string.widget_bear_happy)
+                        },
                         style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
                     )
 
                     Spacer(modifier = GlanceModifier.height(6.dp))
-                    RunwayBar(summary)
+                    if (summary.monthlyBudget > 0L) RunwayBar(summary)
                     Spacer(modifier = GlanceModifier.height(2.dp))
                     // Runway message preview (first line)
                     Text(

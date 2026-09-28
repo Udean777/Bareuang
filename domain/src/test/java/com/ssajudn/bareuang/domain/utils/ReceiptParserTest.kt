@@ -39,10 +39,34 @@ class ReceiptParserTest {
     }
 
     @Test
+    fun `parses rupiah amount without a space after currency prefix`() {
+        assertEquals(12500L, ReceiptParser.parse("WARUNG\nTOTAL Rp12.500").totalAmount)
+    }
+
+    @Test
     fun `extracts Indonesian date`() {
         val parsed = ReceiptParser.parse("TOKO\nTanggal: 18/09/2026\nTOTAL 25000")
 
         assertEquals("2026-09-18", parsed.date)
+    }
+
+    @Test
+    fun `ignores impossible receipt dates`() {
+        assertEquals(null, ReceiptParser.parse("TOKO\nTanggal: 31/02/2026\nTOTAL 25000").date)
+    }
+
+    @Test
+    fun `prefers transaction date label over due date`() {
+        val parsed = ReceiptParser.parse(
+            "TOKO\nTanggal transaksi: 28/09/2026\nJatuh tempo: 10/10/2026\nTOTAL 25000",
+        )
+
+        assertEquals("2026-09-28", parsed.date)
+    }
+
+    @Test
+    fun `ignores ambiguous unlabelled dates`() {
+        assertEquals(null, ReceiptParser.parse("TOKO\n18/09/2026\n19/09/2026\nBerlaku sampai 20/10/2026\nTOTAL 25000").date)
     }
 
     @Test
