@@ -85,13 +85,33 @@ jobs:
           java-version: '21'
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Build instrumentation test APKs
+        run: ./gradlew :data:assembleDebugAndroidTest :app:assembleDebugAndroidTest --no-daemon --max-workers=2
       - name: Run Android instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
+          cores: 2
           disable-animations: true
-          script: ./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon
+          script: |
+            adb wait-for-device
+            for attempt in $(seq 1 30); do
+              api_level="$(adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
+              if [ "$api_level" = "$EXPECTED_API_LEVEL" ]; then break; fi
+              sleep 2
+            done
+            if [ "$api_level" != "$EXPECTED_API_LEVEL" ]; then
+              echo "Expected emulator API $EXPECTED_API_LEVEL, got '${api_level:-unavailable}'"
+              adb devices -l
+              exit 1
+            fi
+            adb shell svc power stayon true
+            adb shell settings put system screen_off_timeout 2147483647
+            adb shell input keyevent 82
+            ./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon --max-workers=2
+        env:
+          EXPECTED_API_LEVEL: ${{ matrix.api-level }}
       - name: Upload Android instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4
