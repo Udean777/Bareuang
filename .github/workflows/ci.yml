@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: [26, 37]
+        api-level: [26, 36]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -92,6 +92,15 @@ jobs:
           arch: x86_64
           disable-animations: true
           script: ./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon
+      - name: Upload Android instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumentation-reports-api-${{ matrix.api-level }}
+          path: |
+            **/build/reports/androidTests/**
+            **/build/outputs/androidTest-results/**
+          if-no-files-found: ignore
 
   assemble-debug:
     needs: [unit-test, lint, web-check, android-instrumentation]

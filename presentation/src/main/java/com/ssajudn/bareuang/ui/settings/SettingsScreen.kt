@@ -56,6 +56,8 @@ fun SettingsScreen(
     val darkMode by settingsViewModel.darkMode.collectAsStateWithLifecycle()
     val widgetHideBalance by settingsViewModel.widgetHideBalance.collectAsStateWithLifecycle()
     val currency by settingsViewModel.currency.collectAsStateWithLifecycle()
+    val shareMessage = stringResource(R.string.settings_share_message)
+    val shareChooserTitle = stringResource(R.string.settings_share_chooser)
 
     var languageCode by remember(context) {
         mutableStateOf(LanguageManager.getCurrentLanguageCode(context))
@@ -177,9 +179,9 @@ fun SettingsScreen(
                 onShare = {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.settings_share_message))
+                        putExtra(Intent.EXTRA_TEXT, shareMessage)
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.settings_share_chooser)))
+                    context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
                 },
             )
             SettingsDangerSection { showResetConfirmDialog = true }
