@@ -44,9 +44,9 @@
     <string name="settings_title">Settings</string>
     <string name="settings_backup_title">Offline Backup</string>
     <string name="settings_export_title">Export Backup File (Download)</string>
-    <string name="settings_export_desc">Save all transactions, bills, wallets, and savings goals to a JSON file</string>
+    <string name="settings_export_desc">Save all financial data to an unencrypted JSON file. Store it somewhere safe.</string>
     <string name="settings_import_title">Import Backup File (Restore)</string>
-    <string name="settings_import_desc">Restore all data from a previous JSON backup file</string>
+    <string name="settings_import_desc">Merge data from a JSON backup. Matching IDs are replaced; other existing data stays.</string>
     <string name="settings_support_title">Support &amp; Appreciation</string>
     <string name="settings_donate_title">Donate to Developer</string>
     <string name="settings_donate_desc">Buy a coffee or support Bareuang development</string>
@@ -54,7 +54,7 @@
     <string name="settings_star_desc">Star the Bareuang repository on GitHub</string>
     <string name="settings_share_title">Share App</string>
     <string name="settings_share_desc">Invite friends to manage finances &amp; financial runway</string>
-    <string name="settings_share_message">Manage your finances and calculate your financial runway with Bareuang! Check the repo at: https://github.com/Udean777/Bare-Budget</string>
+    <string name="settings_share_message">Manage your finances and calculate your financial runway with Bareuang! Check the repo at: https://github.com/Udean777/Bareuang</string>
     <string name="settings_share_chooser">Share Bareuang</string>
     <string name="settings_danger_title">Local Data</string>
     <string name="settings_danger_desc">Erase data stored on this device and return to onboarding</string>

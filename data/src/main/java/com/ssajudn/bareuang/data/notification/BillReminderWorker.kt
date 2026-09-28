@@ -45,13 +45,13 @@ class BillReminderWorker @AssistedInject constructor(
 
         val bills = dueBillRepository.getDueBills(DueBillStatus.UNPAID.name)
             .getOrDefault(emptyList())
-        Log.d(TAG, "Unpaid bills: ${bills.size} -> ${bills.map { "${it.providerName} due=${it.dueDate}" }}")
+        Log.d(TAG, "Unpaid bills found: ${bills.size}")
 
         val reminders = buildReminders(bills) { bill ->
             runCatching { com.ssajudn.bareuang.domain.utils.DateUtils.getDaysUntilDue(bill.dueDate) }
                 .getOrDefault(Long.MAX_VALUE)
         }
-        Log.d(TAG, "Reminders in window: ${reminders.map { "${it.providerName} daysLeft=${it.daysLeft} urgency=${it.urgency}" }}")
+        Log.d(TAG, "Reminders in window: ${reminders.size}")
 
         val fresh = reminders.filter { !prefs.alreadyShown(dedupeKey(it.billId, it.dueDateIso, it.urgency.name)) }
 

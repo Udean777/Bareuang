@@ -2,12 +2,50 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: Semantic version to publish, for example 1.0.0
+        required: true
+        type: string
+      version_code:
+        description: Positive integer greater than the latest version uploaded to Play
+        required: true
+        type: number
 
 permissions:
   contents: write
 
 jobs:
+  android-instrumentation:
+    name: Instrumentation tests (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [26, 37]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Android instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          disable-animations: true
+          script: ./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon
+
   release:
+    needs: android-instrumentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,49 +60,102 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Decode signing keystore
+      - name: Validate and decode signing keystore
         env:
           SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          test -n "$SIGNING_KEYSTORE_BASE64" || { echo "Missing SIGNING_KEYSTORE_BASE64 secret"; exit 1; }
+          test -n "$KEYSTORE_PASSWORD" || { echo "Missing KEYSTORE_PASSWORD secret"; exit 1; }
+          test -n "$KEY_ALIAS" || { echo "Missing KEY_ALIAS secret"; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "Missing KEY_PASSWORD secret"; exit 1; }
           mkdir -p keystores
-          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > keystores/bareuang-release.keystore
+          printf '%s' "$SIGNING_KEYSTORE_BASE64" | base64 --decode > keystores/bareuang-release.keystore
+          test -s keystores/bareuang-release.keystore
+          keytool -list -keystore keystores/bareuang-release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
 
-      - name: Run unit tests
-        run: ./gradlew test --no-daemon
+      - name: Run unit tests and lint
+        run: ./gradlew test lint --no-daemon
 
-      - name: Run lint quality gate
-        run: ./gradlew lint --no-daemon
+      - name: Validate web JavaScript and SEO
+        run: |
+          node --check web/js/main.js
+          node --check web/js/i18n.js
+          node --check web/api/download.js
+          node web/test/seo-check.mjs
 
-      - name: Build signed APK
+      - name: Build signed AAB and sideload APK
         env:
-          VERSION_CODE: ${{ github.run_number }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
           KEYSTORE_FILE: ${{ github.workspace }}/keystores/bareuang-release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease --no-daemon
+        run: ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon
 
-      - name: Collect artifacts
+      - name: Smoke-test minified release APK on Android 17
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 37
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install -r app/build/outputs/apk/release/app-release.apk
+            adb logcat -c
+            START_RESULT=$(adb shell am start -W -n com.ssajudn.bareuang/.MainActivity)
+            printf '%s\n' "$START_RESULT"
+            printf '%s\n' "$START_RESULT" | grep -q 'Status: ok'
+            sleep 8
+            if adb logcat -d -s AndroidRuntime:E | grep -q 'FATAL EXCEPTION'; then
+              echo "Release APK crashed during launch"
+              exit 1
+            fi
+
+      - name: Verify release signatures and collect artifacts
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/keystores/bareuang-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
         run: |
-          CODE="${{ github.run_number }}"
+          AAB=app/build/outputs/bundle/release/app-release.aab
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$AAB"
+          test -s "$APK"
+          jarsigner -verify -certs "$AAB"
+          apksigner verify --verbose "$APK"
+
+          EXPECTED_CERT=$(keytool -list -v -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>/dev/null | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
+          AAB_CERT=$(keytool -printcert -jarfile "$AAB" 2>/dev/null | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
+          APK_CERT=$(apksigner verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/{print toupper($2); exit}')
+          test -n "$EXPECTED_CERT" && test "$EXPECTED_CERT" = "$AAB_CERT"
+          test -n "$EXPECTED_CERT" && test "$EXPECTED_CERT" = "$APK_CERT"
+
           ZIPALIGN=$(find "$ANDROID_HOME/build-tools" -name zipalign | sort -V | tail -1)
-          "$ZIPALIGN" -c -P 16 -v 4 app/build/outputs/apk/release/app-release.apk
-          APK_SIZE=$(stat -c%s app/build/outputs/apk/release/app-release.apk)
+          test -n "$ZIPALIGN"
+          "$ZIPALIGN" -c -P 16 -v 4 "$APK"
+          APK_SIZE=$(stat -c%s "$APK")
           echo "Release APK size: ${APK_SIZE} bytes"
           test "$APK_SIZE" -le 25000000
+
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-v1.0-${CODE}.apk"
-          cp app/build/outputs/apk/release/app-release.apk "dist/Bareuang-latest.apk"
-          sha256sum dist/*.apk > dist/SHA256SUMS.txt
+          cp "$AAB" "dist/Bareuang-v${VERSION_NAME}-${VERSION_CODE}.aab"
+          cp "$APK" "dist/Bareuang-v${VERSION_NAME}-${VERSION_CODE}.apk"
+          cp "$APK" dist/Bareuang-latest.apk
+          sha256sum dist/*.aab dist/*.apk > dist/SHA256SUMS.txt
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0-${{ github.run_number }}
-          name: Bareuang v1.0 (build ${{ github.run_number }})
+          tag_name: v${{ inputs.version_name }}
+          name: Bareuang v${{ inputs.version_name }}
           body: |
-            Build manual via GitHub Actions.
-            - Commit: ${{ github.sha }}
-            - versionCode: ${{ github.run_number }}
-            - SHA-256: lihat `SHA256SUMS.txt` pada release artifact.
+            Signed release artifacts built from commit ${{ github.sha }}.
+            - versionCode: ${{ inputs.version_code }}
+            - Upload the AAB to Google Play Console.
+            - SHA-256 checksums are included in `SHA256SUMS.txt`.
           files: dist/*

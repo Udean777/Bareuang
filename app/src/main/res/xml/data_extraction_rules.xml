@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--
    Backup / transfer rules for devices on API 31+.
-   Financial data (Room DB) and session identity (uid/email) are excluded from
-   both cloud backup and device-to-device migration; harmless preferences
-   (theme, tour, onboarding) remain included.
+   The Room database is excluded from cloud backup and device-to-device
+   migration. The legacy session preference exclusion is retained for upgrades.
 -->
 <data-extraction-rules>
     <cloud-backup>

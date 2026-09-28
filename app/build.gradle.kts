@@ -8,13 +8,20 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-// Release signing: credentials live in gitignored keystore.properties (local)
-// with KEYSTORE_PASSWORD / KEY_PASSWORD env fallbacks (CI). Missing config
-// degrades gracefully to an unsigned APK instead of failing the build.
+// Release credentials come from the ignored local properties file or CI secrets.
 val keystoreProps = Properties()
 rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use {
     keystoreProps.load(it)
 }
+val releaseStorePath = keystoreProps["storeFile"]?.toString() ?: System.getenv("KEYSTORE_FILE")
+val releaseStoreFile = releaseStorePath?.let { path ->
+    file(path).takeIf { it.exists() } ?: rootProject.file(path.removePrefix("/"))
+}
+val releaseStorePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps["storePassword"] as String?
+val releaseKeyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps["keyAlias"] as String?
+val releaseKeyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps["keyPassword"] as String?
+val releaseVersionCodeInput = System.getenv("VERSION_CODE")
+val releaseVersionNameInput = System.getenv("VERSION_NAME")
 
 android {
     namespace = "com.ssajudn.bareuang"
@@ -24,13 +31,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = keystoreProps["storeFile"]?.toString()?.let { path ->
-                // Tolerate a leading '/' meant as "relative to project root".
-                file(path).takeIf { it.exists() } ?: rootProject.file(path.removePrefix("/"))
-            } ?: System.getenv("KEYSTORE_FILE")?.let { file(it) }
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps["storePassword"] as String?
-            keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps["keyAlias"] as String?
-            keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps["keyPassword"] as String?
+            storeFile = releaseStoreFile
+            storePassword = releaseStorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
             enableV1Signing = true
             enableV2Signing = true
             enableV3Signing = true
@@ -42,8 +46,8 @@ android {
         applicationId = "com.ssajudn.bareuang"
         minSdk = 26
         targetSdk = 37
-        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
-        versionName = "1.0"
+        versionCode = releaseVersionCodeInput?.toIntOrNull() ?: 1
+        versionName = releaseVersionNameInput ?: "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -74,6 +78,33 @@ android {
         unitTests.all { it.jvmArgs("-Dnet.bytebuddy.experimental=true") }
         // android.util.Log (used by data-layer mappers) returns defaults in JVM tests.
         unitTests.isReturnDefaultValues = true
+    }
+}
+
+val validateReleaseInputs = tasks.register("validateReleaseInputs") {
+    group = "verification"
+    description = "Checks required signing and version inputs before creating a release artifact."
+    doLast {
+        val missing = buildList {
+            if (releaseStoreFile == null || !releaseStoreFile.isFile) add("KEYSTORE_FILE / storeFile")
+            if (releaseStorePassword.isNullOrBlank()) add("KEYSTORE_PASSWORD / storePassword")
+            if (releaseKeyAlias.isNullOrBlank()) add("KEY_ALIAS / keyAlias")
+            if (releaseKeyPassword.isNullOrBlank()) add("KEY_PASSWORD / keyPassword")
+            if (releaseVersionCodeInput?.toIntOrNull()?.let { it > 0 } != true) add("VERSION_CODE (positive integer)")
+            if (releaseVersionNameInput.isNullOrBlank()) add("VERSION_NAME")
+        }
+        check(missing.isEmpty()) {
+            "Release build refused. Set valid values for: ${missing.joinToString()}."
+        }
+        check(releaseVersionNameInput!!.matches(Regex("\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?"))) {
+            "VERSION_NAME must use semantic version format, for example 1.2.3 or 1.2.3-beta.1."
+        }
+    }
+}
+
+tasks.configureEach {
+    if (name == "bundleRelease" || name == "assembleRelease") {
+        dependsOn(validateReleaseInputs)
     }
 }
 

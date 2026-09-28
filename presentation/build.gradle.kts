@@ -1,5 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+val displayVersionName = System.getenv("VERSION_NAME")
+    ?.takeIf { it.matches(Regex("\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?")) }
+    ?: "1.0.0"
+
 plugins {
     id("com.android.library")
     alias(libs.plugins.kotlin.compose)
@@ -13,7 +17,11 @@ android {
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "VERSION_NAME", "\"1.0\"")
+        buildConfigField(
+            "String",
+            "VERSION_NAME",
+            "\"$displayVersionName\""
+        )
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21

@@ -126,11 +126,8 @@ Fitur inti tidak memerlukan akun. Build debug dapat menjalankan OCR lokal tanpa 
 # Debug
 ./gradlew installDebug
 
-# Release APK (butuh keystore.properties)
-./gradlew :app:assembleRelease
-
-# AAB untuk Play Store
-./gradlew :app:bundleRelease
+# Release APK dan AAB (butuh signing + version input)
+VERSION_CODE=2 VERSION_NAME=1.0.1 ./gradlew :app:assembleRelease :app:bundleRelease
 
 # Validasi lokal
 ./gradlew test
@@ -138,8 +135,8 @@ Fitur inti tidak memerlukan akun. Build debug dapat menjalankan OCR lokal tanpa 
 ./gradlew :data:compileDebugAndroidTestKotlin
 ```
 
-`connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. Migration
-Room dan perilaku widget/notification harus diuji pada perangkat sebelum release.
+`connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. CI
+menjalankan tes instrumentasi pada API minimum (26) dan target (37).
 
 ### 🌐 Web - Landing Page
 
@@ -157,7 +154,7 @@ python3 -m http.server --directory web 8000
 
 Deploy: push `web/` ke GitHub Pages (Settings → Pages → Deploy from `/web`) atau connect repo ke Cloudflare Pages (root `web`). Ganti `https://bareuang.app` di `web/index.html`, `privacy.html`, `terms.html`, `sitemap.xml` jika pakai domain lain. URL Privacy/Terms dipakai di Play Console → Data safety & Store listing.
 
-Release APK dipublikasikan dari GitHub Releases resmi `Udean777/Bareuang`. Setiap release menyertakan `SHA256SUMS.txt`; verifikasi dengan `sha256sum -c SHA256SUMS.txt`. Fingerprint sertifikat signing diambil dari keystore produksi dengan `keytool -list -v -keystore <keystore>` dan dicatat di Play Console/secret manager, bukan di repository.
+Workflow Release meminta `version_name` dan `version_code`, membangun AAB untuk diunggah ke Play Console serta APK sideload, memeriksa tanda tangan, dan menyertakan `SHA256SUMS.txt`. `VERSION_CODE` harus lebih besar daripada versi terakhir yang pernah diunggah. Simpan fingerprint sertifikat upload di secret manager, bukan di repository.
 
 <details>
 <summary>Setup keystore untuk release build</summary>

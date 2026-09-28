@@ -129,8 +129,7 @@ class BackupRestoreManager @Inject constructor(
     suspend fun importBackupFromUri(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val raw = context.contentResolver.openInputStream(uri)?.use { input ->
-                val bytes = input.readBytes()
-                requireValid(bytes.size <= MAX_BACKUP_BYTES, "File backup terlalu besar (maks 5MB)")
+                val bytes = readBackupBytes(input, MAX_BACKUP_BYTES)
                 String(bytes, StandardCharsets.UTF_8)
             } ?: return@withContext Result.failure(AppException.DataException("Cannot open file for reading"))
 
@@ -171,6 +170,8 @@ class BackupRestoreManager @Inject constructor(
             Result.success(restored)
         } catch (e: CancellationException) {
             throw e
+        } catch (e: BackupTooLargeException) {
+            Result.failure(AppException.DataException("File backup terlalu besar (maks 5MB)", e))
         } catch (e: Exception) {
             android.util.Log.e("Backup", "import failed", e)
             Result.failure(if (e is AppException) e else AppException.DataException("Backup tidak valid", e))

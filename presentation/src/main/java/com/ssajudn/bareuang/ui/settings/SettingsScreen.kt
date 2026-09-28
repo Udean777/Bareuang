@@ -432,7 +432,7 @@ fun SettingsScreen(
                             context.startActivity(
                                 android.content.Intent(
                                     android.content.Intent.ACTION_VIEW,
-                                    "https://bareuang.vercel.app/privacy".toUri()
+                                    "https://bareuang.app/privacy".toUri()
                                 )
                             )
                         }
@@ -456,7 +456,7 @@ fun SettingsScreen(
                         onClick = {
                             val intent = android.content.Intent(
                                 android.content.Intent.ACTION_VIEW,
-                                    "https://github.com/Udean777/Bare-Budget".toUri()
+                                    "https://github.com/Udean777/Bareuang".toUri()
                             )
                             context.startActivity(intent)
                         }
