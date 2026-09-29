@@ -25,4 +25,4 @@ adb shell svc power stayon true
 adb shell settings put system screen_off_timeout 2147483647
 adb shell input keyevent 82
 
-./gradlew :data:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon --max-workers=2
+./gradlew :data:connectedDebugAndroidTest :presentation:connectedDebugAndroidTest :app:connectedDebugAndroidTest --no-daemon --max-workers=1

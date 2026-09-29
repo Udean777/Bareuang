@@ -72,5 +72,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.mockk.android)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
