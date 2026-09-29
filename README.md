@@ -30,9 +30,9 @@ sepenuhnya **guest-only**. Reset Data di Pengaturan menghapus data lokal aplikas
 
 ### Privasi OCR
 
-- Foto struk diproses lokal di perangkat menggunakan ML Kit pada build debug/local.
+- Foto struk diproses lokal di perangkat menggunakan ML Kit pada semua build aplikasi.
 - Tidak ada foto struk yang dikirim ke server atau provider AI.
-- Build release dan production menonaktifkan OCR.
+- Model OCR bundled tersedia tanpa unduhan pertama dan dapat digunakan offline.
 - Input manual selalu tersedia jika OCR tidak tersedia atau gagal.
 - Kebijakan lengkap: [Privacy Policy](https://bareuang.app/privacy.html).
 
@@ -58,7 +58,7 @@ sepenuhnya **guest-only**. Reset Data di Pengaturan menghapus data lokal aplikas
 | 📈 | **Financial Analytics** | Visualisasi tren *Cashflow*, riwayat *Net Worth*, dan distribusi pengeluaran per kategori |
 | 🏠 | **Home Widget** | Widget beruang interaktif di layar utama: pantau sisa runway, saldo, & tagihan harian |
 
-> **Budget Gate** - pencatatan transaksi baru aktif setelah budget bulan berjalan diatur. Hal ini memastikan Financial Runway dan estimasi hari bertahan selalu memiliki data acuan yang akurat. Import CSV & Scan Struk juga melewati gate + cek saldo (fail-fast) via `BulkCreateTransactionsUseCase` dan `OcrScanViewModel`.
+> **Budget & Runway** - transaksi tetap dapat dicatat tanpa budget. Estimasi runway baru tersedia setelah budget bulanan ditetapkan. Impor CSV dan Scan Struk tetap memvalidasi data sebelum transaksi disimpan.
 
 **Import offline, OCR offline opsional:** CSV `5MB` guard + `DocumentFile` name, `parseWithStats` + `getByDates` dedup, bulk insert 1 transaksi DB (`bulkCreate`), `ImportPreferences` counter. Scan struk memakai ML Kit di perangkat; hasilnya dapat diedit sebelum disimpan lokal.
 
@@ -105,14 +105,16 @@ Bareuang/
 ├── presentation/  # Jetpack Compose UI, ViewModels, Hilt Navigation
 └── web/           # Landing page + Privacy/Terms (static, no build)
     ├── index.html      # Landing 1 halaman (ID/EN, responsive, SEO)
-    ├── privacy.html    # Privacy Policy - local data + local OCR pada debug
+    ├── privacy.html    # Privacy Policy - local data + local OCR
     ├── terms.html      # Terms of Service + Disclaimer
     ├── css/style.css   # Single stylesheet, no framework
     ├── js/main.js      # ~30 lines + i18n dict
     └── assets/         # Logo & screenshots (reuse dari art/)
 ```
 
-**Stack Android:** Kotlin 2.0 · Jetpack Compose · Room v16 (migration historis dan guest-only schema) · Hilt · WorkManager · Glance Widget · Gson · ML Kit Text Recognition (debug)
+Aturan dependency dan penempatan test Android dijelaskan di [docs/architecture.md](docs/architecture.md). Periksa batas modul dengan `./gradlew verifyArchitectureBoundaries`.
+
+**Stack Android:** Kotlin 2.0 · Jetpack Compose · Room v16 (migration historis dan guest-only schema) · Hilt · WorkManager · Glance Widget · Gson · ML Kit Text Recognition (bundled, on-device)
 
 **Stack Web:** Pure HTML/CSS/JS - tanpa framework, tanpa build step, tanpa `node_modules`. Deploy ke GitHub Pages / Cloudflare Pages. SEO: canonical, hreflang ID/EN, OG/Twitter, JSON-LD (SoftwareApplication, FAQPage, Organization, Breadcrumb), sitemap.xml, robots.txt.
 
@@ -120,17 +122,14 @@ Bareuang/
 
 ## 🚀 Menjalankan Project
 
-Fitur inti tidak memerlukan akun. Build debug dapat menjalankan OCR lokal tanpa koneksi internet; build release menonaktifkan OCR.
+Fitur inti tidak memerlukan akun. OCR lokal tersedia pada build debug dan release tanpa koneksi internet.
 
 ```bash
 # Debug
 ./gradlew installDebug
 
-# Release APK (butuh keystore.properties)
-./gradlew :app:assembleRelease
-
-# AAB untuk Play Store
-./gradlew :app:bundleRelease
+# Release APK dan AAB (butuh signing + version input)
+VERSION_CODE=2 VERSION_NAME=1.0.1 ./gradlew :app:assembleRelease :app:bundleRelease
 
 # Validasi lokal
 ./gradlew test
@@ -138,8 +137,8 @@ Fitur inti tidak memerlukan akun. Build debug dapat menjalankan OCR lokal tanpa 
 ./gradlew :data:compileDebugAndroidTestKotlin
 ```
 
-`connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. Migration
-Room dan perilaku widget/notification harus diuji pada perangkat sebelum release.
+`connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. CI
+menjalankan tes instrumentasi pada API minimum (26) dan target (37).
 
 ### 🌐 Web - Landing Page
 
@@ -157,7 +156,7 @@ python3 -m http.server --directory web 8000
 
 Deploy: push `web/` ke GitHub Pages (Settings → Pages → Deploy from `/web`) atau connect repo ke Cloudflare Pages (root `web`). Ganti `https://bareuang.app` di `web/index.html`, `privacy.html`, `terms.html`, `sitemap.xml` jika pakai domain lain. URL Privacy/Terms dipakai di Play Console → Data safety & Store listing.
 
-Release APK dipublikasikan dari GitHub Releases resmi `Udean777/Bareuang`. Setiap release menyertakan `SHA256SUMS.txt`; verifikasi dengan `sha256sum -c SHA256SUMS.txt`. Fingerprint sertifikat signing diambil dari keystore produksi dengan `keytool -list -v -keystore <keystore>` dan dicatat di Play Console/secret manager, bukan di repository.
+Workflow Release meminta `version_name` dan `version_code`, membangun AAB untuk diunggah ke Play Console serta APK sideload, memeriksa tanda tangan, dan menyertakan `SHA256SUMS.txt`. `VERSION_CODE` harus lebih besar daripada versi terakhir yang pernah diunggah. Simpan fingerprint sertifikat upload di secret manager, bukan di repository.
 
 <details>
 <summary>Setup keystore untuk release build</summary>

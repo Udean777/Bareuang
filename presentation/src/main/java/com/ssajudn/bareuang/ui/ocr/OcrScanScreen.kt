@@ -7,6 +7,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -57,7 +58,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +68,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -122,39 +123,88 @@ fun OcrScanScreen(
         }
     }
 
-    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var cameraOutputPath by rememberSaveable { mutableStateOf<String?>(null) }
+    var cameraPermissionDenied by remember { mutableStateOf(false) }
+
+    fun discardCameraOutput() {
+        cameraOutputPath?.let(::File)?.delete()
+        cameraOutputPath = null
+        cameraUri = null
+    }
+
+    LaunchedEffect(Unit) {
+        val currentOutputPath = cameraOutputPath
+        File(context.cacheDir, "ocr").listFiles()
+            ?.filter { it.absolutePath != currentOutputPath }
+            ?.forEach(File::delete)
+    }
+
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) cameraUri?.let { viewModel.selectImage(it) }
+        val outputFile = cameraOutputPath?.let(::File)
+        if (success && outputFile?.length()?.let { it > 0L } == true) {
+            cameraUri?.let { viewModel.selectImage(it) }
+        } else {
+            discardCameraOutput()
+        }
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let { viewModel.selectImage(it) }
+        uri?.let {
+            discardCameraOutput()
+            viewModel.selectImage(it)
+        }
     }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            val file = File(context.cacheDir, "ocr_${System.currentTimeMillis()}.jpg")
+
+    fun launchCameraCapture() {
+        cameraPermissionDenied = false
+        discardCameraOutput()
+        val ocrCache = File(context.cacheDir, "ocr").apply { mkdirs() }
+        val file = File(ocrCache, "receipt_${System.currentTimeMillis()}.jpg")
+        cameraOutputPath = file.absolutePath
+        runCatching {
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
             cameraUri = uri
             cameraLauncher.launch(uri)
         }
+            .onFailure {
+                discardCameraOutput()
+                cameraPermissionDenied = true
+            }
+    }
+
+    fun launchGallery() {
+        discardCameraOutput()
+        galleryLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) launchCameraCapture() else cameraPermissionDenied = true
     }
 
     fun launchCamera() {
         val hasPerm = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         if (hasPerm) {
-            val file = File(context.cacheDir, "ocr_${System.currentTimeMillis()}.jpg")
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-            cameraUri = uri
-            cameraLauncher.launch(uri)
+            launchCameraCapture()
         } else {
+            cameraPermissionDenied = false
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
+
+    fun leaveOcrScreen() {
+        discardCameraOutput()
+        onNavigateBack()
+    }
+
+    BackHandler(onBack = ::leaveOcrScreen)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.ocr_title)) },
-                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } }
+                navigationIcon = { IconButton(onClick = ::leaveOcrScreen) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -162,7 +212,7 @@ fun OcrScanScreen(
             if (uiState.rawText != null) {
                 Surface(tonalElevation = 3.dp, shadowElevation = 8.dp) {
                     Button(
-                        onClick = { viewModel.save { onNavigateBack() } },
+                        onClick = { viewModel.save { leaveOcrScreen() } },
                         enabled = !uiState.isSaving && uiState.parsedAmount > 0 && uiState.selectedWalletId != null,
                         modifier = Modifier.fillMaxWidth().padding(16.dp).height(52.dp)
                     ) {
@@ -185,7 +235,7 @@ fun OcrScanScreen(
                 Text(
                     text = stringResource(
                         if (uiState.isOcrAvailable) R.string.ocr_local_info
-                        else R.string.ocr_disabled_release,
+                        else R.string.ocr_unavailable,
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -198,7 +248,7 @@ fun OcrScanScreen(
             val selectedWallet = uiState.wallets.find { it.id == uiState.selectedWalletId }
             ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                 OutlinedTextField(
-                    value = selectedWallet?.name ?: "Pilih dompet",
+                    value = selectedWallet?.name ?: stringResource(R.string.ocr_wallet_select),
                     onValueChange = {}, readOnly = true,
                     label = { Text(stringResource(R.string.ocr_wallet_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
@@ -221,17 +271,21 @@ fun OcrScanScreen(
                 }
                 OutlinedButton(
                     onClick = {
-                        galleryLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
+                        launchGallery()
                     },
                     enabled = uiState.isOcrAvailable && !uiState.isProcessing,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.ocr_btn_gallery))
                 }
+            }
+
+            if (cameraPermissionDenied) {
+                Text(
+                    text = stringResource(R.string.ocr_camera_denied),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
 
             if (uiState.isProcessing) {
@@ -256,11 +310,7 @@ fun OcrScanScreen(
                     },
                     onChooseGallery = {
                         viewModel.clearSelectedImage()
-                        galleryLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
+                        launchGallery()
                     },
                 )
             }
@@ -341,6 +391,21 @@ fun OcrScanScreen(
             }
 
             if (uiState.rawText != null) {
+                val receiptPhoto = uiState.selectedImageUri
+                if (!uiState.isManualEntry && receiptPhoto != null) {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.ocr_original_photo_title),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            ReceiptImagePreview(receiptPhoto)
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = uiState.merchant,
                     onValueChange = viewModel::onMerchantChange,
@@ -407,9 +472,9 @@ fun OcrScanScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissDailyOverride() },
             title = { Text(stringResource(R.string.ocr_daily_override_title)) },
-            text = { Text(uiState.pendingDailyMessage ?: "Jatah harian habis. Tetap simpan?") },
+            text = { Text(uiState.pendingDailyMessage?.asString() ?: stringResource(R.string.tx_error_daily_exceeded)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.confirmDailyOverride { onNavigateBack() } }) {
+                TextButton(onClick = { viewModel.confirmDailyOverride { leaveOcrScreen() } }) {
                     Text(stringResource(R.string.ocr_save_anyway))
                 }
             },

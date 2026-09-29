@@ -2,7 +2,7 @@ package com.ssajudn.bareuang.ui.budget
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ssajudn.bareuang.domain.model.CategoryBudget

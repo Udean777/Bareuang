@@ -29,6 +29,8 @@ import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
+import com.ssajudn.bareuang.ui.common.toUiText
+import com.ssajudn.bareuang.domain.error.AppException
 
 sealed interface DueBillsUiState {
     object Loading : DueBillsUiState
@@ -108,7 +110,8 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createDueBill(CreateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
-            val ui = UiText.Res(R.string.bills_error_create)
+            val ui = (r.exceptionOrNull() as? AppException)?.toUiText()
+                ?: UiText.Res(R.string.bills_error_create)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isSuccess) {
                 reminderScheduler.runNow()
@@ -121,7 +124,8 @@ class DueBillsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateDueBill(id, UpdateDueBillRequest(providerName, providerIconUrl, totalAmount, dueDate, isRecurring, recurringInterval, notes))
-            val ui = UiText.Res(R.string.bills_error_update)
+            val ui = (r.exceptionOrNull() as? AppException)?.toUiText()
+                ?: UiText.Res(R.string.bills_error_update)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui)) else reminderScheduler.runNow()
         }
@@ -137,8 +141,10 @@ class DueBillsViewModel @Inject constructor(
                     val nextDueDate = DateUtils.calculateNextDueDate(bill.dueDate, bill.recurringInterval.name)
                     repository.createDueBill(CreateDueBillRequest(bill.providerName, providerIconUrl = bill.providerIconUrl, totalAmount = bill.totalAmount, dueDate = nextDueDate, isRecurring = true, recurringInterval = bill.recurringInterval, notes = bill.notes ?: ""))
                 }
-                _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error("", UiText.Res(R.string.bills_error_insufficient))
-                if (result.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.bills_error_insufficient))) else reminderScheduler.runNow()
+                val ui = (result.exceptionOrNull() as? AppException)?.toUiText()
+                    ?: UiText.Res(R.string.bills_error_insufficient)
+                _operation.value = if (result.isSuccess) OperationState.Success() else OperationState.Error("", ui)
+                if (result.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui)) else reminderScheduler.runNow()
             }
         }
     }

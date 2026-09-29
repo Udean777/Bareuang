@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--
    Backup rules for devices on API 30 and below.
-   Financial data (Room DB) and session identity (uid/email) never leave the
-   device via backup; harmless preferences (theme, tour, onboarding) do.
+   The Room database is excluded so financial records are not copied by Android
+   backup. The legacy session preference exclusion is retained for upgrades.
 -->
 <full-backup-content>
     <exclude domain="database" path="bareuang_offline.db" />

@@ -12,6 +12,9 @@ import com.ssajudn.bareuang.domain.model.UpdateGoalRequest
 import com.ssajudn.bareuang.data.service.WalletBalanceService
 import com.ssajudn.bareuang.domain.utils.DateUtils
 import com.ssajudn.bareuang.data.error.ApiErrorParser
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.error.GoalOperationReason
+import com.ssajudn.bareuang.domain.error.WalletOperationReason
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
@@ -40,8 +43,8 @@ class GoalLocalDataSource @Inject constructor(
 
     suspend fun createGoal(request: CreateGoalRequest): Result<Goal> = withContext(Dispatchers.IO) {
         try {
-            if (request.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama target tidak boleh kosong"))
-            if (request.targetAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Target tabungan harus lebih dari 0"))
+            if (request.name.isBlank()) return@withContext Result.failure(AppException.GoalOperationException(GoalOperationReason.INVALID_NAME))
+            if (request.targetAmount <= 0) return@withContext Result.failure(AppException.GoalOperationException(GoalOperationReason.INVALID_TARGET))
             val localGoal = Goal(
                 id = UUID.randomUUID().toString(),
                 name = request.name.trim(),
@@ -63,17 +66,19 @@ class GoalLocalDataSource @Inject constructor(
     suspend fun depositToGoal(id: String, amount: Long, walletId: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                if (amount == 0L) return@withContext Result.failure(IllegalArgumentException("Jumlah setor/tarik harus lebih dari 0"))
-                if (walletId.isBlank()) return@withContext Result.failure(IllegalArgumentException("Dompet wajib dipilih"))
-                val goal = db.goalDao().getGoalById(id) ?: return@withContext Result.failure(IllegalArgumentException("Target tidak ditemukan"))
-                if (amount < 0 && goal.currentAmount + amount < 0) {
-                    return@withContext Result.failure(IllegalStateException("Saldo tabungan tidak cukup untuk penarikan"))
-                }
-                if (amount > 0) {
-                    val w = db.walletDao().getWalletById(walletId) ?: return@withContext Result.failure(IllegalArgumentException("Dompet tidak ditemukan"))
-                    if (w.balance < amount) return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup"))
-                }
+                if (amount == 0L || amount == Long.MIN_VALUE) return@withContext Result.failure(AppException.GoalOperationException(GoalOperationReason.INVALID_AMOUNT))
+                if (walletId.isBlank()) return@withContext Result.failure(AppException.GoalOperationException(GoalOperationReason.WALLET_REQUIRED))
                 val block: () -> Unit = {
+                    val goal = db.goalDao().getGoalById(id)
+                        ?: throw AppException.GoalOperationException(GoalOperationReason.GOAL_NOT_FOUND)
+                    if (amount < 0 && goal.currentAmount < -amount) {
+                        throw AppException.GoalOperationException(GoalOperationReason.INSUFFICIENT_GOAL_BALANCE)
+                    }
+                    val wallet = db.walletDao().getWalletById(walletId)
+                        ?: throw AppException.WalletOperationException(WalletOperationReason.NOT_FOUND)
+                    if (amount > 0 && wallet.balance < amount) {
+                        throw AppException.InsufficientBalanceException(wallet.balance, amount)
+                    }
                     db.goalDao().depositToGoal(id, amount)
                     val isDeposit = amount > 0
                     balanceService.add(walletId, -amount)
@@ -108,8 +113,8 @@ class GoalLocalDataSource @Inject constructor(
     suspend fun updateGoal(id: String, request: UpdateGoalRequest): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                if (request.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama target tidak boleh kosong"))
-                if (request.targetAmount <= 0) return@withContext Result.failure(IllegalArgumentException("Target tabungan harus lebih dari 0"))
+                if (request.name.isBlank()) return@withContext Result.failure(AppException.GoalOperationException(GoalOperationReason.INVALID_NAME))
+                if (request.targetAmount <= 0) return@withContext Result.failure(AppException.GoalOperationException(GoalOperationReason.INVALID_TARGET))
                 db.goalDao().updateGoal(
                     id = id,
                     name = request.name.trim(),

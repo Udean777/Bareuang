@@ -13,6 +13,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +53,7 @@ fun AppFabHost(
     ) {
         val items = listOf(
             SpeedDialItem(stringResource(R.string.fab_menu_transaction), Icons.Filled.Add, { navController.navigate(Screen.AddTransaction.route) }),
+            SpeedDialItem(stringResource(R.string.fab_menu_scan), Icons.Default.DocumentScanner, { navController.navigate(Screen.OcrScan.route) }),
             SpeedDialItem(stringResource(R.string.fab_menu_bill), Icons.AutoMirrored.Filled.ReceiptLong, { showBillDialog = true }),
             SpeedDialItem(stringResource(R.string.fab_menu_goal), Icons.Filled.Savings, { showGoalDialog = true }),
         )

@@ -15,7 +15,7 @@ object CalculateBudgetRunwayUseCase {
         val remainingBudget = Math.subtractExact(monthlyBudget, totalSpent)
         val averageDailySpend = if (period.daysPassed > 0) totalSpent / period.daysPassed else 0L
         return when {
-            monthlyBudget <= 0 -> BudgetRunwayResult(remainingBudget, averageDailySpend, period.daysInMonth, RunwayStatus.BudgetNotSet)
+            monthlyBudget <= 0 -> BudgetRunwayResult(0L, averageDailySpend, 0, RunwayStatus.BudgetNotSet)
             remainingBudget <= 0 -> BudgetRunwayResult(remainingBudget, averageDailySpend, period.daysPassed, RunwayStatus.Exhausted)
             averageDailySpend <= 0 -> BudgetRunwayResult(remainingBudget, averageDailySpend, period.daysInMonth, RunwayStatus.NoSpending)
             else -> {
@@ -31,4 +31,3 @@ object CalculateBudgetRunwayUseCase {
         }
     }
 }
-

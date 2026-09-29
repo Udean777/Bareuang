@@ -27,6 +27,12 @@ android {
     }
 }
 
+androidComponents {
+    onVariants { variant ->
+        variant.androidTest?.sources?.assets?.addStaticSourceDirectory("$projectDir/schemas")
+    }
+}
+
 kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
     jvmToolchain(21)
@@ -50,7 +56,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.appcompat)
-    debugImplementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.text.recognition)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)

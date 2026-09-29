@@ -16,7 +16,7 @@ import com.ssajudn.bareuang.ui.components.AppNavigationBar
 @Composable
 fun AppNavigation(navController: NavHostController = rememberNavController()) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showNavigationBar = currentRoute in TopLevelRoutes && currentRoute != Screen.Transfer.route
+    val showNavigationBar = currentRoute in TopLevelRoutes
     val destinations = rememberTopLevelDestinations()
 
     Box(Modifier.fillMaxSize()) {
@@ -38,7 +38,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 }
             },
             floatingActionButton = {
-                AppFabHost(showNavigationBar && currentRoute != Screen.Transfer.route, currentRoute, navController)
+                AppFabHost(showNavigationBar, currentRoute, navController)
             },
         ) { innerPadding -> AppNavGraph(navController, innerPadding) }
         }

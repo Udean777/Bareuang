@@ -89,6 +89,9 @@ import com.ssajudn.bareuang.ui.theme.Spacing
 import java.io.File
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -101,11 +104,6 @@ fun ImagePreviewCard(
     onRetake: () -> Unit,
     onChooseGallery: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val bitmap by produceState<Bitmap?>(initialValue = null, uri) {
-        value = withContext(Dispatchers.IO) { decodePreviewBitmap(context, uri) }
-    }
-
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -115,28 +113,7 @@ fun ImagePreviewCard(
                 text = stringResource(R.string.ocr_preview_title),
                 style = MaterialTheme.typography.titleMedium,
             )
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap!!.asImageBitmap(),
-                    contentDescription = stringResource(R.string.ocr_preview_content_description),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Inside,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(stringResource(R.string.ocr_preview_unavailable))
-                }
-            }
+            ReceiptImagePreview(uri)
             Text(
                 text = stringResource(R.string.ocr_preview_caption),
                 style = MaterialTheme.typography.bodySmall,
@@ -174,12 +151,69 @@ fun ImagePreviewCard(
     }
 }
 
+@Composable
+fun ReceiptImagePreview(uri: Uri) {
+    val context = LocalContext.current
+    var isLoading by remember(uri) { mutableStateOf(true) }
+    val bitmap by produceState<Bitmap?>(initialValue = null, uri) {
+        isLoading = true
+        value = withContext(Dispatchers.IO) {
+            runCatching { decodePreviewBitmap(context, uri) }
+                .onFailure { Log.w("ReceiptImagePreview", "Could not decode selected receipt image", it) }
+                .getOrNull()
+        }
+        isLoading = false
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!.asImageBitmap(),
+            contentDescription = stringResource(R.string.ocr_preview_content_description),
+            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .clip(RoundedCornerShape(8.dp)),
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                stringResource(
+                    if (isLoading) R.string.ocr_preview_loading else R.string.ocr_preview_unavailable,
+                ),
+            )
+        }
+    }
+}
+
 private fun decodePreviewBitmap(context: android.content.Context, uri: Uri): Bitmap? {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val source = ImageDecoder.createSource(context.contentResolver, uri)
+        return ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            val width = info.size.width
+            val height = info.size.height
+            if (width <= 0 || height <= 0) {
+                throw IllegalArgumentException("Selected image has invalid dimensions")
+            }
+            val scale = minOf(1f, 1200f / maxOf(width, height))
+            decoder.setTargetSize((width * scale).toInt().coerceAtLeast(1), (height * scale).toInt().coerceAtLeast(1))
+        }
+    }
+
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     context.contentResolver.openInputStream(uri)?.use { input ->
         BitmapFactory.decodeStream(input, null, bounds)
     } ?: return null
 
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
     val longestSide = maxOf(bounds.outWidth, bounds.outHeight)
     var sampleSize = 1
     while (longestSide / sampleSize > 1200) sampleSize *= 2

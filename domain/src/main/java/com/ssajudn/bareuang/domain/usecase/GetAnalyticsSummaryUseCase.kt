@@ -5,7 +5,7 @@ import com.ssajudn.bareuang.domain.model.CashflowDataPoint
 import com.ssajudn.bareuang.domain.model.DashboardSummary
 import com.ssajudn.bareuang.domain.model.NetWorthDataPoint
 import com.ssajudn.bareuang.domain.repository.AnalyticsRepository
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
+import com.ssajudn.bareuang.domain.repository.TransactionQueryRepository
 import javax.inject.Inject
 import java.time.Clock
 
@@ -21,7 +21,7 @@ data class AnalyticsSummary(
 
 class GetAnalyticsSummaryUseCase @Inject constructor(
     private val getDashboardSummary: GetDashboardSummaryUseCase,
-    private val transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionQueryRepository,
     private val analyticsRepository: AnalyticsRepository,
     private val calculateSavageStreak: CalculateSavageStreakUseCase,
     private val clock: Clock,

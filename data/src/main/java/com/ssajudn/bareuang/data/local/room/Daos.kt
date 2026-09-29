@@ -38,6 +38,9 @@ interface TransactionDao {
     @Query("SELECT * FROM local_transactions WHERE date >= :fromDate AND date < :toDate AND isRecurringParent = 0 ORDER BY date DESC LIMIT :limit")
     fun getTransactionsByDateRange(fromDate: String, toDate: String, limit: Int): List<LocalTransactionEntity>
 
+    @Query("SELECT * FROM local_transactions WHERE isRecurringParent = 0 ORDER BY rowid DESC LIMIT :limit")
+    fun getRecentTransactions(limit: Int): List<LocalTransactionEntity>
+
     @Query("SELECT * FROM local_transactions WHERE id = :id LIMIT 1")
     fun getTransactionById(id: String): LocalTransactionEntity?
 
@@ -86,6 +89,9 @@ interface TransactionDao {
 
     @Query("SELECT COALESCE(SUM(amount), 0) FROM local_transactions WHERE date >= :fromDate AND date < :toDate AND isRecurringParent = 0 AND type = 'EXPENSE' AND category != 'BILLS'")
     fun getDiscretionaryExpenseTotalForDay(fromDate: String, toDate: String): Long
+
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM local_transactions WHERE date >= :fromDate AND date < :toDate AND isRecurringParent = 0 AND type = 'EXPENSE'")
+    fun getExpenseTotalForDay(fromDate: String, toDate: String): Long
 
     @Query("""
         SELECT COALESCE(SUM(amount), 0) FROM local_transactions

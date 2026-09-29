@@ -24,8 +24,8 @@
     <!-- Translation -->
     <!-- Navigation -->
     <string name="nav_home">Home</string>
+    <string name="nav_transactions">Transactions</string>
     <string name="nav_bills">Bills</string>
-    <string name="nav_transfer">Transfer</string>
     <string name="nav_goals">Goals</string>
     <string name="nav_analytics">Analytics</string>
     <!-- Onboarding tour -->
@@ -44,9 +44,51 @@
     <string name="settings_title">Settings</string>
     <string name="settings_backup_title">Offline Backup</string>
     <string name="settings_export_title">Export Backup File (Download)</string>
-    <string name="settings_export_desc">Save all transactions, bills, wallets, and savings goals to a JSON file</string>
+    <string name="settings_export_desc">Export financial records to an encrypted file. You will need its password to restore it.</string>
     <string name="settings_import_title">Import Backup File (Restore)</string>
-    <string name="settings_import_desc">Restore all data from a previous JSON backup file</string>
+    <string name="settings_import_desc">Preview backup contents and matching records before restoring. Older unencrypted JSON backups are supported.</string>
+    <string name="settings_backup_password_title">Protect your backup</string>
+    <string name="settings_backup_password_desc">Create a password with at least 12 characters. Bareuang cannot recover it if you forget it.</string>
+    <string name="settings_backup_password">Backup password</string>
+    <string name="settings_backup_password_confirm">Confirm password</string>
+    <string name="settings_password_show">Show password</string>
+    <string name="settings_password_hide">Hide password</string>
+    <string name="settings_backup_export_continue">Choose save location</string>
+    <string name="settings_restore_password_title">Open backup</string>
+    <string name="settings_restore_password_desc">Enter the password for this encrypted backup.</string>
+    <string name="settings_restore_legacy_hint">For an older unencrypted JSON backup, leave this blank.</string>
+    <string name="settings_restore_preview_action">Preview backup</string>
+    <string name="settings_restore_preview_title">Review restore</string>
+    <string name="settings_restore_backup_label">Backup details</string>
+    <string name="settings_restore_encrypted">Encrypted</string>
+    <string name="settings_restore_unencrypted">Unencrypted</string>
+    <string name="settings_restore_total">Total</string>
+    <string name="settings_restore_new">New</string>
+    <string name="settings_restore_replaced_short">Replaced</string>
+    <string name="settings_restore_records_heading">Data in this backup</string>
+    <string name="settings_restore_new_count">%1$d new</string>
+    <string name="settings_restore_replaced_count">%1$d will replace</string>
+    <string name="settings_restore_backup_info">Backup date: %1$s · App version: %2$s</string>
+    <string name="settings_restore_currency">Currency: %1$s</string>
+    <string name="settings_restore_wallets">Wallets</string>
+    <string name="settings_restore_transactions">Transactions</string>
+    <string name="settings_restore_bills">Bills</string>
+    <string name="settings_restore_budgets">Monthly budgets</string>
+    <string name="settings_restore_category_budgets">Category budgets</string>
+    <string name="settings_restore_goals">Goals</string>
+    <string name="settings_restore_record_counts">%1$s: %2$d total · %3$d new · %4$d replace existing</string>
+    <string name="settings_restore_merge_warning">Records with matching IDs will be replaced. Other records on this device remain. No data changes until you restore.</string>
+    <string name="settings_restore_unencrypted_warning">This backup is not encrypted. Its financial data can be read by anyone who can open the file.</string>
+    <string name="settings_restore_receipt_warning">This backup references receipt images, but image files are not included. Some receipts may not open on this device.</string>
+    <string name="settings_restore_confirm">Restore data</string>
+    <string name="settings_restore_complete_title">Restore complete</string>
+    <string name="settings_restore_added">New records added: %1$d</string>
+    <string name="settings_restore_replaced">Existing records replaced: %1$d</string>
+    <string name="settings_restore_currency_warning">The records were restored, but the display currency could not be updated.</string>
+    <string name="settings_restore_invalid_password_or_file">Could not open the backup. Check the password and file, then try again.</string>
+    <string name="settings_restore_apply_failed">Restore failed. Your existing data was kept; you can retry from this preview.</string>
+    <string name="common_done">Done</string>
+    <string name="common_loading">Working…</string>
     <string name="settings_support_title">Support &amp; Appreciation</string>
     <string name="settings_donate_title">Donate to Developer</string>
     <string name="settings_donate_desc">Buy a coffee or support Bareuang development</string>
@@ -54,7 +96,7 @@
     <string name="settings_star_desc">Star the Bareuang repository on GitHub</string>
     <string name="settings_share_title">Share App</string>
     <string name="settings_share_desc">Invite friends to manage finances &amp; financial runway</string>
-    <string name="settings_share_message">Manage your finances and calculate your financial runway with Bareuang! Check the repo at: https://github.com/Udean777/Bare-Budget</string>
+    <string name="settings_share_message">Manage your finances and calculate your financial runway with Bareuang! Check the repo at: https://github.com/Udean777/Bareuang</string>
     <string name="settings_share_chooser">Share Bareuang</string>
     <string name="settings_danger_title">Local Data</string>
     <string name="settings_danger_desc">Erase data stored on this device and return to onboarding</string>
@@ -71,7 +113,7 @@
     <string name="runway_set">Set Budget</string>
     <string name="runway_total_wealth">TOTAL WEALTH</string>
     <string name="runway_view_detail">View detail <xliff:g id="name">%1$s</xliff:g></string>
-    <string name="runway_status_budget_not_set">Monthly budget not set yet. Tap here to set your target budget.</string>
+    <string name="runway_status_budget_not_set">Set a monthly budget to see your remaining budget and runway estimate.</string>
     <string name="runway_status_exhausted">CRITICAL: You have exhausted your budget for this month! Stop all non-essential spending.</string>
     <string name="runway_status_no_spending">GREAT: No expenses recorded yet this month. Keep it up!</string>
     <plurals name="runway_status_warning"><item quantity="one">WARNING: At your current burn rate, your money runs out on day %1$d (%2$d day left)!</item><item quantity="other">WARNING: At your current burn rate, your money runs out on day %1$d (%2$d days left)!</item></plurals>
@@ -108,6 +150,7 @@
     <!-- Wallets -->
     <string name="wallets_title">My Wallets</string>
     <string name="wallets_add">Add Wallet</string>
+    <string name="wallets_transfer_action">Transfer between wallets</string>
     <string name="wallets_net_worth_label">TOTAL NET WORTH</string>
     <string name="wallets_list_title">Wallet List</string>
     <string name="wallets_active">ACTIVE WALLET</string>
@@ -122,7 +165,7 @@
     <string name="wallets_color">Wallet Color</string>
     <string name="wallets_edit_desc">Edit Wallet</string>
     <string name="wallets_edit_title">Edit Wallet</string>
-    <string name="tx_budget_not_set">Budget for this month has not been set</string>
+    <string name="tx_budget_not_set">No monthly budget yet. You can still save this transaction; runway estimates start after you set one.</string>
 <string name="settings_replay_tour_title">Replay Tour</string>
     <string name="settings_replay_tour_desc">Re-run the app introduction tour</string>
     <string name="tour_step1_title">Financial Runway</string>
@@ -310,7 +353,7 @@
     <plurals name="import_rows_found"><item quantity="one"><xliff:g id="count">%1$d</xliff:g> row found</item><item quantity="other"><xliff:g id="count">%1$d</xliff:g> rows found</item></plurals>
     <string name="import_select_all">Select all</string>
     <string name="import_deselect_all">Deselect all</string>
-    <string name="import_duplicate_skip">Duplicate - auto skipped</string>
+    <string name="import_duplicate_skip">Duplicate. Select to import again.</string>
     <plurals name="import_selected_count"><item quantity="one"><xliff:g id="count">%1$d</xliff:g> selected</item><item quantity="other"><xliff:g id="count">%1$d</xliff:g> selected</item></plurals>
     <string name="import_btn">Import</string>
     <string name="import_empty_csv">CSV empty or format not recognized</string>
@@ -320,6 +363,7 @@
     <string name="import_wallet_empty_desc">Create a wallet first to import into</string>
     <string name="import_wallet_create">Create Wallet</string>
     <string name="import_file_too_large">File too large, max 5MB</string>
+    <string name="import_too_many_rows">CSV contains more than 5,000 rows. Split the file and import it in parts.</string>
     <string name="import_chip_expense">Expense</string>
     <string name="import_chip_income">Income</string>
     <string name="import_supported_format">Supported formats</string>
@@ -327,13 +371,46 @@
     <string name="import_format_generic">• Generic: date, description, amount (delimiter , or ;)</string>
     <string name="import_format_debit_credit">• Separate debit/credit columns are supported</string>
     <string name="import_format_example">Example: 01/01/2026,Top Up GoPay,50000</string>
+    <string name="import_mapping_title">Match CSV columns</string>
+    <string name="import_mapping_description">Choose which columns contain each value. Date, description, and amount (or debit/credit) are required.</string>
+    <string name="import_mapping_sample">Sample rows</string>
+    <string name="import_mapping_not_selected">Not selected</string>
+    <string name="import_mapping_date">Date</string>
+    <string name="import_mapping_description_column">Description</string>
+    <string name="import_mapping_amount">Amount</string>
+    <string name="import_mapping_debit">Debit</string>
+    <string name="import_mapping_credit">Credit</string>
+    <string name="import_mapping_type">Type (optional)</string>
+    <string name="import_mapping_category">Category (optional)</string>
+    <string name="import_mapping_required">Select a date, description, and amount column or debit/credit columns.</string>
+    <string name="import_preview_button">Preview transactions</string>
+    <string name="import_review_title">Review before importing</string>
+    <string name="import_review_counts">%1$d valid · %2$d duplicates · %3$d skipped</string>
+    <string name="import_edit_mapping">Change columns</string>
+    <string name="import_skipped_heading">Rows to skip: %1$d</string>
+    <string name="import_issue_row">Row %1$d: %2$s</string>
+    <string name="import_issue_invalid_date">date is missing or invalid</string>
+    <string name="import_issue_missing_description">description is missing</string>
+    <string name="import_issue_invalid_amount">amount is missing or invalid</string>
+    <string name="import_issue_amount_conflict">both debit and credit have values</string>
+    <string name="import_issue_balance_summary">account balance summary, not a transaction</string>
+    <string name="import_more_issues">and %1$d more rows</string>
+    <string name="import_no_valid_rows">No valid transactions. Change the column mapping or choose another file.</string>
+    <string name="import_complete_title">Import complete</string>
+    <string name="import_summary_added">Imported: %1$d transactions</string>
+    <string name="import_summary_duplicates">Duplicate rows skipped: %1$d</string>
+    <string name="import_summary_invalid">Invalid rows skipped: %1$d</string>
+    <string name="import_summary_wallet">Wallet: %1$s</string>
+    <string name="import_done">Done</string>
     <string name="import_daily_override_message">Some transactions exceed today’s pacing target. Import anyway?</string>
     <string name="import_daily_override_confirm">Import anyway</string>
     <string name="tx_error_daily_exceeded_title">Daily target exceeded</string>
     <string name="ocr_title">Scan Receipt</string>
     <string name="ocr_wallet_label">Wallet</string>
+    <string name="ocr_wallet_select">Select a wallet</string>
     <string name="ocr_local_info">The photo is processed on this device and is not sent to a server.</string>
-    <string name="ocr_disabled_release">Receipt OCR is available only in local development builds.</string>
+    <string name="ocr_unavailable">Receipt scanning is unavailable right now. You can still enter the transaction manually.</string>
+    <string name="ocr_camera_denied">Camera access was denied or the camera could not open. You can choose a photo or enter the transaction manually.</string>
     <string name="ocr_btn_camera">Camera</string>
     <string name="ocr_btn_gallery">Gallery</string>
     <string name="ocr_processing">Processing OCR…</string>
@@ -391,6 +468,12 @@
     <string name="tx_recurring_monthly">Monthly</string>
     <string name="tx_recurring_yearly">Yearly</string>
     <string name="tx_recurring_once">One-time</string>
+    <string name="tx_reuse_title">Use again</string>
+    <string name="tx_reuse_favorites">Favorites</string>
+    <string name="tx_reuse_recent">Recent transactions</string>
+    <string name="tx_favorite_save_after_success">Save as a favorite after this transaction succeeds</string>
+    <string name="tx_favorite_include_amount">Save the amount in the favorite</string>
+    <string name="tx_favorite_delete">Delete favorite</string>
     <string name="tx_recurring_on_day">Repeat on</string>
     <string name="tx_recurring_on_date">Every date %1$d</string>
     <string name="day_mon">Mon</string>
@@ -402,6 +485,7 @@
     <string name="day_sun">Sun</string>
     <string name="tx_badge_recurring">Recurring</string>
     <string name="tx_all_title">All Transactions</string>
+    <string name="tx_import_csv">Import CSV</string>
     <string name="tx_search_hint">Search transactions…</string>
     <string name="tx_filter">Filter Transactions</string>
     <string name="tx_total_found">TOTAL FOUND</string>
@@ -448,14 +532,14 @@
     <string name="onboarding_welcome">Welcome to Bareuang</string>
     <string name="onboarding_choose_mode">Set up your local finance tracker</string>
     <string name="onboarding_auth_desc">No account or cloud sync is required; your finance data stays on this device.</string>
-    <string name="auth_offline_message">Bareuang works offline. Receipt OCR is available only in local development builds.</string>
+    <string name="auth_offline_message">Bareuang works offline. Receipt OCR is processed locally on this device.</string>
     <string name="auth_guest_offline_message">No internet connection. Your financial data remains available on this device.</string>
     <string name="notif_perm_title">Never Miss a Bill</string>
     <string name="notif_perm_desc">Bareuang can remind you when bills are due - 3 days ahead, tomorrow, and today. Reminders are generated entirely on your device; nothing is sent anywhere.</string>
     <string name="notif_perm_allow">Allow Notifications</string>
     <string name="notif_perm_later">Maybe later</string>
     <string name="onboarding_guest_title">Local Profile</string>
-    <string name="onboarding_guest_desc">No account required. Core financial data stays on device; local receipt OCR is available only in development builds. Backup and restore use a JSON file.</string>
+    <string name="onboarding_guest_desc">No account required. Core financial data and receipt OCR stay on device. Backup and restore use a JSON file.</string>
     <string name="onboarding_guest_btn">Continue</string>
     <string name="onboarding_slide1_title">Zero Friction Expense Tracking</string>
     <string name="onboarding_slide1_desc">Log your daily expenses in seconds. Clean, minimal, and focused on what truly matters to your wallet.</string>
@@ -476,8 +560,8 @@
     <string name="tx_error_to_wallet_required">Please select destination wallet for transfer</string>
     <string name="tx_error_same_wallet">Source and destination wallet must not be the same</string>
     <string name="tx_error_insufficient_balance">Insufficient wallet balance (%1$s)</string>
-    <string name="tx_error_budget_required">Please set this month\'s budget first</string>
     <string name="tx_error_daily_exceeded">Today\'s pacing target was exceeded. You can still save this transaction.</string>
+    <string name="tx_error_daily_exceeded_with_remaining">Today\'s pacing target was exceeded. Remaining allowance: %1$s. You can still save this transaction.</string>
     <string name="tx_error_save_failed">Failed to save transaction</string>
     <!-- Daily budget soft nudge + pacing -->
     <string name="tx_daily_override_title">Daily pacing target exceeded</string>
@@ -530,6 +614,9 @@
     <string name="wallets_error_create">Failed to create wallet</string>
     <string name="wallets_error_update">Failed to update wallet</string>
     <string name="wallets_error_delete">Failed to delete wallet</string>
+    <string name="wallets_error_not_found">Wallet could not be found</string>
+    <string name="wallet_error_invalid_name">Enter a wallet name</string>
+    <string name="wallet_error_negative_balance">Wallet balance cannot be negative</string>
     <!-- Tx detail -->
     <string name="tx_detail_error_load">Failed to load transaction</string>
     <string name="tx_detail_error_delete">Failed to delete transaction</string>
@@ -538,13 +625,22 @@
     <string name="goals_error_update">Failed to update goal</string>
     <string name="goals_error_deposit">Failed to process goal transaction</string>
     <string name="goals_error_delete">Failed to delete goal</string>
+    <string name="goals_error_invalid_name">Enter a goal name</string>
+    <string name="goals_error_invalid_target">Target amount must be greater than zero</string>
+    <string name="goals_error_invalid_amount">Amount must be greater than zero</string>
+    <string name="goals_error_not_found">Goal could not be found</string>
+    <string name="goals_error_insufficient_savings">Goal savings are not enough for this withdrawal</string>
     <!-- Bills granular -->
     <string name="bills_error_create">Failed to create bill</string>
     <string name="bills_error_update">Failed to update bill</string>
     <string name="bills_error_delete">Failed to delete bill</string>
+    <string name="bills_error_invalid_provider">Enter a provider name</string>
+    <string name="bills_error_invalid_amount">Bill amount must be greater than zero</string>
+    <string name="bills_error_not_found">Bill could not be found</string>
     <!-- Import granular -->
     <string name="import_error_read">Failed to read file</string>
     <string name="import_error_save">Failed to import transactions</string>
+    <string name="import_error_no_selection">Select at least one transaction</string>
     <!-- OCR granular -->
     <string name="ocr_error_save">Failed to save receipt transaction</string>
     <string name="ocr_error_file">Failed to open image file</string>
@@ -563,8 +659,10 @@
     <string name="ocr_amount_label">Total (Rp)</string>
     <string name="ocr_receipt_original">%1$s • original receipt</string>
     <string name="ocr_preview_title">Check the photo</string>
+    <string name="ocr_original_photo_title">Receipt photo</string>
     <string name="ocr_preview_content_description">Selected receipt photo</string>
     <string name="ocr_preview_unavailable">Photo preview is unavailable</string>
+    <string name="ocr_preview_loading">Loading photo…</string>
     <string name="ocr_preview_caption">Review the photo before local OCR. The image stays on this device.</string>
     <string name="ocr_use_photo">Use this photo</string>
     <string name="ocr_retake">Retake</string>
@@ -578,6 +676,13 @@
     <!-- Settings granular -->
     <string name="settings_error_backup">Failed to export backup</string>
     <string name="settings_error_restore">Failed to restore backup</string>
+    <string name="settings_backup_destination_unavailable">The backup destination could not be opened</string>
+    <string name="settings_backup_source_unavailable">The backup file could not be opened</string>
+    <string name="settings_restore_preview_expired">The backup preview expired. Select the file again.</string>
+    <string name="settings_restore_in_progress">This restore is already in progress</string>
+    <string name="settings_restore_unsupported_currency">The backup uses an unsupported currency</string>
+    <string name="settings_restore_file_too_large">The backup file exceeds the supported size</string>
+    <string name="settings_restore_invalid_file">The backup file is invalid or uses an unsupported format</string>
     <!-- Split bill extras -->
     <string name="split_default_merchant">Split</string>
     <string name="split_person_default">Friend %1$d</string>
@@ -596,6 +701,9 @@
     <string name="widget_daily">Daily</string>
     <string name="widget_bills">Bills</string>
     <string name="widget_used">Used</string>
+    <string name="widget_budget_not_set_value">Set a budget</string>
+    <string name="widget_budget_not_set_mood">Runway estimate is not active yet</string>
+    <string name="runway_not_calculated">Runway not calculated yet</string>
     <string name="fab_close">Close</string>
     <string name="fab_menu">Action Menu</string>
     <string name="onboarding_stay_on_track">Stay on track</string>
@@ -611,4 +719,17 @@
     <string name="splash_brand">Bareuang</string>
     <string name="splash_runway_tracker">KNOW HOW LONG YOUR MONEY LASTS</string>
     <string name="splash_bubbly_desc">Soft. Simple. Surprisingly fun.</string>
+    <string name="setup_title">Set up your money basics</string>
+    <string name="setup_description">Add a starting balance and monthly budget now, or skip and set them later. Bareuang never guesses these amounts.</string>
+    <string name="setup_wallet_title">Main wallet</string>
+    <string name="setup_wallet_description">Enter the balance available in this wallet today. Leave it blank if you prefer to start at zero.</string>
+    <string name="setup_wallet_name">Wallet name</string>
+    <string name="setup_wallet_balance">Starting balance (optional)</string>
+    <string name="setup_budget_title">Monthly budget</string>
+    <string name="setup_budget_description">Optional. Without a budget, you can record transactions, but the runway estimate will stay off.</string>
+    <string name="setup_budget_amount">Spending limit for this month</string>
+    <string name="setup_start">Save and start</string>
+    <string name="setup_skip">Skip for now</string>
+    <string name="setup_saving">Saving…</string>
+    <string name="setup_save_error">Could not save setup. Check your details and try again.</string>
 </resources>

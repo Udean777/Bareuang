@@ -20,6 +20,8 @@ import com.ssajudn.bareuang.presentation.R
 import com.ssajudn.bareuang.ui.common.UiText
 import com.ssajudn.bareuang.ui.common.OperationState
 import com.ssajudn.bareuang.ui.common.UiEffect
+import com.ssajudn.bareuang.ui.common.toUiText
+import com.ssajudn.bareuang.domain.error.AppException
 import javax.inject.Inject
 
 data class WalletsUiState(
@@ -58,7 +60,8 @@ class WalletsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.createWallet(CreateWalletRequest(name, startingBalance, colorHex, "account_balance_wallet"))
-            val ui = UiText.Res(R.string.wallets_error_create)
+            val ui = (r.exceptionOrNull() as? AppException)?.toUiText()
+                ?: UiText.Res(R.string.wallets_error_create)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isSuccess) _effect.send(UiEffect.PopBackStack) else _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
@@ -68,7 +71,8 @@ class WalletsViewModel @Inject constructor(
         viewModelScope.launch {
             _operation.value = OperationState.Loading
             val r = repository.updateWallet(wallet.copy(name = name, colorHex = colorHex))
-            val ui = UiText.Res(R.string.wallets_error_update)
+            val ui = (r.exceptionOrNull() as? AppException)?.toUiText()
+                ?: UiText.Res(R.string.wallets_error_update)
             _operation.value = if (r.isSuccess) OperationState.Success() else OperationState.Error("", ui)
             if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(ui))
         }
@@ -77,7 +81,11 @@ class WalletsViewModel @Inject constructor(
     fun deleteWallet(id: String) {
         viewModelScope.launch {
             val r = repository.deleteWallet(id)
-            if (r.isFailure) _effect.send(UiEffect.ShowSnackbarRes(UiText.Res(R.string.wallets_error_delete)))
+            if (r.isFailure) {
+                val ui = (r.exceptionOrNull() as? AppException)?.toUiText()
+                    ?: UiText.Res(R.string.wallets_error_delete)
+                _effect.send(UiEffect.ShowSnackbarRes(ui))
+            }
         }
     }
 }

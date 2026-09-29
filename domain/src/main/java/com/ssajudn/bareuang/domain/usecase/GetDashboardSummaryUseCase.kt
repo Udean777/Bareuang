@@ -9,7 +9,7 @@ import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
 import com.ssajudn.bareuang.domain.repository.DueBillRepository
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
+import com.ssajudn.bareuang.domain.repository.TransactionQueryRepository
 import com.ssajudn.bareuang.domain.repository.WalletRepository
 import java.time.Clock
 import java.time.LocalDate
@@ -20,7 +20,7 @@ import javax.inject.Inject
 /** Orchestrates dashboard data retrieval and delegates each calculation to a focused use case. */
 class GetDashboardSummaryUseCase @Inject constructor(
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionQueryRepository,
     private val walletRepository: WalletRepository,
     private val dueBillRepository: DueBillRepository,
     private val dailyPacingPreferences: DailyPacingPreferencesPort,
@@ -75,7 +75,7 @@ class GetDashboardSummaryUseCase @Inject constructor(
             ),
         )
     } catch (e: ArithmeticException) {
-        Result.failure(AppException.DataException("Nominal transaksi terlalu besar untuk dihitung", e))
+        Result.failure(AppException.DataException(cause = e))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {

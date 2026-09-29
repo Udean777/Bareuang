@@ -6,6 +6,8 @@ import com.ssajudn.bareuang.domain.model.CreateWalletRequest
 import com.ssajudn.bareuang.domain.model.Wallet
 import com.ssajudn.bareuang.data.mapper.PersistenceMappers
 import com.ssajudn.bareuang.data.error.ApiErrorParser
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.error.WalletOperationReason
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
@@ -61,8 +63,12 @@ class WalletLocalDataSource @Inject constructor(private val db: AppDatabase) {
 
     suspend fun createWallet(request: CreateWalletRequest): Result<Wallet> = withContext(Dispatchers.IO) {
         try {
-            if (request.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama dompet tidak boleh kosong"))
-            if (request.balance < 0) return@withContext Result.failure(IllegalArgumentException("Saldo tidak boleh negatif"))
+            if (request.name.isBlank()) return@withContext Result.failure(
+                AppException.WalletOperationException(WalletOperationReason.INVALID_NAME)
+            )
+            if (request.balance < 0) return@withContext Result.failure(
+                AppException.WalletOperationException(WalletOperationReason.NEGATIVE_BALANCE)
+            )
             val wallet = Wallet(
                 id = UUID.randomUUID().toString(),
                 name = request.name.trim(),
@@ -81,9 +87,13 @@ class WalletLocalDataSource @Inject constructor(private val db: AppDatabase) {
 
     suspend fun updateWallet(wallet: Wallet): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            if (wallet.name.isBlank()) return@withContext Result.failure(IllegalArgumentException("Nama dompet tidak boleh kosong"))
-            val existing = db.walletDao().getWalletById(wallet.id!!)
-                ?: return@withContext Result.failure(Exception("Dompet tidak ditemukan"))
+            if (wallet.name.isBlank()) return@withContext Result.failure(
+                AppException.WalletOperationException(WalletOperationReason.INVALID_NAME)
+            )
+            val walletId = wallet.id
+                ?: return@withContext Result.failure(AppException.WalletOperationException(WalletOperationReason.NOT_FOUND))
+            val existing = db.walletDao().getWalletById(walletId)
+                ?: return@withContext Result.failure(AppException.WalletOperationException(WalletOperationReason.NOT_FOUND))
             db.walletDao().insertWallet(
                 existing.copy(name = wallet.name.trim(), colorHex = wallet.colorHex, isSynced = false)
             )

@@ -92,7 +92,8 @@ import com.ssajudn.bareuang.ui.components.AppIconButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllTransactionsScreen(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)?,
+    onNavigateToImport: () -> Unit,
     onNavigateToTransactionDetail: (String) -> Unit,
     viewModel: AllTransactionsViewModel = hiltViewModel()
 ) {
@@ -117,11 +118,18 @@ fun AllTransactionsScreen(
                     )
                 },
                 navigationIcon = {
-                    AppIconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.common_back)
-                        )
+                    if (onNavigateBack != null) {
+                        AppIconButton(onClick = onNavigateBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.common_back)
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    TextButton(onClick = onNavigateToImport) {
+                        Text(stringResource(R.string.tx_import_csv))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -548,15 +556,22 @@ fun AllTransactionsScreen(
                                         .padding(32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = if (state.searchQuery.isNotBlank() || state.selectedCategory != null) {
-                                            stringResource(R.string.tx_no_match)
-                                        } else {
-                                            stringResource(R.string.tx_no_data)
-                                        },
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = if (state.searchQuery.isNotBlank() || state.selectedCategory != null) {
+                                                stringResource(R.string.tx_no_match)
+                                            } else {
+                                                stringResource(R.string.tx_no_data)
+                                            },
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        if (state.searchQuery.isBlank() && state.selectedCategory == null) {
+                                            TextButton(onClick = onNavigateToImport) {
+                                                Text(stringResource(R.string.tx_import_csv))
+                                            }
+                                        }
+                                    }
                                 }
                             } else {
                                 LazyColumn(

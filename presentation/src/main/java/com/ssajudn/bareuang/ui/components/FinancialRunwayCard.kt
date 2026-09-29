@@ -64,7 +64,8 @@ fun FinancialRunwayCard(
     remainingToday: Long = 0L,
     remainingDays: Int = 0,
 ) {
-    val isDanger = remainingBudget <= 0 || estimatedDeathDay < daysInMonth
+    val hasBudget = totalBudget > 0L
+    val isDanger = hasBudget && (remainingBudget <= 0 || estimatedDeathDay < daysInMonth)
     val containerColor = if (isDanger) {
         MaterialTheme.colorScheme.errorContainer
     } else {
@@ -170,21 +171,26 @@ fun FinancialRunwayCard(
 
             // Main remaining runway budget display using dedicated money typography
             Text(
-                text = CurrencyFormatter.formatRupiah(countUp.value.toLong()),
-                style = PriceDisplayStyle,
+                text = if (hasBudget) {
+                    CurrencyFormatter.formatRupiah(countUp.value.toLong())
+                } else {
+                    stringResource(R.string.runway_not_calculated)
+                },
+                style = if (hasBudget) PriceDisplayStyle else MaterialTheme.typography.titleLarge,
+                fontWeight = if (hasBudget) FontWeight.Normal else FontWeight.Bold,
             )
 
-            Spacer(Modifier.height(10.dp))
-
-            // Signature Expressive Gauge Bar with Bear Mascot
-            BearProgressIndicator(
-                progress = animatedProgress,
-                color = accentColor,
-                trackColor = contentColor.copy(alpha = 0.15f),
-                trackHeight = 10.dp,
-                bearSize = 22.dp,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (hasBudget) {
+                Spacer(Modifier.height(10.dp))
+                BearProgressIndicator(
+                    progress = animatedProgress,
+                    color = accentColor,
+                    trackColor = contentColor.copy(alpha = 0.15f),
+                    trackHeight = 10.dp,
+                    bearSize = 22.dp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(Modifier.height(14.dp))
 

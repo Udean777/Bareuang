@@ -9,13 +9,14 @@ import com.ssajudn.bareuang.domain.model.CategorySummary
 import com.ssajudn.bareuang.domain.model.DashboardTransactionData
 import com.ssajudn.bareuang.data.service.WalletBalanceService
 import com.ssajudn.bareuang.data.error.ApiErrorParser
+import com.ssajudn.bareuang.domain.error.AppException
+import com.ssajudn.bareuang.domain.error.TransactionValidationReason
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,8 +27,7 @@ import javax.inject.Singleton
 @Singleton
 class TransactionLocalDataSource @Inject constructor(
     private val db: AppDatabase,
-    private val balanceService: WalletBalanceService,
-    private val currencyPreferences: com.ssajudn.bareuang.data.local.CurrencyPreferences
+    private val balanceService: WalletBalanceService
 ) {
 
     suspend fun getDashboardTransactions(monthYear: String, todayIso: String): Result<DashboardTransactionData> =
@@ -46,10 +46,10 @@ class TransactionLocalDataSource @Inject constructor(
                 }
                 Result.success(
                     DashboardTransactionData(
-                        totalSpent = dao.getDiscretionaryExpenseTotal(monthStart, nextMonth),
-                        todaySpent = dao.getDiscretionaryExpenseTotalForDay(todayIso, todayEnd),
+                        totalSpent = dao.getExpenseTotal(monthStart, nextMonth),
+                        todaySpent = dao.getExpenseTotalForDay(todayIso, todayEnd),
                         topCategories = categories,
-                        recentTransactions = dao.getTransactionsByDateRange(monthStart, nextMonth, 5).map { it.toTransaction() },
+                        recentTransactions = dao.getRecentTransactions(5).map { it.toTransaction() },
                         recurringTransactions = dao.getRecurringTemplates().map { it.toTransaction() },
                     )
                 )
@@ -72,6 +72,8 @@ class TransactionLocalDataSource @Inject constructor(
                     db.transactionDao().getTransactionsByCategoryPaged(category, safeLimit, offset)
                 }
                 Result.success(entities.map { it.toTransaction() })
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Result.failure(ApiErrorParser.fromThrowable(e))
             }
@@ -90,37 +92,7 @@ class TransactionLocalDataSource @Inject constructor(
     suspend fun createTransaction(request: CreateTransactionRequest): Result<Transaction> =
         withContext(Dispatchers.IO) {
             try {
-                if (request.amount <= 0) {
-                    return@withContext Result.failure(IllegalArgumentException("Jumlah transaksi harus lebih dari 0"))
-                }
-                // Validasi: semua tipe wajib pakai dompet
-                if (request.walletId.isNullOrBlank()) {
-                    return@withContext Result.failure(IllegalArgumentException("Dompet wajib dipilih untuk transaksi"))
-                }
-                if (request.type == TransactionType.TRANSFER) {
-                    if (request.toWalletId.isNullOrBlank()) {
-                        return@withContext Result.failure(IllegalArgumentException("Dompet tujuan wajib dipilih untuk transfer"))
-                    }
-                    if (request.walletId == request.toWalletId) {
-                        return@withContext Result.failure(IllegalArgumentException("Dompet asal dan tujuan tidak boleh sama"))
-                    }
-                }
-                // Validasi saldo untuk pengeluaran & transfer
-                if (request.type == TransactionType.EXPENSE) {
-                    val w = db.walletDao().getWalletById(request.walletId!!)
-                        ?: return@withContext Result.failure(IllegalArgumentException("Dompet tidak ditemukan"))
-                    if (w.balance < request.amount) {
-                        val cur = currencyPreferences.getCurrency()
-                        return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(w.balance, cur)}, dibutuhkan: ${DomainCurrencyFormatter.format(request.amount, cur)}"))
-                    }
-                } else if (request.type == TransactionType.TRANSFER) {
-                    val w = db.walletDao().getWalletById(request.walletId!!)
-                        ?: return@withContext Result.failure(IllegalArgumentException("Dompet asal tidak ditemukan"))
-                    if (w.balance < request.amount) {
-                        val cur = currencyPreferences.getCurrency()
-                        return@withContext Result.failure(IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(w.balance, cur)}, dibutuhkan: ${DomainCurrencyFormatter.format(request.amount, cur)}"))
-                    }
-                }
+                requireValidPersistenceRequest(request)
                 val dateStr = request.date.ifBlank {
                     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date())
                 }
@@ -147,6 +119,7 @@ class TransactionLocalDataSource @Inject constructor(
                 )
 
                 db.withTransaction {
+                    validateCurrentBalance(request)
                     if (!isRecurring) {
                         balanceService.adjustForCreate(request)
                     }
@@ -165,19 +138,8 @@ class TransactionLocalDataSource @Inject constructor(
             var inserted = 0
             db.withTransaction {
                 for (req in requests) {
-                    if (req.amount <= 0) throw IllegalArgumentException("Jumlah transaksi harus lebih dari 0")
-                    if (req.walletId.isNullOrBlank()) throw IllegalArgumentException("Dompet wajib dipilih")
-                    if (req.type == TransactionType.TRANSFER) {
-                        if (req.toWalletId.isNullOrBlank()) throw IllegalArgumentException("Dompet tujuan wajib dipilih untuk transfer")
-                        if (req.walletId == req.toWalletId) throw IllegalArgumentException("Dompet asal dan tujuan tidak boleh sama")
-                    }
-                    if (req.type == TransactionType.EXPENSE || req.type == TransactionType.TRANSFER) {
-                        val w = db.walletDao().getWalletById(req.walletId!!) ?: throw IllegalArgumentException("Dompet tidak ditemukan")
-                        if (w.balance < req.amount) {
-                            val cur = currencyPreferences.getCurrency()
-                            throw IllegalStateException("Saldo dompet tidak cukup. Saldo: ${DomainCurrencyFormatter.format(w.balance, cur)}, dibutuhkan: ${DomainCurrencyFormatter.format(req.amount, cur)}")
-                        }
-                    }
+                    requireValidPersistenceRequest(req)
+                    validateCurrentBalance(req)
                     val dateStr = req.date.ifBlank { SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date()) }
                     val isRecurring = req.recurringInterval != com.ssajudn.bareuang.domain.model.RecurringInterval.NONE
                     val nextDate = if (isRecurring) com.ssajudn.bareuang.domain.utils.DateUtils.calculateNextDueDate(dateStr, req.recurringInterval.name) else null
@@ -222,6 +184,45 @@ class TransactionLocalDataSource @Inject constructor(
             throw e
         } catch (e: Exception) {
             Result.failure(ApiErrorParser.fromThrowable(e))
+        }
+    }
+
+    private fun requireValidPersistenceRequest(request: CreateTransactionRequest) {
+        // Defensive adapter guards mirror the domain validation boundary for direct repository callers.
+        // Balance checks stay below because only the persistence transaction sees the latest stored balance.
+        if (request.amount <= 0) {
+            throw AppException.TransactionValidationException(TransactionValidationReason.INVALID_AMOUNT)
+        }
+        if (request.walletId.isNullOrBlank()) {
+            throw AppException.TransactionValidationException(TransactionValidationReason.WALLET_REQUIRED)
+        }
+        if (request.type == TransactionType.TRANSFER) {
+            if (request.toWalletId.isNullOrBlank()) {
+                throw AppException.TransactionValidationException(TransactionValidationReason.TO_WALLET_REQUIRED)
+            }
+            if (request.walletId == request.toWalletId) {
+                throw AppException.TransactionValidationException(TransactionValidationReason.SAME_WALLET)
+            }
+        }
+    }
+
+    private suspend fun validateCurrentBalance(request: CreateTransactionRequest) {
+        val walletId = request.walletId
+            ?: throw AppException.TransactionValidationException(TransactionValidationReason.WALLET_REQUIRED)
+        val wallet = db.walletDao().getWalletById(walletId)
+            ?: throw AppException.TransactionValidationException(TransactionValidationReason.WALLET_REQUIRED)
+        if (request.type == TransactionType.TRANSFER &&
+            db.walletDao().getWalletById(request.toWalletId.orEmpty()) == null
+        ) {
+            throw AppException.TransactionValidationException(TransactionValidationReason.TO_WALLET_REQUIRED)
+        }
+        if ((request.type == TransactionType.EXPENSE || request.type == TransactionType.TRANSFER) &&
+            wallet.balance < request.amount
+        ) {
+            throw AppException.InsufficientBalanceException(
+                availableBalance = wallet.balance,
+                requestedAmount = request.amount
+            )
         }
     }
 

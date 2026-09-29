@@ -2,12 +2,10 @@ package com.ssajudn.bareuang.domain.usecase
 
 import com.ssajudn.bareuang.domain.error.AppException
 import com.ssajudn.bareuang.domain.repository.BudgetRepository
-import com.ssajudn.bareuang.domain.repository.TransactionRepository
-import com.ssajudn.bareuang.domain.model.AppCurrency
+import com.ssajudn.bareuang.domain.repository.TransactionQueryRepository
 import com.ssajudn.bareuang.domain.model.TransactionType
 import com.ssajudn.bareuang.domain.model.TransactionCategory
 import com.ssajudn.bareuang.domain.model.BudgetPeriod
-import com.ssajudn.bareuang.domain.utils.DomainCurrencyFormatter
 import com.ssajudn.bareuang.domain.port.DailyPacingPreferencesPort
 import java.time.Clock
 import java.time.LocalDate
@@ -20,17 +18,20 @@ import javax.inject.Inject
  */
 class CheckDailyBudgetUseCase @Inject constructor(
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionQueryRepository,
     private val dailyPacingPreferences: DailyPacingPreferencesPort,
     private val clock: Clock,
 ) {
     suspend operator fun invoke(
         amount: Long,
         date: String,
-        currency: AppCurrency,
         category: TransactionCategory = TransactionCategory.OTHER
     ): Result<Unit> {
-        if (amount <= 0) return Result.failure(AppException.DataException("Jumlah harus lebih dari 0"))
+        if (amount <= 0) return Result.failure(
+            AppException.TransactionValidationException(
+                com.ssajudn.bareuang.domain.error.TransactionValidationReason.INVALID_AMOUNT
+            )
+        )
         return try {
             val today = LocalDate.now(clock)
             val monthYear = YearMonth.from(today).toString()
@@ -68,14 +69,16 @@ class CheckDailyBudgetUseCase @Inject constructor(
             val remainingToday = pacing.remaining
 
             if (category != TransactionCategory.BILLS && amount > remainingToday) {
-                val formatted = DomainCurrencyFormatter.format(remainingToday.coerceAtLeast(0L), currency)
-                val msg = if (remainingToday <= 0) "Target pacing hari ini sudah terlampaui."
-                else "Melebihi target pacing hari ini. Sisa target $formatted."
-                return Result.failure(AppException.DataException(msg))
+                return Result.failure(
+                    AppException.DailyBudgetExceededException(
+                        remainingAmount = remainingToday.coerceAtLeast(0L),
+                        requestedAmount = amount,
+                    )
+                )
             }
             Result.success(Unit)
         } catch (e: ArithmeticException) {
-            Result.failure(AppException.DataException("Nominal transaksi terlalu besar untuk dihitung", e))
+            Result.failure(AppException.DataException(cause = e))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

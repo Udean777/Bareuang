@@ -65,6 +65,12 @@
 -keep class androidx.activity.result.contract.** { *; }
 -keep class androidx.activity.result.** { *; }
 
-# Keep Log for release diagnostics — proguard-android-optimize.txt has -assumenosideeffects for Log.v/d
-# which hides backup/import failures in release; we need error logs
--keep class android.util.Log { *; }
+# User-entered financial data and file exceptions must not reach production logcat.
+-assumenosideeffects class android.util.Log {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
+    public static *** w(...);
+    public static *** e(...);
+    public static *** wtf(...);
+}

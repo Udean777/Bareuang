@@ -13,12 +13,7 @@ object ApiErrorParser {
     fun fromThrowable(e: Throwable): AppException = when (e) {
         is IOException -> AppException.NetworkException(cause = e)
         is AppException -> e
-        is IllegalArgumentException, is IllegalStateException -> AppException.DataException(e.message, e)
+        is IllegalArgumentException, is IllegalStateException -> AppException.DataException(cause = e)
         else -> AppException.UnknownError(cause = e)
-    }
-
-    fun message(e: Throwable): String = when (e) {
-        is AppException -> e.message ?: "Terjadi kesalahan"
-        else -> "Terjadi kesalahan"
     }
 }
