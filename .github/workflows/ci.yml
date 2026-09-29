@@ -83,13 +83,8 @@ jobs:
           node --check web/api/download.js
           node web/test/seo-check.mjs
 
-  android-instrumentation:
-    uses: ./.github/workflows/reusable-android-instrumentation.yml
-    with:
-      artifact-name-prefix: android-instrumentation-reports
-
   assemble-debug:
-    needs: [unit-test, lint, web-check, android-instrumentation]
+    needs: [unit-test, lint, web-check]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20

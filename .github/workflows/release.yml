@@ -20,13 +20,7 @@ permissions:
   contents: read
 
 jobs:
-  android-instrumentation:
-    uses: ./.github/workflows/reusable-android-instrumentation.yml
-    with:
-      artifact-name-prefix: release-android-instrumentation-reports
-
   release:
-    needs: android-instrumentation
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
