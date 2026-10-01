@@ -79,19 +79,26 @@ android {
 val validateReleaseInputs = tasks.register("validateReleaseInputs") {
     group = "verification"
     description = "Checks required signing and version inputs before creating a release artifact."
+    val configuredReleaseStoreFile = releaseStoreFile
+    val configuredReleaseStorePassword = releaseStorePassword
+    val configuredReleaseKeyAlias = releaseKeyAlias
+    val configuredReleaseKeyPassword = releaseKeyPassword
+    val configuredReleaseVersionCode = releaseVersionCodeInput
+    val configuredReleaseVersionName = releaseVersionNameInput
+
     doLast {
         val missing = buildList {
-            if (releaseStoreFile == null || !releaseStoreFile.isFile) add("KEYSTORE_FILE / storeFile")
-            if (releaseStorePassword.isNullOrBlank()) add("KEYSTORE_PASSWORD / storePassword")
-            if (releaseKeyAlias.isNullOrBlank()) add("KEY_ALIAS / keyAlias")
-            if (releaseKeyPassword.isNullOrBlank()) add("KEY_PASSWORD / keyPassword")
-            if (releaseVersionCodeInput?.toIntOrNull()?.let { it > 0 } != true) add("VERSION_CODE (positive integer)")
-            if (releaseVersionNameInput.isNullOrBlank()) add("VERSION_NAME")
+            if (configuredReleaseStoreFile == null || !configuredReleaseStoreFile.isFile) add("KEYSTORE_FILE / storeFile")
+            if (configuredReleaseStorePassword.isNullOrBlank()) add("KEYSTORE_PASSWORD / storePassword")
+            if (configuredReleaseKeyAlias.isNullOrBlank()) add("KEY_ALIAS / keyAlias")
+            if (configuredReleaseKeyPassword.isNullOrBlank()) add("KEY_PASSWORD / keyPassword")
+            if (configuredReleaseVersionCode?.toIntOrNull()?.let { it > 0 } != true) add("VERSION_CODE (positive integer)")
+            if (configuredReleaseVersionName.isNullOrBlank()) add("VERSION_NAME")
         }
         check(missing.isEmpty()) {
             "Release build refused. Set valid values for: ${missing.joinToString()}."
         }
-        check(releaseVersionNameInput!!.matches(Regex("\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?"))) {
+        check(configuredReleaseVersionName!!.matches(Regex("\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?"))) {
             "VERSION_NAME must use semantic version format, for example 1.2.3 or 1.2.3-beta.1."
         }
     }
