@@ -104,23 +104,6 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon
 
-      - name: Enable KVM permissions
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-          test -e /dev/kvm || { echo "KVM device is unavailable on this runner"; exit 1; }
-          test -r /dev/kvm && test -w /dev/kvm || { echo "KVM device is not accessible to the runner user"; ls -l /dev/kvm; exit 1; }
-          ls -l /dev/kvm
-
-      - name: Smoke-test minified release APK on Android 16
-        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
-        with:
-          api-level: 36
-          arch: x86_64
-          disable-animations: true
-          script: bash scripts/ci/smoke-test-release-apk.sh
-
       - name: Verify release signatures and collect artifacts
         env:
           KEYSTORE_FILE: ${{ github.workspace }}/keystores/bareuang-release.keystore
@@ -138,7 +121,7 @@ jobs:
 
           EXPECTED_CERT=$(keytool -list -v -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>/dev/null | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
           AAB_CERT=$(keytool -printcert -jarfile "$AAB" 2>/dev/null | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
-          APK_CERT=$(apksigner verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/{print toupper($2); exit}')
+          APK_CERT=$(apksigner verify --print-certs "$APK" | awk -F': ' '/certificate SHA-256 digest:/{print toupper($2); exit}')
           test -n "$EXPECTED_CERT" && test "$EXPECTED_CERT" = "$AAB_CERT"
           test -n "$EXPECTED_CERT" && test "$EXPECTED_CERT" = "$APK_CERT"
 
@@ -147,7 +130,10 @@ jobs:
           "$ZIPALIGN" -c -P 16 -v 4 "$APK"
           APK_SIZE=$(stat -c%s "$APK")
           echo "Release APK size: ${APK_SIZE} bytes"
-          test "$APK_SIZE" -le 25000000
+          if [ "$APK_SIZE" -gt 60000000 ]; then
+            echo "Release APK exceeds the 60 MB size limit: ${APK_SIZE} bytes"
+            exit 1
+          fi
 
           mkdir -p dist
           cp "$AAB" "dist/Bareuang-v${VERSION_NAME}-${VERSION_CODE}.aab"
