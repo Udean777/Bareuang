@@ -168,7 +168,10 @@ fun SettingsScreen(
                     onReplayTour()
                 },
                 onOpenPrivacy = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, "https://bareuang.app/privacy".toUri()))
+                    context.startActivity(Intent(Intent.ACTION_VIEW, "https://bareuang.vercel.app/privacy".toUri()))
+                },
+                onOpenTerms = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, "https://bareuang.vercel.app/terms".toUri()))
                 },
                 onDonate = {
                     context.startActivity(Intent(Intent.ACTION_VIEW, "https://trakteer.id/ssajudn".toUri()))

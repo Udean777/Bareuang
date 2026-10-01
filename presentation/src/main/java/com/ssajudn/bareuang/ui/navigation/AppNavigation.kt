@@ -1,8 +1,9 @@
 package com.ssajudn.bareuang.ui.navigation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -23,7 +24,11 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         TourHost(currentRoute, navController) {
         Scaffold(
             bottomBar = {
-                AnimatedVisibility(showNavigationBar, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
+                AnimatedVisibility(
+                    visible = showNavigationBar,
+                    enter = fadeIn(tween(350)),
+                    exit = fadeOut(tween(350)),
+                ) {
                     AppNavigationBar(
                         items = destinations,
                         currentRoute = currentRoute,

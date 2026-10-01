@@ -2,14 +2,9 @@ package com.ssajudn.bareuang.ui.navigation
 import androidx.compose.material.icons.filled.ReceiptLong
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
@@ -48,8 +43,8 @@ fun AppFabHost(
 
     AnimatedVisibility(
         visible = visible,
-        enter = scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) + fadeIn(tween(250)),
-        exit = scaleOut(animationSpec = tween(200, easing = FastOutLinearInEasing)) + fadeOut(tween(180)),
+        enter = fadeIn(tween(350)),
+        exit = fadeOut(tween(350)),
     ) {
         val items = listOf(
             SpeedDialItem(stringResource(R.string.fab_menu_transaction), Icons.Filled.Add, { navController.navigate(Screen.AddTransaction.route) }),

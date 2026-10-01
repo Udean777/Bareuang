@@ -427,6 +427,8 @@
     <string name="settings_ocr_desc">Process receipt photos on this device, offline</string>
     <string name="settings_privacy_title">Privacy Policy</string>
     <string name="settings_privacy_desc">See how receipt images and local financial data are handled</string>
+    <string name="settings_terms_title">Terms of Service</string>
+    <string name="settings_terms_desc">Read the terms and conditions for using Bareuang</string>
 
     <!-- Appearance -->
     <string name="appearance_title">Appearance</string>

@@ -47,6 +47,8 @@ fun AppNavGraph(navController: NavHostController, innerPadding: PaddingValues) {
         exitTransition = { fadeOut(tween(350)) },
         popEnterTransition = { fadeIn(tween(350)) },
         popExitTransition = { fadeOut(tween(350)) },
+        predictivePopEnterTransition = { fadeIn(tween(350)) },
+        predictivePopExitTransition = { fadeOut(tween(350)) },
         modifier = Modifier
             .padding(innerPadding)
             .consumeWindowInsets(innerPadding),

@@ -620,6 +620,8 @@
     <string name="settings_ocr_desc">Proses foto struk di perangkat ini, tanpa internet</string>
     <string name="settings_privacy_title">Kebijakan Privasi</string>
     <string name="settings_privacy_desc">Lihat cara foto struk dan data keuangan lokal diproses</string>
+    <string name="settings_terms_title">Ketentuan Layanan</string>
+    <string name="settings_terms_desc">Baca ketentuan penggunaan Bareuang</string>
     <string name="bills_error_insufficient">Saldo tidak cukup untuk membayar tagihan</string>
     <string name="budget_category_add">Atur Batas Kategori</string>
     <string name="budget_category_allocated">Terpakai %1$s dari %2$s</string>
