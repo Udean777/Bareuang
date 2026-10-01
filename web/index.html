@@ -171,24 +171,25 @@
       <!-- Vercel Analytics: enable in dashboard → Analytics → Web Analytics (no code needed) -->
   </head>
   <body>
-    <a href="#main" class="skip-link">Skip to content</a>
+    <a href="#main" class="skip-link" data-i18n="nav.skip">Skip to content</a>
     <header class="nav">
       <div class="container nav-inner">
         <a class="brand" href="#"
           ><img
             src="/assets/logo.png"
             alt="Bareuang logo"
+            data-i18n-alt="brand.logo"
             width="36"
             height="36"
           /><span>Bareuang</span></a
         >
-        <nav id="navLinks" class="nav-links" aria-label="Primary">
+        <nav id="navLinks" class="nav-links" aria-label="Primary" data-i18n-aria-label="aria.primary">
           <a href="#fitur" data-i18n="nav.features">Fitur</a>
           <a href="#cara-kerja" data-i18n="nav.how">Cara kerja</a>
           <a href="#screenshot" data-i18n="nav.screenshots">Screenshot</a>
           <a href="#faq" data-i18n="nav.faq">FAQ</a>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
+          <a href="/privacy" data-i18n="nav.privacy">Privacy</a>
+          <a href="/terms" data-i18n="nav.terms">Terms</a>
           <a
             class="nav-github"
             href="https://github.com/Udean777/Bareuang"
@@ -212,7 +213,7 @@
           >
         </nav>
         <div class="nav-actions">
-          <div class="lang-switch" role="group" aria-label="Language">
+          <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="aria.language">
             <button data-lang="id" class="active" aria-pressed="true">
               ID
             </button>
@@ -222,6 +223,7 @@
             class="hamburger"
             id="hamburger"
             aria-label="Menu"
+            data-i18n-aria-label="aria.menu"
             aria-controls="navLinks"
             aria-expanded="false"
           >
@@ -390,6 +392,7 @@
             <img
               src="/assets/screenshots/Dashboard.png"
               alt="Bareuang dashboard runway preview"
+              data-i18n-alt="hero.imageAlt"
             />
             <div class="phone-float">
               <div class="phone-icon">
@@ -455,7 +458,7 @@
                 >
                   <path d="M5 13l4 4L19 7" />
                 </svg>
-                Budget Gate</span
+                <span data-i18n="trust.budget">Budget Gate</span></span
               >
               <span class="badge"
                 ><svg
@@ -471,7 +474,7 @@
                 >
                   <path d="M5 13l4 4L19 7" />
                 </svg>
-                Import CSV BCA/e-wallet</span
+                <span data-i18n="trust.csv">Import CSV BCA/e-wallet</span></span
               >
               <span class="badge"
                 ><svg
@@ -505,7 +508,7 @@
                 >
                   <path d="M5 13l4 4L19 7" />
                 </svg>
-                IDR / USD</span
+                <span data-i18n="trust.currency">IDR / USD</span></span
               >
               <span class="badge"
                 ><svg
@@ -521,7 +524,7 @@
                 >
                   <path d="M5 13l4 4L19 7" />
                 </svg>
-                Widget Home</span
+                <span data-i18n="trust.widget">Widget Home</span></span
               >
             </div>
             <p data-i18n="trust.note">
@@ -625,7 +628,7 @@
                   <path d="M14 12h2" />
                 </svg>
               </div>
-              <h3>Multi-Wallet</h3>
+              <h3 data-i18n="features.c3t">Multi-Wallet</h3>
               <p data-i18n="features.c3d">
                 Tunai, BCA, GoPay, OVO - total net worth real-time dalam satu
                 layar.
@@ -843,8 +846,9 @@
               <img
                 src="/assets/screenshots/Dashboard.png"
                 alt="Dashboard runway"
+                data-i18n-alt="shots.altDashboard"
               />
-              <figcaption>Dashboard & Runway</figcaption>
+              <figcaption data-i18n="shots.captionDashboard">Dashboard & Runway</figcaption>
             </figure>
             <figure class="reveal reveal-delay-1">
               <img
@@ -854,8 +858,9 @@
                 width="390"
                 height="844"
                 alt="Budget"
+                data-i18n-alt="shots.altBudget"
               />
-              <figcaption>Monthly Budget</figcaption>
+              <figcaption data-i18n="shots.captionBudget">Monthly Budget</figcaption>
             </figure>
             <figure class="reveal reveal-delay-2">
               <img
@@ -865,8 +870,9 @@
                 width="390"
                 height="844"
                 alt="Bills"
+                data-i18n-alt="shots.altBills"
               />
-              <figcaption>Bills & Commitments</figcaption>
+              <figcaption data-i18n="shots.captionBills">Bills & Commitments</figcaption>
             </figure>
             <figure class="reveal">
               <img
@@ -876,8 +882,9 @@
                 width="390"
                 height="844"
                 alt="Goals"
+                data-i18n-alt="shots.altGoals"
               />
-              <figcaption>Savings Goals</figcaption>
+              <figcaption data-i18n="shots.captionGoals">Savings Goals</figcaption>
             </figure>
             <figure class="reveal reveal-delay-1">
               <img
@@ -887,8 +894,9 @@
                 width="390"
                 height="844"
                 alt="Transfer"
+                data-i18n-alt="shots.altTransfer"
               />
-              <figcaption>Wallet Transfer</figcaption>
+              <figcaption data-i18n="shots.captionTransfer">Wallet Transfer</figcaption>
             </figure>
             <figure class="reveal reveal-delay-2">
               <img
@@ -898,8 +906,9 @@
                 width="390"
                 height="844"
                 alt="Analytics"
+                data-i18n-alt="shots.altAnalytics"
               />
-              <figcaption>Financial Analytics</figcaption>
+              <figcaption data-i18n="shots.captionAnalytics">Financial Analytics</figcaption>
             </figure>
           </div>
         </div>
@@ -908,7 +917,7 @@
       <section id="faq" class="section section--cream">
         <div class="container">
           <div class="section-head reveal">
-            <div class="kicker">FAQ</div>
+            <div class="kicker" data-i18n="faq.skip">FAQ</div>
             <h2 data-i18n="faq.title">Yang sering ditanya</h2>
           </div>
           <div class="faq reveal">
@@ -1152,31 +1161,31 @@
               di Indonesia.
             </p>
             <p class="footer-meta footer-contact" id="contact">
-              Kontak:
+              <span data-i18n="footer.contact">Kontak:</span>
               <a href="mailto:sajudinmaruf@gmail.com" class="contact-link"
                 >sajudinmaruf@gmail.com</a
               >
             </p>
           </div>
           <div>
-            <h4>Legal</h4>
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
-            <a href="/privacy#cookies">Cookie Policy</a>
-            <a href="/terms#disclaimer">Disclaimer</a>
+            <h4 data-i18n="footer.legal">Legal</h4>
+            <a href="/privacy" data-i18n="footer.privacy">Privacy Policy</a>
+            <a href="/terms" data-i18n="footer.terms">Terms of Service</a>
+            <a href="/privacy#cookies" data-i18n="footer.cookies">Cookie Policy</a>
+            <a href="/terms#disclaimer" data-i18n="footer.disclaimer">Disclaimer</a>
           </div>
           <div>
             <h4 data-i18n="footer.product">Produk</h4>
             <a href="#fitur" data-i18n="footer.features">Fitur</a>
             <a href="#screenshot" data-i18n="footer.screenshots">Screenshot</a>
-            <a href="#faq">FAQ</a>
+            <a href="#faq" data-i18n="footer.faq">FAQ</a>
             <a href="https://github.com/Udean777/Bareuang"
-              >GitHub & License (MIT)</a
+              data-i18n="footer.githubLicense">GitHub & License (MIT)</a
             >
           </div>
         </div>
         <div class="subfooter">
-          <span>© <span id="year"></span> Bareuang · MIT License</span>
+          <span>© <span id="year"></span> Bareuang · <span data-i18n="footer.license">MIT License</span></span>
           <span data-i18n="footer.lang">Bahasa: Indonesia · English</span>
         </div>
       </div>

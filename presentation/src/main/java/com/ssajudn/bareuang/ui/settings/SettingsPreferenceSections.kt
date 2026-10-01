@@ -103,6 +103,7 @@ internal fun SettingsCurrencySection(currency: AppCurrency, onOpenCurrencyPicker
 internal fun SettingsSupportSection(
     onReplayTour: () -> Unit,
     onOpenPrivacy: () -> Unit,
+    onOpenTerms: () -> Unit,
     onDonate: () -> Unit,
     onRate: () -> Unit,
     onShare: () -> Unit,
@@ -121,6 +122,12 @@ internal fun SettingsSupportSection(
                 description = stringResource(R.string.settings_privacy_desc),
                 icon = Icons.Default.Policy,
                 onClick = onOpenPrivacy,
+            ),
+            Material3SettingsItem(
+                title = stringResource(R.string.settings_terms_title),
+                description = stringResource(R.string.settings_terms_desc),
+                icon = Icons.Default.Policy,
+                onClick = onOpenTerms,
             ),
             Material3SettingsItem(
                 title = stringResource(R.string.settings_donate_title),

@@ -92,6 +92,13 @@ function applyLang(lang) {
       el.textContent = val;
     }
   }
+  for (const attribute of ["alt", "aria-label"]) {
+    for (const el of document.querySelectorAll(`[data-i18n-${attribute}]`)) {
+      const key = el.getAttribute(`data-i18n-${attribute}`);
+      const val = d[key];
+      if (val != null) el.setAttribute(attribute, val);
+    }
+  }
   // hero title/desc contain HTML already handled above
   for (const b of document.querySelectorAll(".lang-switch button")) {
     const active = b.dataset.lang === lang;
