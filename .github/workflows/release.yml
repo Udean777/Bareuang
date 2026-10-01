@@ -141,11 +141,16 @@ jobs:
           fi
 
           echo "Verifying AAB JAR signature (certificate trust warnings may be reported for a self-signed upload key)."
-          if jarsigner -verify -certs "$AAB"; then
+          JARSIGNER_LOG="$RUNNER_TEMP/jarsigner-verify.log"
+          if jarsigner -verify -certs "$AAB" >"$JARSIGNER_LOG" 2>&1; then
+            if grep -q "internal inconsistencies" "$JARSIGNER_LOG"; then
+              echo "jarsigner reported its informational JarFile/JarInputStream consistency warning for the AAB."
+            fi
             echo "AAB JAR signature verification passed."
           else
             verify_exit=$?
             echo "AAB JAR signature verification failed with exit code $verify_exit."
+            tail -n 40 "$JARSIGNER_LOG"
             exit "$verify_exit"
           fi
 
