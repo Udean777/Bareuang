@@ -196,6 +196,9 @@ jobs:
             echo "A signing certificate fingerprint is missing (keystore/AAB/APK)."
             exit 1
           fi
+          echo "Configured keystore SHA-256: $EXPECTED_CERT"
+          echo "AAB signing certificate SHA-256: $AAB_CERT"
+          echo "APK signing certificate SHA-256: $APK_CERT"
           if [ "$EXPECTED_CERT" != "$AAB_CERT" ]; then
             echo "AAB signing certificate does not match the configured keystore alias."
             exit 1
