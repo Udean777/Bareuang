@@ -7,10 +7,6 @@ on:
         description: Semantic version to publish, for example 1.0.0
         required: true
         type: string
-      version_code:
-        description: Positive integer greater than the latest version uploaded to Play
-        required: true
-        type: number
 
 concurrency:
   group: bareuang-release
@@ -28,6 +24,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Generate version code
+        id: version_code
+        env:
+          PLAY_VERSION_CODE_BASE: ${{ vars.PLAY_VERSION_CODE_BASE }}
+          WORKFLOW_RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          if ! [[ "$PLAY_VERSION_CODE_BASE" =~ ^[0-9]+$ ]] || ! [[ "$WORKFLOW_RUN_NUMBER" =~ ^[0-9]+$ ]] || (( 10#$PLAY_VERSION_CODE_BASE < 1 )); then
+            echo "Set the PLAY_VERSION_CODE_BASE repository variable to the highest versionCode already uploaded to Play."
+            exit 1
+          fi
+
+          VERSION_CODE=$((10#$PLAY_VERSION_CODE_BASE + WORKFLOW_RUN_NUMBER))
+          if (( VERSION_CODE > 2100000000 )); then
+            echo "Generated versionCode exceeds the Google Play maximum: ${VERSION_CODE}"
+            exit 1
+          fi
+
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+          echo "Generated versionCode: ${VERSION_CODE}"
 
       - name: Set up JDK
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -96,7 +112,7 @@ jobs:
 
       - name: Build signed AAB and sideload APK
         env:
-          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_CODE: ${{ steps.version_code.outputs.version_code }}
           VERSION_NAME: ${{ inputs.version_name }}
           KEYSTORE_FILE: ${{ github.workspace }}/keystores/bareuang-release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -109,24 +125,72 @@ jobs:
           KEYSTORE_FILE: ${{ github.workspace }}/keystores/bareuang-release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_CODE: ${{ steps.version_code.outputs.version_code }}
           VERSION_NAME: ${{ inputs.version_name }}
         run: |
+          set -euo pipefail
           AAB=app/build/outputs/bundle/release/app-release.aab
           APK=app/build/outputs/apk/release/app-release.apk
-          test -s "$AAB"
-          test -s "$APK"
-          jarsigner -verify -certs "$AAB"
-          apksigner verify --verbose "$APK"
+          if [ ! -s "$AAB" ]; then
+            echo "AAB is missing or empty: $AAB"
+            exit 1
+          fi
+          if [ ! -s "$APK" ]; then
+            echo "APK is missing or empty: $APK"
+            exit 1
+          fi
 
-          EXPECTED_CERT=$(keytool -list -v -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>/dev/null | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
-          AAB_CERT=$(keytool -printcert -jarfile "$AAB" 2>/dev/null | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}')
-          APK_CERT=$(apksigner verify --print-certs "$APK" | awk -F': ' '/certificate SHA-256 digest:/{print toupper($2); exit}')
-          test -n "$EXPECTED_CERT" && test "$EXPECTED_CERT" = "$AAB_CERT"
-          test -n "$EXPECTED_CERT" && test "$EXPECTED_CERT" = "$APK_CERT"
+          echo "Verifying AAB JAR signature (certificate trust warnings may be reported for a self-signed upload key)."
+          if jarsigner -verify -certs "$AAB"; then
+            echo "AAB JAR signature verification passed."
+          else
+            verify_exit=$?
+            echo "AAB JAR signature verification failed with exit code $verify_exit."
+            exit "$verify_exit"
+          fi
+
+          echo "Verifying APK signature."
+          if apksigner verify --verbose "$APK"; then
+            echo "APK signature verification passed."
+          else
+            verify_exit=$?
+            echo "APK signature verification failed with exit code $verify_exit."
+            exit "$verify_exit"
+          fi
+
+          echo "Comparing release certificate fingerprints."
+          if ! EXPECTED_CERT=$(keytool -list -v -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}'); then
+            echo "Could not read the expected certificate for alias '$KEY_ALIAS'. Check KEYSTORE_FILE, KEYSTORE_PASSWORD, and KEY_ALIAS."
+            exit 1
+          fi
+          if ! AAB_CERT=$(keytool -printcert -jarfile "$AAB" | awk -F': ' '/SHA256:/{gsub(":", "", $2); print toupper($2); exit}'); then
+            echo "Could not read the signing certificate from the AAB."
+            exit 1
+          fi
+          if ! APK_CERT=$(apksigner verify --print-certs "$APK" | awk -F': ' '/certificate SHA-256 digest:/{print toupper($2); exit}'); then
+            echo "Could not read the signing certificate from the APK."
+            exit 1
+          fi
+          if [ -z "$EXPECTED_CERT" ] || [ -z "$AAB_CERT" ] || [ -z "$APK_CERT" ]; then
+            echo "A signing certificate fingerprint is missing (keystore/AAB/APK)."
+            exit 1
+          fi
+          if [ "$EXPECTED_CERT" != "$AAB_CERT" ]; then
+            echo "AAB signing certificate does not match the configured keystore alias."
+            exit 1
+          fi
+          if [ "$EXPECTED_CERT" != "$APK_CERT" ]; then
+            echo "APK signing certificate does not match the configured keystore alias."
+            exit 1
+          fi
+          echo "AAB and APK certificates match the configured release key."
 
           ZIPALIGN=$(find "$ANDROID_HOME/build-tools" -name zipalign | sort -V | tail -1)
-          test -n "$ZIPALIGN"
+          if [ -z "$ZIPALIGN" ]; then
+            echo "Could not find zipalign under $ANDROID_HOME/build-tools."
+            exit 1
+          fi
+          echo "Checking APK alignment with $ZIPALIGN."
           "$ZIPALIGN" -c -P 16 -v 4 "$APK"
           APK_SIZE=$(stat -c%s "$APK")
           echo "Release APK size: ${APK_SIZE} bytes"
@@ -148,7 +212,7 @@ jobs:
           name: Bareuang v${{ inputs.version_name }}
           body: |
             Signed release artifacts built from commit ${{ github.sha }}.
-            - versionCode: ${{ inputs.version_code }}
+            - versionCode: ${{ steps.version_code.outputs.version_code }}
             - Upload the AAB to Google Play Console.
             - SHA-256 checksums are included in `SHA256SUMS.txt`.
           files: dist/*

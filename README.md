@@ -134,11 +134,10 @@ VERSION_CODE=2 VERSION_NAME=1.0.1 ./gradlew :app:assembleRelease :app:bundleRele
 # Validasi lokal
 ./gradlew test
 ./gradlew lint
-./gradlew :data:compileDebugAndroidTestKotlin
 ```
 
-`connectedDebugAndroidTest` membutuhkan emulator atau perangkat Android aktif. CI
-menjalankan tes instrumentasi pada API minimum (26) dan target (37).
+CI menjalankan unit test JVM dan lint tanpa emulator. Untuk mendapatkan APK debug,
+jalankan workflow **Build APK** secara manual dari tab Actions.
 
 ### 🌐 Web - Landing Page
 
@@ -156,7 +155,7 @@ python3 -m http.server --directory web 8000
 
 Deploy: push `web/` ke GitHub Pages (Settings → Pages → Deploy from `/web`) atau connect repo ke Cloudflare Pages (root `web`). Ganti `https://bareuang.app` di `web/index.html`, `privacy.html`, `terms.html`, `sitemap.xml` jika pakai domain lain. URL Privacy/Terms dipakai di Play Console → Data safety & Store listing.
 
-Workflow Release meminta `version_name` dan `version_code`, membangun AAB untuk diunggah ke Play Console serta APK sideload, memeriksa tanda tangan, dan menyertakan `SHA256SUMS.txt`. `VERSION_CODE` harus lebih besar daripada versi terakhir yang pernah diunggah. Simpan fingerprint sertifikat upload di secret manager, bukan di repository.
+Workflow Release meminta `version_name` saja. Nomor versi dibuat otomatis dari repository variable `PLAY_VERSION_CODE_BASE` ditambah nomor run workflow. Atur variable tersebut satu kali ke versionCode tertinggi yang sudah diunggah ke Play; setiap run Release berikutnya akan mendapat nomor yang lebih tinggi. Workflow membangun AAB untuk diunggah ke Play Console serta APK sideload, memeriksa tanda tangan, dan menyertakan `SHA256SUMS.txt`. Simpan fingerprint sertifikat upload di secret manager, bukan di repository.
 
 <details>
 <summary>Setup keystore untuk release build</summary>
